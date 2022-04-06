@@ -4,21 +4,57 @@ import org.m.svtpk.entity.EpisodeEntity;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.net.URI;
 import java.util.Calendar;
 import java.util.Objects;
 
 @Service
 public class EpisodeService {
+
+    public EpisodeEntity findEpisode(String address) {
+        System.out.println("address supplied to findEpisode: " + address);
+        EpisodeEntity episode = new EpisodeEntity();
+        if (address.length() > 9) {
+            try {
+                URI uri = URI.create(address);
+                //address = URLEncoder.encode(address, StandardCharsets.UTF_8);
+                if (uri.isAbsolute() && address.contains("\\id=")) {
+                    System.out.println("uri was absolute and contained id");
+                    episode = getEpisodeInfo(address);
+                } else if (uri.isAbsolute()) {
+                    System.out.println("uri was absolute");
+
+                    ResponseEntity<String> response = new RestTemplate().exchange(address, HttpMethod.GET, new HttpEntity<String>(setHeaders()), String.class);
+                    if (response.getBody() != null) {
+                        String id = response.getBody().split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
+                        episode = getEpisodeInfo(address + "?" + id);
+                    }
+                } else System.out.println("URI was not absolute, didn't search.");
+            } catch (HttpClientErrorException e) {
+                System.out.println("Couldn't find episode");
+                System.out.println(e.getMessage());
+            } catch (NullPointerException e) {
+                System.out.println("Error in body, error in regex?");
+                System.out.println(e.getMessage());
+            } catch (IllegalArgumentException | ResourceAccessException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+        System.out.println("returning episode named: " + episode.getEpisodeTitle());
+        return episode;
+    }
+
     public EpisodeEntity getEpisodeInfo(String address) {
         EpisodeEntity episode = new EpisodeEntity();
         System.out.println("getEpisodeInfo says address = " + address);
-        String episodeInfo = "";
         String[] id = address.split("id=");
-        if (address.contains("id=") && id.length > 1 && id[1].trim().length() > 5) {
+        if (id.length > 1 && id[1].trim().length() > 5) {
             System.out.println("Close enough, trying to get: " + address);
             String episodeId = address.split("id=")[1];
             String URI = "https://api.svt.se/video/" + episodeId;
@@ -35,9 +71,9 @@ public class EpisodeService {
                     episode.setProgramTitle(res.split("programTitle\":\"")[1].split("\",")[0]);
                     episode.setEpisodeTitle(res.split("episodeTitle\":\"")[1].split("\",")[0]);
                     episode.setContentDuration(Integer.parseInt(res.split("contentDuration\":")[1].split(",")[0]));
-                    try{
+                    try {
                         episode.setImageURL(getImgURL(address));
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         System.out.println("bildhämtningen fuckade upp");
                         e.printStackTrace();
                     }
@@ -47,13 +83,13 @@ public class EpisodeService {
                 System.out.println(e.getMessage());
             }
         }
-        System.out.println("Bild finns på: "+episode.getImageURL());
+        System.out.println("Bild finns på: " + episode.getImageURL());
         return episode;
     }
 
     private String getImgURL(String addressWithId) throws NullPointerException, HttpClientErrorException {
         String HTML_URI = addressWithId.split("\\?id=")[0];
-        ResponseEntity<String> response = new RestTemplate().exchange(HTML_URI,HttpMethod.GET, new HttpEntity<String>(setHeaders()),String.class);
+        ResponseEntity<String> response = new RestTemplate().exchange(HTML_URI, HttpMethod.GET, new HttpEntity<String>(setHeaders()), String.class);
         return response.getBody().split("data-src=\"")[1].split("\"")[0];
     }
 
@@ -87,9 +123,10 @@ public class EpisodeService {
 
             response = restTemplate.exchange(BASE_URL + SUBS_BASE_URL, HttpMethod.GET, entity, String.class);
             Calendar c = Calendar.getInstance();
-            String filename = episode.getProgramTitle()+"-"+episode.getEpisodeTitle()+"-"+c.get(Calendar.YEAR)+c.get(Calendar.MONTH)+c.get(Calendar.DAY_OF_MONTH)+1+"-"+c.get(Calendar.HOUR)+c.get(Calendar.MINUTE);
-            File file = new File(filename);
-            FileWriter fw = new FileWriter(filename);
+            String filename = episode.getProgramTitle() + "-" + episode.getEpisodeTitle() + "-" + c.get(Calendar.YEAR) + c.get(Calendar.MONTH) + c.get(Calendar.DAY_OF_MONTH) + 1 + "-" + c.get(Calendar.HOUR) + c.get(Calendar.MINUTE);
+            String filetype = ".txt";
+            File file = new File(filename + filetype);
+            FileWriter fw = new FileWriter(filename + filetype);
             fw.write(Objects.requireNonNull(response.getBody()));
             fw.close();
 

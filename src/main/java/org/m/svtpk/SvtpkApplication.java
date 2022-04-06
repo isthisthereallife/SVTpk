@@ -25,12 +25,15 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class SvtpkApplication extends Application {
     EpisodeEntity currentEpisode = new EpisodeEntity();
     EpisodeService episodeService = new EpisodeService();
+    Text infoText;
+    Button dlBtn;
+    ImageView episodeImageView;
+    TextField addressTextField;
 
     @Override
     public void start(Stage stage) {
         stage.getIcons().add(new Image("file:src/main/resources/images/arrow.png"));
         stage.setTitle("SVTpk");
-        Label l = new Label("SVTpk");
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_CENTER);
         grid.setHgap(10);
@@ -42,27 +45,28 @@ public class SvtpkApplication extends Application {
         title.setTextAlignment(TextAlignment.CENTER);
         grid.add(title, 0, 0, 2, 1);
 
-        Label addressFieldLabel = new Label("Ange adress med id");
+        Label addressFieldLabel = new Label("Ange adress");
         addressFieldLabel.setAlignment(Pos.CENTER);
         grid.add(addressFieldLabel, 0, 2);
 
-        TextField addressTextField = new TextField();
+        addressTextField = new TextField();
         addressTextField.setPrefWidth(400);
 
+
         Image episodeImage = null;
-        ImageView episodeImageView = new ImageView(episodeImage);
+        episodeImageView = new ImageView(episodeImage);
         episodeImageView.setPreserveRatio(true);
         episodeImageView.setFitWidth(200);
         grid.add(episodeImageView,0,4);
 
-        Text infoText = new Text();
+        infoText = new Text();
         HBox hBoxInfoText = new HBox(10);
         infoText.prefHeight(160);
         hBoxInfoText.getChildren().add(infoText);
 
         grid.add(hBoxInfoText, 0, 8);
 
-        Button dlBtn = new Button("Kopiera");
+        dlBtn = new Button("Kopiera");
         dlBtn.setDisable(true);
         HBox hboxDlBtn = new HBox(10);
         hboxDlBtn.setAlignment(Pos.BOTTOM_CENTER);
@@ -72,29 +76,21 @@ public class SvtpkApplication extends Application {
 
 
         addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            currentEpisode = episodeService.getEpisodeInfo(addressTextField.getText());
-
-            if (!currentEpisode.getSvtId().equals("")) {
-                infoText.setVisible(true);
-                infoText.setFill(Color.DARKGREEN);
-                infoText.setText(currentEpisode.toString());
-                episodeImageView.setImage(new Image(currentEpisode.getImageURL()));
-
-                dlBtn.setDisable(false);
-            } else if (addressTextField.getText().length() > 0) {
-                currentEpisode = new EpisodeEntity();
-                infoText.setVisible(true);
-                infoText.setFill(Color.FIREBRICK);
-                infoText.setText("Tyvärr, hittar inte det avsnittet.");
-                episodeImageView.setImage(null);
-                dlBtn.setDisable(true);
-            } else {
-                infoText.setVisible(false);
-                episodeImageView.setImage(null);
-                dlBtn.setDisable(true);
-            }
+            currentEpisode = episodeService.findEpisode(addressTextField.getText());
+            updateUI();
         });
-        grid.add(addressTextField, 0, 3);
+
+
+        Button findEpisodeBtn = new Button("Hitta");
+        findEpisodeBtn.setOnAction(e->{
+            currentEpisode = episodeService.findEpisode(addressTextField.getText());
+            updateUI();
+        });
+
+        HBox search = new HBox(10);
+        search.getChildren().add(addressTextField);
+        search.getChildren().add(findEpisodeBtn);
+        grid.add(search, 0, 3);
 
         dlBtn.setOnAction(e -> {
             episodeService.copyEpisodeToDisk(currentEpisode);
@@ -106,6 +102,27 @@ public class SvtpkApplication extends Application {
         stage.show();
     }
 
+    private void updateUI(){
+        if (!currentEpisode.getSvtId().equals("")) {
+            infoText.setVisible(true);
+            infoText.setFill(Color.DARKGREEN);
+            infoText.setText(currentEpisode.toString());
+            episodeImageView.setImage(new Image(currentEpisode.getImageURL()));
+
+            dlBtn.setDisable(false);
+        } else if (addressTextField.getText().length() > 0) {
+            currentEpisode = new EpisodeEntity();
+            infoText.setVisible(true);
+            infoText.setFill(Color.FIREBRICK);
+            infoText.setText("Tyvärr, hittar inte det avsnittet.");
+            episodeImageView.setImage(null);
+            dlBtn.setDisable(true);
+        } else {
+            infoText.setVisible(false);
+            episodeImageView.setImage(null);
+            dlBtn.setDisable(true);
+        }
+    }
 
     public static void main(String[] args) {
         launch();
