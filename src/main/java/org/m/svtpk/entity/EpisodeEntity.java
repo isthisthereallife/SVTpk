@@ -1,6 +1,8 @@
 package org.m.svtpk.entity;
 
 
+import javafx.scene.image.Image;
+
 public class EpisodeEntity {
     private String svtId;
     private String programVersionId;
@@ -10,9 +12,11 @@ public class EpisodeEntity {
     private String episodeTitle;
     private VideoReferencesEntity[] videoReferences;
     private SubtitleReferencesEntity[] subtitleReferences;
+    private String imageURL;
 
     public EpisodeEntity() {
-        svtId ="";
+        svtId = "";
+        imageURL = "";
     }
 
     public String getSvtId() {
@@ -79,10 +83,18 @@ public class EpisodeEntity {
         this.subtitleReferences = subtitleReferences;
     }
 
+    public String getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(String imageURL) {
+        this.imageURL = imageURL;
+    }
+
     @Override
     public String toString() {
         return "Program: '" + programTitle + "'\n" +
                 "Avsnitt: '" + episodeTitle + "'\n" +
-                "Längd: " + contentDuration/60+" min";
+                "Längd: " + contentDuration / 60 + " min";
     }
 }

@@ -3,6 +3,7 @@ package org.m.svtpk.services;
 import org.m.svtpk.entity.EpisodeEntity;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
@@ -34,14 +35,27 @@ public class EpisodeService {
                     episode.setProgramTitle(res.split("programTitle\":\"")[1].split("\",")[0]);
                     episode.setEpisodeTitle(res.split("episodeTitle\":\"")[1].split("\",")[0]);
                     episode.setContentDuration(Integer.parseInt(res.split("contentDuration\":")[1].split(",")[0]));
+                    try{
+                        episode.setImageURL(getImgURL(address));
+                    }catch(Exception e){
+                        System.out.println("bildhämtningen fuckade upp");
+                        e.printStackTrace();
+                    }
                 }
             } catch (Exception e) {
+                System.out.println("hämtningen av avsnittsinfon fuckade upp");
                 System.out.println(e.getMessage());
             }
         }
+        System.out.println("Bild finns på: "+episode.getImageURL());
         return episode;
     }
 
+    private String getImgURL(String addressWithId) throws NullPointerException, HttpClientErrorException {
+        String HTML_URI = addressWithId.split("\\?id=")[0];
+        ResponseEntity<String> response = new RestTemplate().exchange(HTML_URI,HttpMethod.GET, new HttpEntity<String>(setHeaders()),String.class);
+        return response.getBody().split("data-src=\"")[1].split("\"")[0];
+    }
 
     public void copyEpisodeToDisk(EpisodeEntity episode) {
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
@@ -70,12 +84,12 @@ public class EpisodeService {
 
 
             //response = restTemplate.exchange(BASE_URL+initial, HttpMethod.GET, entity, String.class);
+
             response = restTemplate.exchange(BASE_URL + SUBS_BASE_URL, HttpMethod.GET, entity, String.class);
-            //System.out.println("response.body: " + response.getBody());
             Calendar c = Calendar.getInstance();
-            String subsname = episode.getProgramTitle()+"-"+episode.getEpisodeTitle()+"-"+c.get(Calendar.YEAR)+c.get(Calendar.MONTH)+c.get(Calendar.DAY_OF_MONTH)+1+"-"+c.get(Calendar.HOUR)+c.get(Calendar.MINUTE);
-            File mp4 = new File(subsname);
-            FileWriter fw = new FileWriter(subsname);
+            String filename = episode.getProgramTitle()+"-"+episode.getEpisodeTitle()+"-"+c.get(Calendar.YEAR)+c.get(Calendar.MONTH)+c.get(Calendar.DAY_OF_MONTH)+1+"-"+c.get(Calendar.HOUR)+c.get(Calendar.MINUTE);
+            File file = new File(filename);
+            FileWriter fw = new FileWriter(filename);
             fw.write(Objects.requireNonNull(response.getBody()));
             fw.close();
 

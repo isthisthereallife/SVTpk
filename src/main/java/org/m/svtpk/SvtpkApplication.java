@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
@@ -48,35 +49,48 @@ public class SvtpkApplication extends Application {
         TextField addressTextField = new TextField();
         addressTextField.setPrefWidth(400);
 
+        Image episodeImage = null;
+        ImageView episodeImageView = new ImageView(episodeImage);
+        episodeImageView.setPreserveRatio(true);
+        episodeImageView.setFitWidth(200);
+        grid.add(episodeImageView,0,4);
+
+        Text infoText = new Text();
+        HBox hBoxInfoText = new HBox(10);
+        infoText.prefHeight(160);
+        hBoxInfoText.getChildren().add(infoText);
+
+        grid.add(hBoxInfoText, 0, 8);
+
         Button dlBtn = new Button("Kopiera");
         dlBtn.setDisable(true);
         HBox hboxDlBtn = new HBox(10);
         hboxDlBtn.setAlignment(Pos.BOTTOM_CENTER);
         hboxDlBtn.getChildren().add(dlBtn);
-        grid.add(hboxDlBtn, 0, 20);
+        grid.add(hboxDlBtn, 0, 10);
 
-        Text infoText = new Text();
-        HBox hBoxInfoText = new HBox(10);
-        hBoxInfoText.getChildren().add(infoText);
-        grid.add(hBoxInfoText, 0, 8);
+
 
         addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            //try getting resource
             currentEpisode = episodeService.getEpisodeInfo(addressTextField.getText());
 
             if (!currentEpisode.getSvtId().equals("")) {
                 infoText.setVisible(true);
                 infoText.setFill(Color.DARKGREEN);
                 infoText.setText(currentEpisode.toString());
+                episodeImageView.setImage(new Image(currentEpisode.getImageURL()));
+
                 dlBtn.setDisable(false);
             } else if (addressTextField.getText().length() > 0) {
                 currentEpisode = new EpisodeEntity();
                 infoText.setVisible(true);
                 infoText.setFill(Color.FIREBRICK);
                 infoText.setText("Tyvärr, hittar inte det avsnittet.");
+                episodeImageView.setImage(null);
                 dlBtn.setDisable(true);
             } else {
                 infoText.setVisible(false);
+                episodeImageView.setImage(null);
                 dlBtn.setDisable(true);
             }
         });
