@@ -34,6 +34,11 @@ public class SvtpkApplication extends Application {
     public void start(Stage stage) {
         stage.getIcons().add(new Image("file:src/main/resources/images/arrow.png"));
         stage.setTitle("SVTpk");
+        stage.setScene(homeScene());
+        stage.show();
+    }
+
+    private Scene homeScene() {
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.TOP_CENTER);
         grid.setHgap(10);
@@ -57,7 +62,7 @@ public class SvtpkApplication extends Application {
         episodeImageView = new ImageView(episodeImage);
         episodeImageView.setPreserveRatio(true);
         episodeImageView.setFitWidth(200);
-        grid.add(episodeImageView,0,4);
+        grid.add(episodeImageView, 0, 4);
 
         infoText = new Text();
         HBox hBoxInfoText = new HBox(10);
@@ -74,15 +79,26 @@ public class SvtpkApplication extends Application {
         grid.add(hboxDlBtn, 0, 10);
 
 
-
         addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            currentEpisode = episodeService.findEpisode(addressTextField.getText());
-            updateUI();
+           /* search every time user types a letter in search box. not good now, maybe good later.
+             currentEpisode = episodeService.findEpisode(addressTextField.getText());
+           */
+            if (addressTextField.getText().length() < 1) {
+                currentEpisode = new EpisodeEntity();
+                updateUI();
+            }
         });
 
 
+        addressTextField.setOnKeyPressed(e -> {
+            if (e.getCode().toString().equals("ENTER")) {
+                currentEpisode = episodeService.findEpisode(addressTextField.getText());
+                updateUI();
+            }
+        });
+
         Button findEpisodeBtn = new Button("Hitta");
-        findEpisodeBtn.setOnAction(e->{
+        findEpisodeBtn.setOnAction(e -> {
             currentEpisode = episodeService.findEpisode(addressTextField.getText());
             updateUI();
         });
@@ -93,16 +109,12 @@ public class SvtpkApplication extends Application {
         grid.add(search, 0, 3);
 
         dlBtn.setOnAction(e -> {
-            episodeService.copyEpisodeToDisk(currentEpisode);
+            infoText.setText(episodeService.copyEpisodeToDisk(currentEpisode).toString());
         });
-        Scene scene = new Scene(grid, 640, 480);
-        stage.setScene(scene);
-
-
-        stage.show();
+        return new Scene(grid, 640, 480);
     }
 
-    private void updateUI(){
+    private void updateUI() {
         if (!currentEpisode.getSvtId().equals("")) {
             infoText.setVisible(true);
             infoText.setFill(Color.DARKGREEN);
@@ -118,6 +130,7 @@ public class SvtpkApplication extends Application {
             episodeImageView.setImage(null);
             dlBtn.setDisable(true);
         } else {
+            currentEpisode = new EpisodeEntity();
             infoText.setVisible(false);
             episodeImageView.setImage(null);
             dlBtn.setDisable(true);

@@ -2,16 +2,18 @@ package org.m.svtpk.services;
 
 import org.m.svtpk.entity.EpisodeEntity;
 import org.springframework.http.*;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
+import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.FileWriter;
+import java.io.IOException;
 import java.net.URI;
-import java.util.Calendar;
-import java.util.Objects;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
 
 @Service
 public class EpisodeService {
@@ -29,7 +31,7 @@ public class EpisodeService {
                 } else if (uri.isAbsolute()) {
                     System.out.println("uri was absolute");
 
-                    ResponseEntity<String> response = new RestTemplate().exchange(address, HttpMethod.GET, new HttpEntity<String>(setHeaders()), String.class);
+                    ResponseEntity<String> response = new RestTemplate().exchange(address, HttpMethod.GET, new HttpEntity<String>(getHeaders()), String.class);
                     if (response.getBody() != null) {
                         String id = response.getBody().split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
                         episode = getEpisodeInfo(address + "?" + id);
@@ -58,15 +60,16 @@ public class EpisodeService {
             System.out.println("Close enough, trying to get: " + address);
             String episodeId = address.split("id=")[1];
             String URI = "https://api.svt.se/video/" + episodeId;
-            ResponseEntity<String> response = null;
+            ResponseEntity<String> response;
             RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = setHeaders();
-            HttpEntity<String> entity = new HttpEntity<String>(headers);
+            HttpHeaders headers = getHeaders();
+            HttpEntity<String> entity = new HttpEntity<>(headers);
             try {
                 response = restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
                 if (response.getStatusCode().equals(HttpStatus.OK)) {
                     String res = response.getBody();
 
+                    assert res != null;
                     episode.setSvtId(res.split("svtId\":\"")[1].split("\"")[0]);
                     episode.setProgramTitle(res.split("programTitle\":\"")[1].split("\",")[0]);
                     episode.setEpisodeTitle(res.split("episodeTitle\":\"")[1].split("\",")[0]);
@@ -89,56 +92,86 @@ public class EpisodeService {
 
     private String getImgURL(String addressWithId) throws NullPointerException, HttpClientErrorException {
         String HTML_URI = addressWithId.split("\\?id=")[0];
-        ResponseEntity<String> response = new RestTemplate().exchange(HTML_URI, HttpMethod.GET, new HttpEntity<String>(setHeaders()), String.class);
+        ResponseEntity<String> response = new RestTemplate().exchange(HTML_URI, HttpMethod.GET, new HttpEntity<String>(getHeaders()), String.class);
+        if (response.getBody() == null) {
+            return "";
+        }
         return response.getBody().split("data-src=\"")[1].split("\"")[0];
     }
 
-    public void copyEpisodeToDisk(EpisodeEntity episode) {
+    public HttpStatus copyEpisodeToDisk(EpisodeEntity episode) {
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
-        ResponseEntity<String> response = null;
+        ResponseEntity<String> response;
         RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        HttpEntity<String> entity = new HttpEntity<String>(headers);
+        HttpEntity<String> entity = new HttpEntity<>(getHeaders());
         try {
             response = restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
+            if (response.getBody() == null) return HttpStatus.NO_CONTENT;
             String resolveURI = response.getBody().split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0];
-            System.out.println("RESOLVE URI:" + resolveURI);
-            response = restTemplate.exchange(resolveURI, HttpMethod.GET, entity, String.class);
-            System.out.println(response.getBody());
 
-            String location = response.getBody().split("location\":\"")[1].split("\"")[0];
-            location = "https://api.svt.se/ditto/api/v1/web?manifestUrl=" + location + "&excludeCodecs=hvc&excludeCodecs=ac-3";
-            response = restTemplate.exchange(location, HttpMethod.GET, entity, String.class);
-            System.out.println(response.getBody());
+            response = restTemplate.exchange(resolveURI, HttpMethod.GET, entity, String.class);
+            response = restTemplate.exchange("https://api.svt.se/ditto/api/v1/web?manifestUrl=" + response.getBody().split("location\":\"")[1].split("\"")[0] + "&excludeCodecs=hvc&excludeCodecs=ac-3", HttpMethod.GET, entity, String.class);
             String resbody = response.getBody();
 
             //GET BASE URL
             String BASE_URL = resbody.split("<BaseURL>")[1].split("</BaseURL")[0];
-            String SUBS_BASE_URL = resbody.split("</BaseURL>")[1].split("<BaseURL>")[1].split("</BaseURL>")[0];
+            //String SUBS_BASE_URL = resbody.split("</BaseURL>")[1].split("<BaseURL>")[1].split("</BaseURL>")[0];
             //RESOLUTION IS CHOSEN AT THIS POINT
             String initial = resbody.split("<SegmentTemplate initialization=\"")[1].split("\"")[0];
+            String partUrl = initial.split("init")[0];
+            List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
+            messageConverters.add(new ByteArrayHttpMessageConverter());
+            int range = Integer.parseInt(resbody.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]);
+            RestTemplate restTemplateByte = new RestTemplate(messageConverters);
+            System.out.println("Getting part init");
+            ResponseEntity<byte[]> res = restTemplateByte.exchange(BASE_URL + initial, HttpMethod.GET, entity, byte[].class);
+            String listOfPartsString = "";
 
+            if (res.getStatusCode() == HttpStatus.OK && res.getBody() != null) {
+                Calendar c = Calendar.getInstance();
 
-            //response = restTemplate.exchange(BASE_URL+initial, HttpMethod.GET, entity, String.class);
-
-            response = restTemplate.exchange(BASE_URL + SUBS_BASE_URL, HttpMethod.GET, entity, String.class);
-            Calendar c = Calendar.getInstance();
-            String filename = episode.getProgramTitle() + "-" + episode.getEpisodeTitle() + "-" + c.get(Calendar.YEAR) + c.get(Calendar.MONTH) + c.get(Calendar.DAY_OF_MONTH) + 1 + "-" + c.get(Calendar.HOUR) + c.get(Calendar.MINUTE);
-            String filetype = ".txt";
-            File file = new File(filename + filetype);
-            FileWriter fw = new FileWriter(filename + filetype);
-            fw.write(Objects.requireNonNull(response.getBody()));
-            fw.close();
-
-        } catch (Exception e) {
+                String filename = fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()
+                        + "-" + c.get(Calendar.YEAR) + "_" + ((c.get(Calendar.MONTH) + 1) < 10 ? "0" + (c.get(Calendar.MONTH) + 1)
+                        : (c.get(Calendar.MONTH) + 1)) + "_" + c.get(Calendar.DAY_OF_MONTH) + "_" + (c.get(Calendar.HOUR) < 10 ? "0"
+                        + c.get(Calendar.HOUR) : c.get(Calendar.HOUR)) + (c.get(Calendar.MINUTE) < 10 ? "0" + c.get(Calendar.MINUTE) : c.get(Calendar.MINUTE)
+                        + "-PART_"));
+                String partInit = filename.concat("init");
+                String filetype = ".mp4";
+                Files.write(Paths.get(partInit + filetype), res.getBody());
+                listOfPartsString = "file '" + partInit + filetype + "'";
+                // do the loop,
+                for (int i = 1; i <= range + 2; i++) {
+                    System.out.println("Getting part " + i);
+                    res = restTemplateByte.exchange(BASE_URL + partUrl + i + ".mp4", HttpMethod.GET, entity, byte[].class);
+                    if (res.getBody() == null) return HttpStatus.NO_CONTENT;
+                    Files.write(Paths.get(filename.concat(String.valueOf(i)).concat(".mp4")), res.getBody());
+                    listOfPartsString = listOfPartsString.concat("\nfile '" + filename + filetype + "'");
+                }
+            }
+            Files.write(Paths.get("list.txt"), Collections.singleton(listOfPartsString));
+        } catch (IOException e) {
             e.printStackTrace();
+            return HttpStatus.CONFLICT;
         }
+        return HttpStatus.OK;
     }
 
 
-    static HttpHeaders setHeaders() {
+    static HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0");
         return headers;
+    }
+
+    private String fileNameFixerUpper(String string) {
+        return string
+                .replace("å", "a")
+                .replace("Å", "A")
+                .replace("ä", "a")
+                .replace("Ä", "A")
+                .replace("ö", "o")
+                .replace("Ö", "O")
+                .replace(" ", "")
+                .replace(":", "-");
     }
 }
