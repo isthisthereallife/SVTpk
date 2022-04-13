@@ -3,6 +3,8 @@ package org.m.svtpk.entity;
 
 import javafx.scene.image.Image;
 
+import java.util.Objects;
+
 public class EpisodeEntity {
     private String svtId;
     private String programVersionId;
@@ -16,7 +18,6 @@ public class EpisodeEntity {
 
     public EpisodeEntity() {
         svtId = "";
-        imageURL = "";
     }
 
     public String getSvtId() {
@@ -89,6 +90,10 @@ public class EpisodeEntity {
 
     public void setImageURL(String imageURL) {
         this.imageURL = imageURL;
+    }
+
+    public Boolean hasID(EpisodeEntity e) {
+        return !Objects.equals(e.getSvtId(), "");
     }
 
     @Override

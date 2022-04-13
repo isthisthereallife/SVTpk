@@ -20,6 +20,8 @@ public class EpisodeService {
 
     public EpisodeEntity findEpisode(String address) {
         System.out.println("address supplied to findEpisode: " + address);
+        address = address.replace(" ","");
+        System.out.println("removed spaces");
         EpisodeEntity episode = new EpisodeEntity();
         if (address.length() > 9) {
             try {
