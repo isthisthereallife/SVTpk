@@ -144,10 +144,15 @@ public class EpisodeService {
                 // do the loop,
                 for (int i = 1; i <= range + 2; i++) {
                     System.out.println("Getting part " + i);
-                    res = restTemplateByte.exchange(BASE_URL + partUrl + i + ".mp4", HttpMethod.GET, entity, byte[].class);
-                    if (res.getBody() == null) return HttpStatus.NO_CONTENT;
-                    Files.write(Paths.get(filename.concat(String.valueOf(i)).concat(".mp4")), res.getBody());
-                    listOfPartsString = listOfPartsString.concat("\nfile '" + filename + filetype + "'");
+                    try {
+                        res = restTemplateByte.exchange(BASE_URL + partUrl + i + ".mp4", HttpMethod.GET, entity, byte[].class);
+                        if (res.getBody() == null) return HttpStatus.NO_CONTENT;
+                        Files.write(Paths.get(filename.concat(String.valueOf(i)).concat(".mp4")), res.getBody());
+                        listOfPartsString = listOfPartsString.concat("\nfile '" + filename + filetype + "'");
+                    }catch (HttpClientErrorException e){
+                        e.printStackTrace();
+                        return HttpStatus.NOT_FOUND;
+                    }
                 }
             }
             Files.write(Paths.get("list.txt"), Collections.singleton(listOfPartsString));
