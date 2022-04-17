@@ -1,6 +1,9 @@
 package org.m.svtpk.services;
 
+import org.m.svtpk.SvtpkApplication;
 import org.m.svtpk.entity.EpisodeEntity;
+import org.m.svtpk.utils.RunnableCopier;
+import org.m.svtpk.utils.StringHelpers;
 import org.springframework.http.*;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -20,7 +23,7 @@ public class EpisodeService {
 
     public EpisodeEntity findEpisode(String address) {
         System.out.println("address supplied to findEpisode: " + address);
-        address = address.replace(" ","");
+        address = address.replace(" ", "");
         System.out.println("removed spaces");
         EpisodeEntity episode = new EpisodeEntity();
         if (address.length() > 9) {
@@ -122,8 +125,8 @@ public class EpisodeService {
             String initial = resbody.split("<SegmentTemplate initialization=\"")[1].split("\"")[0];
             String partUrl = initial.split("init")[0];
             List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
-            messageConverters.add(new ByteArrayHttpMessageConverter());
             int range = Integer.parseInt(resbody.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]);
+            messageConverters.add(new ByteArrayHttpMessageConverter());
             RestTemplate restTemplateByte = new RestTemplate(messageConverters);
             System.out.println("Getting part init");
             ResponseEntity<byte[]> res = restTemplateByte.exchange(BASE_URL + initial, HttpMethod.GET, entity, byte[].class);
@@ -132,11 +135,14 @@ public class EpisodeService {
             if (res.getStatusCode() == HttpStatus.OK && res.getBody() != null) {
                 Calendar c = Calendar.getInstance();
 
-                String filename = fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()
+                /*String filename = fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()
                         + "-" + c.get(Calendar.YEAR) + "_" + ((c.get(Calendar.MONTH) + 1) < 10 ? "0" + (c.get(Calendar.MONTH) + 1)
                         : (c.get(Calendar.MONTH) + 1)) + "_" + c.get(Calendar.DAY_OF_MONTH) + "_" + (c.get(Calendar.HOUR) < 10 ? "0"
                         + c.get(Calendar.HOUR) : c.get(Calendar.HOUR)) + (c.get(Calendar.MINUTE) < 10 ? "0" + c.get(Calendar.MINUTE) : c.get(Calendar.MINUTE)
                         + "-PART_"));
+
+                 */
+                String filename = StringHelpers.fileNameFixerUpper(episode.getSvtId() + "-PART_");
                 String partInit = filename.concat("init");
                 String filetype = ".mp4";
                 Files.write(Paths.get(partInit + filetype), res.getBody());
@@ -145,11 +151,14 @@ public class EpisodeService {
                 for (int i = 1; i <= range + 2; i++) {
                     System.out.println("Getting part " + i);
                     try {
-                        res = restTemplateByte.exchange(BASE_URL + partUrl + i + ".mp4", HttpMethod.GET, entity, byte[].class);
-                        if (res.getBody() == null) return HttpStatus.NO_CONTENT;
-                        Files.write(Paths.get(filename.concat(String.valueOf(i)).concat(".mp4")), res.getBody());
-                        listOfPartsString = listOfPartsString.concat("\nfile '" + filename + filetype + "'");
-                    }catch (HttpClientErrorException e){
+                        RunnableCopier runnable = new RunnableCopier("Thread " + i);
+                        runnable.start();
+                        runnable.run();
+                        String filen = runnable.getAndSave(i, filename, filetype, BASE_URL + partUrl + i + ".mp4", HttpMethod.GET, entity);
+
+                        listOfPartsString = listOfPartsString.concat("\nfile '" + filen + "'");
+                        SvtpkApplication.updateLoadingBar(((double) i / (double) (range + 2)) * 100);
+                    } catch (HttpClientErrorException e) {
                         e.printStackTrace();
                         return HttpStatus.NOT_FOUND;
                     }
@@ -170,15 +179,4 @@ public class EpisodeService {
         return headers;
     }
 
-    private String fileNameFixerUpper(String string) {
-        return string
-                .replace("å", "a")
-                .replace("Å", "A")
-                .replace("ä", "a")
-                .replace("Ä", "A")
-                .replace("ö", "o")
-                .replace("Ö", "O")
-                .replace(" ", "")
-                .replace(":", "-");
-    }
 }

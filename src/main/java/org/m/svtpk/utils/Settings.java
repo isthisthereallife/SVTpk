@@ -6,11 +6,15 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 public class Settings {
+    private final String STANDARD_PATH_WIN = "C:\\";
     private boolean isVisible;
     private String resolution;
     private String subs;
     private String path;
 
+    public Settings(){
+        path = STANDARD_PATH_WIN;
+    }
     public void save(){
         try {
             Files.write(Paths.get("settings.txt"), Collections.singleton(toString()));
@@ -34,7 +38,7 @@ public class Settings {
     public static Settings parseSettings(String settingsString) {
         Settings s = new Settings();
         try {
-            s.setVisible(Boolean.parseBoolean(settingsString.split("isVisible=")[1].split(",")[0]));
+            s.setVisible(Boolean.parseBoolean(settingsString.split("advanced_user=")[1].split(",")[0]));
             s.setResolution(settingsString.split("resolution=")[1].split(",")[0]);
             s.setSubs(settingsString.split("subs=")[1].split(",")[0]);
             s.setPath(settingsString.split("path=")[1].split(",")[0]);
@@ -46,7 +50,7 @@ public class Settings {
 
     @Override
     public String toString() {
-        return  "isVisible=" + isVisible +
+        return  "advanced_user=" + isVisible +
                 ",resolution=" + resolution +
                 ",subs=" + subs +
                 ",path=" + path
@@ -83,5 +87,9 @@ public class Settings {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public void setPath(){
+        path = STANDARD_PATH_WIN;
     }
 }

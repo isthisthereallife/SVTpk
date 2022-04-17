@@ -1,7 +1,7 @@
 package org.m.svtpk;
 
 import javafx.application.Application;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -35,7 +35,11 @@ public class SvtpkApplication extends Application {
     TextField addressTextField;
     Stage window;
     Settings settings;
-    SimpleIntegerProperty loadingCounter;
+    HBox mainContentBox;
+    static SimpleDoubleProperty loadingCounter;
+    static Text loaded;
+    VBox progress;
+
 
     @Override
     public void start(Stage stage) {
@@ -146,7 +150,7 @@ public class SvtpkApplication extends Application {
 
         //lägg till alternativen till den här,
         VBox vBoxSettings = new VBox();
-
+        vBoxSettings.prefWidth(200);
         Text resText = new Text("Upplösning");
         String[] resolutionsList = {"1080p", "720p", "360p"};
         ChoiceBox<String> resolutionChoiceBox = new ChoiceBox<String>(FXCollections.observableArrayList(resolutionsList));
@@ -156,6 +160,9 @@ public class SvtpkApplication extends Application {
             settings.save();
         });
         HBox res = new HBox(resText, resolutionChoiceBox);
+        res.setSpacing(30);
+        res.setAlignment(Pos.BASELINE_LEFT);
+        res.setPrefWidth(200);
 
         Text subsText = new Text("Undertexter");
         String[] subsList = {"Inga undertexter", "Svenska"};
@@ -166,7 +173,7 @@ public class SvtpkApplication extends Application {
             settings.save();
         });
         HBox sub = new HBox(subsText, subsChoiceBox);
-
+        sub.setSpacing(29);
         Text dirText = new Text("Spara till...");
         DirectoryChooser d = new DirectoryChooser();
         Button dirBtn = new Button("Välj");
@@ -174,8 +181,8 @@ public class SvtpkApplication extends Application {
         HBox hBoxCopy = new HBox(dirText, dirBtn);
         Text currentSavePath = settings.getPath() == null ? new Text() : new Text(settings.getPath());//settings.getPath()==null ? "" : settings.getPath());
         currentSavePath.textProperty().addListener((observableValue, s, newValue) -> {
-
         });
+        hBoxCopy.setSpacing(38);
 
         dirBtn.setOnAction(e -> {
                     String path = String.valueOf(d.showDialog(window));
@@ -184,6 +191,10 @@ public class SvtpkApplication extends Application {
                         settings.setPath(path);
                         settings.save();
                         currentSavePath.setText(settings.getPath());
+                    }else{
+                            settings.setPath();
+                            settings.save();
+                            currentSavePath.setText(settings.getPath());
                     }
                 }
         );
@@ -199,25 +210,36 @@ public class SvtpkApplication extends Application {
         vBoxSettings.getChildren().add(copy);
 
 
-        TitledPane settings = new TitledPane("Inställningar för olika saker du kan ställa in", vBoxSettings);
-        settings.setLayoutX(1);
-        settings.setLayoutY(1);
-        settings.prefWidth(200);
+        TitledPane settingsPane = new TitledPane("Inställningar", vBoxSettings);
+        settingsPane.setLayoutX(1);
+        settingsPane.setLayoutY(1);
+        settingsPane.prefWidth(200);
 
         Accordion accordion = new Accordion();
-        accordion.getPanes().add(settings);
+        accordion.getPanes().add(settingsPane);
         VBox settingsBox = new VBox(accordion);
-        settingsBox.setVisible(true);
 
-
-        HBox hBoxEpisodeInfo = new HBox(vBoxInfoText, settingsBox);
-
+        mainContentBox = mainContentBox != null ? mainContentBox : new HBox(vBoxInfoText, settingsBox);
+        mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
 
         statusIcon = currentEpisode.hasID(currentEpisode) ? Arrow.getImgViewArrowDown("green") : Arrow.getImgViewArrowDown("grey");
         HBox statusIndicator = new HBox(statusIcon);
         statusIndicator.prefHeight(100);
         statusIndicator.setAlignment(Pos.BOTTOM_CENTER);
         statusIndicator.setDisable(!currentEpisode.hasID(currentEpisode));
+
+        loadingCounter = loadingCounter != null ? loadingCounter : new SimpleDoubleProperty(0);
+        loadingCounter.addListener(((observableValue, number, newValue) -> {
+            System.out.println("obsValue:"+observableValue+"\tnumber:"+number+"\tnewValue:"+newValue);
+            loadingCounter.set((Double) newValue);
+        }));
+
+        progress = progress != null ? progress : new VBox();
+        progress.prefWidth(200);
+        loaded = loaded != null ? loaded : new Text();
+        loaded.setText(String.valueOf(loadingCounter.get()) );
+        progress.getChildren().add(loaded);
+        progress.setAlignment(Pos.BOTTOM_CENTER);
 
         dlBtn = new Button("Kopiera");
         dlBtn.setDisable(!currentEpisode.hasID(currentEpisode));
@@ -251,10 +273,6 @@ public class SvtpkApplication extends Application {
         HBox search = new HBox(10);
         search.getChildren().add(addressTextField);
         search.getChildren().add(findEpisodeBtn);
-        statusIndicator.setOnMouseClicked(e -> {
-            if (currentEpisode.hasID(currentEpisode))
-                dlBtn.fire();
-        });
         dlBtn.setOnAction(e -> {
             //ändra statusIndicator
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
@@ -278,14 +296,21 @@ public class SvtpkApplication extends Application {
 
         grid.add(addressFieldLabel, 0, 1);
         grid.add(search, 0, 2);
-        grid.add(hBoxEpisodeInfo, 0, 3);
+        grid.add(mainContentBox, 0, 3);
         grid.add(statusIndicator, 0, 4);
-        grid.add(hboxDlBtn, 0, 5);
+        grid.add(progress,0,5);
+        grid.add(hboxDlBtn, 0, 6);
 
         //grid.add(debugBtn, 0, 6);
 
         return new Scene(grid, 640, 480);
     }
+public static void updateLoadingBar(double loaderCounter){
+    System.out.println("loaderCounter säger: "+loaderCounter);
+    loaded.setText(loaderCounter +"%");
+    loadingCounter.set(loaderCounter);
+}
+
 
     public Scene homeScene2() {
         BorderPane bp = new BorderPane();
@@ -372,8 +397,10 @@ public class SvtpkApplication extends Application {
     }
 
     private void updateUI() {
+        mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
 
         if (!currentEpisode.getSvtId().equals("")) {
+            loaded.setText("");
             infoText.setVisible(true);
             infoText.setFill(Color.DARKGREEN);
             infoText.setText(currentEpisode.toString());
@@ -384,6 +411,7 @@ public class SvtpkApplication extends Application {
             dlBtn.setDisable(false);
             System.out.println("hej ui");
         } else if (addressTextField.getText().length() > 0) {
+            loaded.setText("");
             currentEpisode = new EpisodeEntity();
             infoText.setVisible(true);
             infoText.setFill(Color.FIREBRICK);
@@ -393,6 +421,7 @@ public class SvtpkApplication extends Application {
             statusIcon.setDisable(true);
             dlBtn.setDisable(true);
         } else {
+            loaded.setText("");
             currentEpisode = new EpisodeEntity();
             infoText.setVisible(false);
             episodeImageView.setImage(null);
