@@ -1,9 +1,11 @@
 package org.m.svtpk.services;
 
-import org.m.svtpk.SvtpkApplication;
+import org.m.svtpk.entity.AudioReferencesEntity;
 import org.m.svtpk.entity.EpisodeEntity;
+import org.m.svtpk.entity.SubtitleReferencesEntity;
+import org.m.svtpk.entity.VideoReferencesEntity;
 import org.m.svtpk.utils.RunnableCopier;
-import org.m.svtpk.utils.StringHelpers;
+import org.m.svtpk.utils.Settings;
 import org.springframework.http.*;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -73,12 +75,13 @@ public class EpisodeService {
                 response = restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
                 if (response.getStatusCode().equals(HttpStatus.OK)) {
                     String res = response.getBody();
-
                     assert res != null;
                     episode.setSvtId(res.split("svtId\":\"")[1].split("\"")[0]);
                     episode.setProgramTitle(res.split("programTitle\":\"")[1].split("\",")[0]);
                     episode.setEpisodeTitle(res.split("episodeTitle\":\"")[1].split("\",")[0]);
                     episode.setContentDuration(Integer.parseInt(res.split("contentDuration\":")[1].split(",")[0]));
+
+                    episode = updateEpisodeLinks(episode);
                     try {
                         episode.setImageURL(getImgURL(address));
                     } catch (Exception e) {
@@ -92,6 +95,22 @@ public class EpisodeService {
             }
         }
         System.out.println("Bild finns på: " + episode.getImageURL());
+        System.out.println("Dessa ljudkanaler finns: ");
+
+        HashMap<String, AudioReferencesEntity> au = episode.getAvailableAudio();
+        HashMap<String, HashMap> selects = new HashMap<String, HashMap>();
+
+        for (Map.Entry<String, AudioReferencesEntity> entry : au.entrySet()) {
+            System.out.println("key:" + entry.getKey() + "\tvalue.getLabel:" + entry.getValue().getLabel());
+        }
+        System.out.println("Dessa upplösningar finns: ");
+        for (Map.Entry<String, VideoReferencesEntity> entry : episode.getAvailableResolutions().entrySet()) {
+            System.out.println("key:" + entry.getKey() + "\tvalue:" + entry.getValue());
+        }
+        System.out.println("Dessa subs finns: ");
+        for (Map.Entry<String, SubtitleReferencesEntity> entry : episode.getAvailableSubs().entrySet()) {
+            System.out.println("key:" + entry.getKey() + "\tvalue.getLabel:" + entry.getValue().getLabel());
+        }
         return episode;
     }
 
@@ -104,36 +123,166 @@ public class EpisodeService {
         return response.getBody().split("data-src=\"")[1].split("\"")[0];
     }
 
-    public HttpStatus copyEpisodeToDisk(EpisodeEntity episode) {
+    public EpisodeEntity updateEpisodeLinks(EpisodeEntity episode) {
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
         ResponseEntity<String> response;
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+        response = restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
+        if (response.getBody() == null) return new EpisodeEntity();
+        String resolveURI = response.getBody().split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0];
+
+        response = restTemplate.exchange(resolveURI, HttpMethod.GET, entity, String.class);
+        response = restTemplate.exchange("https://api.svt.se/ditto/api/v1/web?manifestUrl=" + response.getBody().split("location\":\"")[1].split("\"")[0] + "&excludeCodecs=hvc&excludeCodecs=ac-3", HttpMethod.GET, entity, String.class);
+
+        String resbody = response.getBody();
+        if (resbody == null) return new EpisodeEntity();
+        String BASE_URL = resbody.split("<BaseURL>")[1].split("</BaseURL>")[0];
+
+        //Set Available resolutions
+        String[] adaptationSet = resbody.split("<AdaptationSet");
+        for (String set : adaptationSet) {
+            if (set.contains("contentType=\"video")) {
+                //video
+                String[] representation = set.split("</AdaptationSet>")[0].split(("<Representation"));
+                for (String rep : representation) {
+                    if (rep.contains("mimeType")) {
+                        VideoReferencesEntity vid = new VideoReferencesEntity();
+                        vid.setId(Integer.parseInt(rep.split("id=\"")[1].split("\"")[0]));
+                        vid.setUrl(BASE_URL + rep.split("media=\"")[1].split("\\$Number\\$")[0]);
+                        vid.setSuffix(rep.split("\\$Number\\$")[1].split("\"")[0]);
+                        vid.setHeight(rep.split("height=\"")[1].split("\"")[0]);
+                        vid.setWidth(rep.split("width=\"")[1].split("\"")[0]);
+                        vid.setCodecs(rep.split("codecs=\"")[0].split("\"")[0]);
+                        vid.setRange(Integer.parseInt(resbody.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]));
+                        episode.addAvailableResolutions(vid.getHeight(), vid);
+                    }
+                }
+            } else if (set.contains("contentType=\"audio\"")) {
+                //audio
+                AudioReferencesEntity aud = new AudioReferencesEntity();
+                aud.setLabel(set.split("<Label>")[1].split("</Label>")[0]);
+                aud.setUrl(BASE_URL + set.split("media=\"")[1].split("\\$Number\\$")[0]);
+                aud.setSuffix(set.split("\\$Number\\$")[1].split("\"")[0]);
+                aud.setRange(Integer.parseInt(resbody.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]));
+                episode.addAvailableAudio(aud.getLabel(), aud);
+            } else if (set.contains("mimeType=\"text")) {
+                //subs
+                SubtitleReferencesEntity sub = new SubtitleReferencesEntity();
+                sub.setLabel(set.split("<Label>")[1].split("</Label")[0]);
+                sub.setUrl(BASE_URL + set.split("<BaseURL>")[1].split("</BaseURL>")[0]);
+                episode.addAvailableSubs(sub);
+            }
+
+        }
+        return episode;
+    }
+
+    public HttpStatus copyEpisodeToDisk(EpisodeEntity episode) {
+        Settings settings = Settings.load();
+        String URI = "https://api.svt.se/video/" + episode.getSvtId();
+        ResponseEntity<String> response;
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+        response = restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
+        if (response.getBody() == null) return HttpStatus.NO_CONTENT;
+        String resolveURI = response.getBody().split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0];
+
+        response = restTemplate.exchange(resolveURI, HttpMethod.GET, entity, String.class);
+        response = restTemplate.exchange("https://api.svt.se/ditto/api/v1/web?manifestUrl=" + response.getBody().split("location\":\"")[1].split("\"")[0] + "&excludeCodecs=hvc&excludeCodecs=ac-3", HttpMethod.GET, entity, String.class);
+        String resbody = response.getBody();
+        String BASE_URL = resbody.split("<BaseURL>")[1].split("</BaseURL")[0];
+
+        System.out.println("availabel resoulutions: " + episode.getAvailableResolutions());
+
+        //GET BASE URL
+        //String SUBS_BASE_URL = resbody.split("</BaseURL>")[1].split("<BaseURL>")[1].split("</BaseURL>")[0];
+        //System.out.println("Subs BASE ="+SUBS_BASE_URL);
+
+
+        //find best resolution, audio, subs based on settings
+        VideoReferencesEntity vid = episode.getBestAvailableResolutions(settings.getResolution());
+        AudioReferencesEntity audio = episode.getSelectedAudio(settings.getAudio());
+        SubtitleReferencesEntity subs = episode.getSelectedSubs(settings.getSubs());
+
+        String subsString;
+        ArrayList<byte[]> videoBytes = getVideo(vid);
+        ArrayList<byte[]> audioBytes = getAudio(audio);
+        if (subs != null) subsString = getAndSaveSubs(subs);
+
+        //muxxing(vid,audio,subs);
+
+        return HttpStatus.OK;
+    }
+
+    private String getAndSaveSubs(SubtitleReferencesEntity subs) {
+        HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+        String subsString = new RestTemplate().getForEntity(subs.getUrl(), String.class).getBody();
         try {
-            response = restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
-            if (response.getBody() == null) return HttpStatus.NO_CONTENT;
-            String resolveURI = response.getBody().split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0];
+            Files.write(Paths.get(subs.getLabel().concat(".txt")), Collections.singleton(subsString));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return subsString;
+    }
 
-            response = restTemplate.exchange(resolveURI, HttpMethod.GET, entity, String.class);
-            response = restTemplate.exchange("https://api.svt.se/ditto/api/v1/web?manifestUrl=" + response.getBody().split("location\":\"")[1].split("\"")[0] + "&excludeCodecs=hvc&excludeCodecs=ac-3", HttpMethod.GET, entity, String.class);
-            String resbody = response.getBody();
+    private ArrayList<byte[]> getVideo(VideoReferencesEntity v) {
+        RunnableCopier runnable = new RunnableCopier("New runnable RunnableCopier started");
+        runnable.start();
+        runnable.run();
+        ArrayList<byte[]> videoArray = new ArrayList<>();
+        HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+        List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
+        messageConverters.add(new ByteArrayHttpMessageConverter());
+        RestTemplate restTemplateByte = new RestTemplate(messageConverters);
 
-            //GET BASE URL
-            String BASE_URL = resbody.split("<BaseURL>")[1].split("</BaseURL")[0];
-            //String SUBS_BASE_URL = resbody.split("</BaseURL>")[1].split("<BaseURL>")[1].split("</BaseURL>")[0];
-            //RESOLUTION IS CHOSEN AT THIS POINT
-            String initial = resbody.split("<SegmentTemplate initialization=\"")[1].split("\"")[0];
-            String partUrl = initial.split("init")[0];
-            List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
-            int range = Integer.parseInt(resbody.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]);
-            messageConverters.add(new ByteArrayHttpMessageConverter());
-            RestTemplate restTemplateByte = new RestTemplate(messageConverters);
+        videoArray.add(runnable.getAndSave(0, String.valueOf(v.getId()), v.getSuffix(), v.getUrl() + "init", HttpMethod.GET, entity));
+
+        //videoArray.add(restTemplateByte.exchange(v.getUrl() + "init" + v.getSuffix(), HttpMethod.GET, entity, byte[].class).getBody());
+        for (int i = 1; i < v.getRange() + 2; i++) {
+            videoArray.add(runnable.getAndSave(i, String.valueOf(v.getId()), v.getSuffix(), v.getUrl() + i, HttpMethod.GET, entity));
+            //videoArray.add(restTemplateByte.exchange(v.getUrl() + i + v.getSuffix(), HttpMethod.GET, entity, byte[].class).getBody());
+        }
+        return videoArray;
+    }
+
+    private ArrayList<byte[]> getAudio(AudioReferencesEntity a) {
+        RunnableCopier runnable = new RunnableCopier("New runnable RunnableCopier started");
+        runnable.start();
+        runnable.run();
+        ArrayList<byte[]> audioArray = new ArrayList<>();
+        HttpEntity<String> entity = new HttpEntity<>(getHeaders());
+        List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
+        messageConverters.add(new ByteArrayHttpMessageConverter());
+        RestTemplate restTemplateByte = new RestTemplate(messageConverters);
+        //audioArray.add(restTemplateByte.exchange(a.getUrl() + "init" + a.getSuffix(), HttpMethod.GET, entity, byte[].class).getBody());
+        audioArray.add(runnable.getAndSave(0, String.valueOf(a.getLabel()), a.getSuffix(), a.getUrl() + "init", HttpMethod.GET, entity));
+        for (int i = 1; i < a.getRange() + 2; i++) {
+            //audioArray.add(restTemplateByte.exchange(a.getUrl() + i + a.getSuffix(), HttpMethod.GET, entity, byte[].class).getBody());
+            audioArray.add(runnable.getAndSave(i, String.valueOf(a.getLabel()), a.getSuffix(), a.getUrl() + i, HttpMethod.GET, entity));
+        }
+        return audioArray;
+    }
+
+    /*
+
+
+    String initial = resbody.split("<SegmentTemplate initialization=\"")[1].split("\"")[0];
+    String partUrl = initial.split("init")[0];
+    List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
+    int range = Integer.parseInt(resbody.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]);
+            messageConverters.add(new
+
+    ByteArrayHttpMessageConverter());
+    RestTemplate restTemplateByte = new RestTemplate(messageConverters);
             System.out.println("Getting part init");
-            ResponseEntity<byte[]> res = restTemplateByte.exchange(BASE_URL + initial, HttpMethod.GET, entity, byte[].class);
-            String listOfPartsString = "";
+    ResponseEntity<byte[]> res = restTemplateByte.exchange(BASE_URL + initial, HttpMethod.GET, entity, byte[].class);
+    String listOfPartsString = "";
 
-            if (res.getStatusCode() == HttpStatus.OK && res.getBody() != null) {
-                Calendar c = Calendar.getInstance();
+            if(res.getStatusCode()==HttpStatus.OK &&res.getBody()!=null)
+
+    {
+        Calendar c = Calendar.getInstance();
 
                 /*String filename = fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()
                         + "-" + c.get(Calendar.YEAR) + "_" + ((c.get(Calendar.MONTH) + 1) < 10 ? "0" + (c.get(Calendar.MONTH) + 1)
@@ -142,36 +291,16 @@ public class EpisodeService {
                         + "-PART_"));
 
                  */
-                String filename = StringHelpers.fileNameFixerUpper(episode.getSvtId() + "-PART_");
-                String partInit = filename.concat("init");
-                String filetype = ".mp4";
-                Files.write(Paths.get(partInit + filetype), res.getBody());
-                listOfPartsString = "file '" + partInit + filetype + "'";
-                // do the loop,
-                for (int i = 1; i <= range + 2; i++) {
-                    System.out.println("Getting part " + i);
-                    try {
-                        RunnableCopier runnable = new RunnableCopier("Thread " + i);
-                        runnable.start();
-                        runnable.run();
-                        String filen = runnable.getAndSave(i, filename, filetype, BASE_URL + partUrl + i + ".mp4", HttpMethod.GET, entity);
 
-                        listOfPartsString = listOfPartsString.concat("\nfile '" + filen + "'");
-                        SvtpkApplication.updateLoadingBar(((double) i / (double) (range + 2)) * 100);
-                    } catch (HttpClientErrorException e) {
-                        e.printStackTrace();
-                        return HttpStatus.NOT_FOUND;
-                    }
-                }
-            }
-            Files.write(Paths.get("list.txt"), Collections.singleton(listOfPartsString));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return HttpStatus.CONFLICT;
-        }
-        return HttpStatus.OK;
+
+    // do the loop,
+
+
+    private HttpStatus copySubsToDisk(EpisodeEntity episode) {
+
+        //String SUBS_BASE_URL = resbody.split("</BaseURL>")[1].split("<BaseURL>")[1].split("</BaseURL>")[0];
+        return null;
     }
-
 
     static HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();

@@ -10,8 +10,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,27 +25,28 @@ public class RunnableCopier implements Runnable {
         System.out.println("Creating thread " + threadName);
     }
 
-    public String getAndSave(int i, String filename, String suffix, String url, HttpMethod httpMethod, HttpEntity<String> httpEntity) {
-
+    public byte[] getAndSave(int i, String filename, String suffix, String url, HttpMethod httpMethod, HttpEntity<String> httpEntity) {
+        ResponseEntity<byte[]> byteRes;
         List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
         messageConverters.add(new ByteArrayHttpMessageConverter());
         RestTemplate restTemplateByte = new RestTemplate(messageConverters);
 
-        URI u = URI.create(url);
-        if (!u.isAbsolute()) return "ERROR, URI WAS NOT ABSOLUTE";
-        ResponseEntity<byte[]> res = restTemplateByte.exchange(u, httpMethod, httpEntity, byte[].class);
-        if (res.getBody() == null) return "SHIT! ";
+        URI u = URI.create(url + suffix
+        );
+        if (!u.isAbsolute()) return null;
+        byteRes = restTemplateByte.exchange(u, httpMethod, httpEntity, byte[].class);
+        if (byteRes.getBody() == null) return null;
         try {
-            filename = filename.concat(String.valueOf(i)).concat(suffix);
+            filename = StringHelpers.fileNameFixerUpper(filename.concat(String.valueOf(i)).concat(suffix));
             Settings s = Settings.load();
             String pathString = s.getPath().trim() + "\\" + filename.trim();
             Path p;
             p = Paths.get(pathString);
-            Files.write(p, res.getBody());
+            Files.write(p, byteRes.getBody());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return filename;
+        return byteRes.getBody();
     }
 
 

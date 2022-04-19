@@ -1,8 +1,7 @@
 package org.m.svtpk.entity;
 
 
-import javafx.scene.image.Image;
-
+import java.util.HashMap;
 import java.util.Objects;
 
 public class EpisodeEntity {
@@ -15,9 +14,87 @@ public class EpisodeEntity {
     private VideoReferencesEntity[] videoReferences;
     private SubtitleReferencesEntity[] subtitleReferences;
     private String imageURL;
+    private HashMap<String, SubtitleReferencesEntity> availableSubs;
+    private HashMap<String, VideoReferencesEntity> availableResolutions;
+    private HashMap<String, AudioReferencesEntity> availableAudio;
 
     public EpisodeEntity() {
         svtId = "";
+        availableSubs = new HashMap<>();
+        availableResolutions = new HashMap<>();
+        availableAudio = new HashMap<>();
+    }
+
+
+    public void addAvailableAudio(String name, AudioReferencesEntity availableAudio) {
+        this.availableAudio.put(name, availableAudio);
+    }
+
+    public HashMap<String, AudioReferencesEntity> getAvailableAudio() {
+        return availableAudio;
+    }
+
+    public void setAvailableAudio(HashMap<String, AudioReferencesEntity> availableAudio) {
+        this.availableAudio = availableAudio;
+    }
+
+    public void addAvailableResolutions(String name, VideoReferencesEntity newResolutions) {
+        this.availableResolutions.put(name, newResolutions);
+    }
+
+    public AudioReferencesEntity getSelectedAudio(String audio) {
+        System.out.println("String audio=" + audio);
+        if (availableAudio.containsKey(audio)) {
+            System.out.println("det fanns en!");
+            return availableAudio.get(audio);
+        } else if (availableAudio.containsKey("Svenska")) {
+            System.out.println("det blev svenska");
+            return availableAudio.get("Svenska");
+        } else if (availableAudio.containsKey("Engelska"))
+            return availableAudio.get("Engelska");
+        else if (availableAudio.containsKey("English"))
+            return availableAudio.get("English");
+        System.out.println("det fanns inget passande ljud");
+        return new AudioReferencesEntity("No Audio");
+    }
+
+    public HashMap<String, VideoReferencesEntity> getAvailableResolutions() {
+        return availableResolutions;
+    }
+
+    public VideoReferencesEntity getBestAvailableResolutions(String resolution) {
+        if (availableResolutions.containsKey(resolution)) {
+            return availableResolutions.get(resolution);
+        } else if (availableResolutions.containsKey("1080")) {
+            return availableResolutions.get("1080");
+        } else if (availableResolutions.containsKey("720")) {
+            return availableResolutions.get("720");
+        } else if (availableResolutions.containsKey("540")) {
+            return availableResolutions.get("540");
+        } else if (availableResolutions.containsKey("360")) {
+            return availableResolutions.get("360");
+        } else {
+            System.out.println("ingen upplösning hittad | Episode Entity getBestAvailableResolutions ");
+            return null;
+        }
+    }
+
+    public void setAvailableResolutions(HashMap<String, VideoReferencesEntity> availableResolutions) {
+        this.availableResolutions = availableResolutions;
+    }
+
+    public HashMap<String, SubtitleReferencesEntity> getAvailableSubs() {
+        return availableSubs;
+    }
+
+    public SubtitleReferencesEntity getSelectedSubs(String subs) {
+        if (availableSubs.containsKey(subs))
+            return availableSubs.get(subs);
+        return null;
+    }
+
+    public void addAvailableSubs(SubtitleReferencesEntity sub) {
+        availableSubs.put(sub.getLabel(), sub);
     }
 
     public String getSvtId() {

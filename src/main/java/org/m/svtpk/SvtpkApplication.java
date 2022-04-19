@@ -18,11 +18,18 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import org.m.svtpk.entity.AudioReferencesEntity;
 import org.m.svtpk.entity.EpisodeEntity;
+import org.m.svtpk.entity.SubtitleReferencesEntity;
+import org.m.svtpk.entity.VideoReferencesEntity;
 import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
 import org.m.svtpk.utils.Settings;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 @SpringBootApplication
 public class SvtpkApplication extends Application {
@@ -36,6 +43,10 @@ public class SvtpkApplication extends Application {
     Stage window;
     Settings settings;
     HBox mainContentBox;
+    ChoiceBox<String> resolutionChoiceBox;
+    ChoiceBox<String> languageChoiceBox;
+    ChoiceBox<String> subsChoiceBox;
+
     static SimpleDoubleProperty loadingCounter;
     static Text loaded;
     VBox progress;
@@ -151,13 +162,18 @@ public class SvtpkApplication extends Application {
         //lägg till alternativen till den här,
         VBox vBoxSettings = new VBox();
         vBoxSettings.prefWidth(200);
+
         Text resText = new Text("Upplösning");
-        String[] resolutionsList = {"1080p", "720p", "360p"};
-        ChoiceBox<String> resolutionChoiceBox = new ChoiceBox<String>(FXCollections.observableArrayList(resolutionsList));
-        resolutionChoiceBox.setValue("Upplösning");
+        ArrayList<String> resolutionsList = new ArrayList<>();
+        resolutionChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(resolutionsList));
         resolutionChoiceBox.valueProperty().addListener((observableValue, s, newValue) -> {
-            settings.setResolution(newValue);
-            settings.save();
+            if (newValue != null) {
+                System.out.println("res lådan pingade, nytt värde: " + newValue);
+                settings.setResolution(newValue);
+                settings.save();
+            } else {
+                System.out.println("reslådan fick en null");
+            }
         });
         HBox res = new HBox(resText, resolutionChoiceBox);
         res.setSpacing(30);
@@ -165,15 +181,40 @@ public class SvtpkApplication extends Application {
         res.setPrefWidth(200);
 
         Text subsText = new Text("Undertexter");
-        String[] subsList = {"Inga undertexter", "Svenska"};
-        ChoiceBox<String> subsChoiceBox = new ChoiceBox<String>(FXCollections.observableArrayList(subsList));
-        subsChoiceBox.setValue(subsList[0]);
+        ArrayList<String> subs = new ArrayList<>();
+        subsChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(subs));
         subsChoiceBox.valueProperty().addListener((observableValue, s, newValue) -> {
-            settings.setSubs(newValue);
-            settings.save();
+            if (newValue != null && !newValue.trim().equals("")) {
+                System.out.println("subs lådan pingade, nytt värde: " + newValue);
+                settings.setSubs(newValue);
+                settings.save();
+            } else {
+                System.out.println("subslådan fick en null");
+            }
         });
         HBox sub = new HBox(subsText, subsChoiceBox);
         sub.setSpacing(29);
+
+        Text languageText = new Text("Språk");
+        HashMap<String, AudioReferencesEntity> availableAudio = currentEpisode.getAvailableAudio();
+        ArrayList<String> audioList = new ArrayList<>();
+        availableAudio.forEach((k, v) -> {
+            audioList.add(v.getLabel());
+        });
+        languageChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(audioList));
+        languageChoiceBox.setItems(FXCollections.observableArrayList(audioList));
+        languageChoiceBox.valueProperty().addListener((observableValue, s, newValue) -> {
+            if (newValue != null) {
+                System.out.println("languagelådan pingade, nytt värde: " + newValue);
+                settings.setAudio(newValue);
+                settings.save();
+            } else {
+                System.out.println("langlådan fick en null");
+            }
+        });
+        HBox lang = new HBox(languageText, languageChoiceBox);
+        lang.setSpacing(62);
+
         Text dirText = new Text("Spara till...");
         DirectoryChooser d = new DirectoryChooser();
         Button dirBtn = new Button("Välj");
@@ -181,6 +222,10 @@ public class SvtpkApplication extends Application {
         HBox hBoxCopy = new HBox(dirText, dirBtn);
         Text currentSavePath = settings.getPath() == null ? new Text() : new Text(settings.getPath());//settings.getPath()==null ? "" : settings.getPath());
         currentSavePath.textProperty().addListener((observableValue, s, newValue) -> {
+            if (newValue != null) {
+                settings.setPath(newValue);
+                settings.save();
+            }
         });
         hBoxCopy.setSpacing(38);
 
@@ -191,10 +236,10 @@ public class SvtpkApplication extends Application {
                         settings.setPath(path);
                         settings.save();
                         currentSavePath.setText(settings.getPath());
-                    }else{
-                            settings.setPath();
-                            settings.save();
-                            currentSavePath.setText(settings.getPath());
+                    } else {
+                        settings.setPath();
+                        settings.save();
+                        currentSavePath.setText(settings.getPath());
                     }
                 }
         );
@@ -206,6 +251,7 @@ public class SvtpkApplication extends Application {
         });
         */
         vBoxSettings.getChildren().add(res);
+        vBoxSettings.getChildren().add(lang);
         vBoxSettings.getChildren().add(sub);
         vBoxSettings.getChildren().add(copy);
 
@@ -230,14 +276,14 @@ public class SvtpkApplication extends Application {
 
         loadingCounter = loadingCounter != null ? loadingCounter : new SimpleDoubleProperty(0);
         loadingCounter.addListener(((observableValue, number, newValue) -> {
-            System.out.println("obsValue:"+observableValue+"\tnumber:"+number+"\tnewValue:"+newValue);
+            System.out.println("obsValue:" + observableValue + "\tnumber:" + number + "\tnewValue:" + newValue);
             loadingCounter.set((Double) newValue);
         }));
 
         progress = progress != null ? progress : new VBox();
         progress.prefWidth(200);
         loaded = loaded != null ? loaded : new Text();
-        loaded.setText(String.valueOf(loadingCounter.get()) );
+        loaded.setText(String.valueOf(loadingCounter.get()));
         progress.getChildren().add(loaded);
         progress.setAlignment(Pos.BOTTOM_CENTER);
 
@@ -298,18 +344,19 @@ public class SvtpkApplication extends Application {
         grid.add(search, 0, 2);
         grid.add(mainContentBox, 0, 3);
         grid.add(statusIndicator, 0, 4);
-        grid.add(progress,0,5);
+        grid.add(progress, 0, 5);
         grid.add(hboxDlBtn, 0, 6);
 
         //grid.add(debugBtn, 0, 6);
 
         return new Scene(grid, 640, 480);
     }
-public static void updateLoadingBar(double loaderCounter){
-    System.out.println("loaderCounter säger: "+loaderCounter);
-    loaded.setText(loaderCounter +"%");
-    loadingCounter.set(loaderCounter);
-}
+
+    public static void updateLoadingBar(double loaderCounter) {
+        System.out.println("loaderCounter säger: " + loaderCounter);
+        loaded.setText(loaderCounter + "%");
+        loadingCounter.set(loaderCounter);
+    }
 
 
     public Scene homeScene2() {
@@ -399,11 +446,16 @@ public static void updateLoadingBar(double loaderCounter){
     private void updateUI() {
         mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
 
+
         if (!currentEpisode.getSvtId().equals("")) {
+            setVideoRes();
+            setAudioLanguage();
+            setSubs();
             loaded.setText("");
             infoText.setVisible(true);
             infoText.setFill(Color.DARKGREEN);
             infoText.setText(currentEpisode.toString());
+            if(currentEpisode.getImageURL()!=null)
             episodeImageView.setImage(new Image(currentEpisode.getImageURL()));
             statusIcon.setImage(Arrow.getImgArrowDown("green"));
             statusIcon.setDisable(false);
@@ -429,6 +481,63 @@ public static void updateLoadingBar(double loaderCounter){
             statusIcon.setDisable(true);
             dlBtn.setDisable(true);
         }
+    }
+
+    private String setVideoRes() {
+        String selectedRes = "";
+        ArrayList<String> res = new ArrayList<>();
+        for (Map.Entry<String, VideoReferencesEntity> entry : currentEpisode.getAvailableResolutions().entrySet()) {
+            System.out.println("entry: " + entry.getKey());
+            res.add(entry.getKey());
+            if (settings.getResolution().equals(entry.getKey())) {
+                selectedRes = entry.getKey();
+                System.out.println("hittade en RES som va samma som i settings!");
+            }
+        }
+        if (resolutionChoiceBox.getValue() == null) {
+            selectedRes = res.get(0);
+            System.out.println("en null res, sätter till: " + res.get(0));
+        }
+        resolutionChoiceBox.setItems(FXCollections.observableArrayList(res));
+        resolutionChoiceBox.setValue(selectedRes);
+        return selectedRes;
+    }
+
+    private void setAudioLanguage() {
+        String selectedAudio = "";
+        ArrayList<String> lang = new ArrayList<>();
+        for (Map.Entry<String, AudioReferencesEntity> entry : currentEpisode.getAvailableAudio().entrySet()) {
+            lang.add(entry.getKey());
+            if (settings.getAudio().equals(entry.getKey())) {
+                selectedAudio = entry.getKey();
+                System.out.println("hittade en AUDIO som va samma som i settings!");
+            }
+        }
+        if (languageChoiceBox.getValue() == null) {
+            selectedAudio = lang.get(0);
+            System.out.println("en null Auidio, sätter till " + lang.get(0));
+        }
+        languageChoiceBox.setItems(FXCollections.observableArrayList(lang));
+        languageChoiceBox.setValue(selectedAudio);
+    }
+
+    private void setSubs() {
+        String selectedSubs = "Inga undertexter";
+        ArrayList<String> subs = new ArrayList<>();
+        subs.add(selectedSubs);
+        for (Map.Entry<String, SubtitleReferencesEntity> entry : currentEpisode.getAvailableSubs().entrySet()) {
+            subs.add(entry.getKey());
+            if (settings.getSubs().equals(entry.getKey())) {
+                selectedSubs = entry.getKey();
+                System.out.println("hittade en SUBS som va samma som i settings!");
+            }
+        }
+        if (subsChoiceBox.getValue() == null) {
+            selectedSubs = subs.get(0);
+            System.out.println("en null subs, sätter till " + subs.get(0));
+        }
+        subsChoiceBox.setItems(FXCollections.observableArrayList(subs));
+        subsChoiceBox.setValue(selectedSubs);
     }
 
     private GridPane basicGrid() {
