@@ -24,6 +24,7 @@ import org.m.svtpk.entity.SubtitleReferencesEntity;
 import org.m.svtpk.entity.VideoReferencesEntity;
 import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
+import org.m.svtpk.utils.RunnableCopier;
 import org.m.svtpk.utils.Settings;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -141,6 +142,10 @@ public class SvtpkApplication extends Application {
     }
 
     public Scene homeScene() {
+        System.out.println("System property: " + System.getProperty("user.dir"));
+        System.out.println("Operating System: " + System.getProperty("os.name"));
+        System.out.println("Java runtime version: " + System.getProperty("java.runtime.version" ));
+
         settings = Settings.load();
         GridPane grid = basicGrid();
         Label addressFieldLabel = new Label("Ange adress");
@@ -274,7 +279,7 @@ public class SvtpkApplication extends Application {
         statusIndicator.setAlignment(Pos.BOTTOM_CENTER);
         statusIndicator.setDisable(!currentEpisode.hasID(currentEpisode));
 
-        loadingCounter = loadingCounter != null ? loadingCounter : new SimpleDoubleProperty(0);
+        loadingCounter = loadingCounter != null ? loadingCounter : new SimpleDoubleProperty();
         loadingCounter.addListener(((observableValue, number, newValue) -> {
             System.out.println("obsValue:" + observableValue + "\tnumber:" + number + "\tnewValue:" + newValue);
             loadingCounter.set((Double) newValue);
@@ -283,7 +288,7 @@ public class SvtpkApplication extends Application {
         progress = progress != null ? progress : new VBox();
         progress.prefWidth(200);
         loaded = loaded != null ? loaded : new Text();
-        loaded.setText(String.valueOf(loadingCounter.get()));
+        loaded.setText("");
         progress.getChildren().add(loaded);
         progress.setAlignment(Pos.BOTTOM_CENTER);
 
@@ -336,7 +341,8 @@ public class SvtpkApplication extends Application {
         Button debugBtn = new Button("DEBUG");
         debugBtn.setAlignment(Pos.BOTTOM_CENTER);
         debugBtn.setOnAction(e -> {
-            window.setScene(optionsScene2(currentEpisode));
+            RunnableCopier.test();
+            //window.setScene(optionsScene2(currentEpisode));
         });
 
 
@@ -347,7 +353,7 @@ public class SvtpkApplication extends Application {
         grid.add(progress, 0, 5);
         grid.add(hboxDlBtn, 0, 6);
 
-        //grid.add(debugBtn, 0, 6);
+        grid.add(debugBtn, 0, 7);
 
         return new Scene(grid, 640, 480);
     }

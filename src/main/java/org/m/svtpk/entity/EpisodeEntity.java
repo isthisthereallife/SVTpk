@@ -14,6 +14,7 @@ public class EpisodeEntity {
     private VideoReferencesEntity[] videoReferences;
     private SubtitleReferencesEntity[] subtitleReferences;
     private String imageURL;
+    private String mpdURL;
     private HashMap<String, SubtitleReferencesEntity> availableSubs;
     private HashMap<String, VideoReferencesEntity> availableResolutions;
     private HashMap<String, AudioReferencesEntity> availableAudio;
@@ -25,6 +26,13 @@ public class EpisodeEntity {
         availableAudio = new HashMap<>();
     }
 
+    public String getMpdURL() {
+        return mpdURL;
+    }
+
+    public void setMpdURL(String mpdURL) {
+        this.mpdURL = mpdURL;
+    }
 
     public void addAvailableAudio(String name, AudioReferencesEntity availableAudio) {
         this.availableAudio.put(name, availableAudio);

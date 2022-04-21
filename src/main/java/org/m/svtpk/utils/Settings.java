@@ -36,7 +36,6 @@ public class Settings {
             s = parseSettings(settingsString);
 
         } catch (Exception e) {
-            e.printStackTrace();
             System.out.println("Bad settings file or no settings file");
             System.out.println("Making a new file...");
             try {
@@ -52,11 +51,11 @@ public class Settings {
     public static Settings parseSettings(String settingsString) {
         Settings s = new Settings();
         try {
-            s.setVisible(Boolean.parseBoolean(settingsString.split("advanced_user=")[1].split(",")[0]));
-            s.setResolution(settingsString.split("resolution=")[1].split(",")[0]);
-            s.setAudio(settingsString.split("audio=")[1].split(",")[0]);
-            s.setSubs(settingsString.split("subs=")[1].split(",")[0]);
-            s.setPath(settingsString.split("path=")[1].split(",")[0]);
+            s.setVisible(Boolean.parseBoolean(settingsString.split("advanced_user=")[1].split(",")[0].trim()));
+            s.setResolution(settingsString.split("resolution=")[1].split(",")[0].trim());
+            s.setAudio(settingsString.split("audio=")[1].split(",")[0].trim());
+            s.setSubs(settingsString.split("subs=")[1].split(",")[0].trim());
+            s.setPath(settingsString.split("path=")[1].split(",")[0].trim());
         } catch (Exception e) {
             System.out.println("error parsing settings");
             return new Settings();
