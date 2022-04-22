@@ -176,8 +176,6 @@ public class SvtpkApplication extends Application {
                 System.out.println("res lådan pingade, nytt värde: " + newValue);
                 settings.setResolution(newValue);
                 settings.save();
-            } else {
-                System.out.println("reslådan fick en null");
             }
         });
         HBox res = new HBox(resText, resolutionChoiceBox);
@@ -193,8 +191,6 @@ public class SvtpkApplication extends Application {
                 System.out.println("subs lådan pingade, nytt värde: " + newValue);
                 settings.setSubs(newValue);
                 settings.save();
-            } else {
-                System.out.println("subslådan fick en null");
             }
         });
         HBox sub = new HBox(subsText, subsChoiceBox);
@@ -213,8 +209,6 @@ public class SvtpkApplication extends Application {
                 System.out.println("languagelådan pingade, nytt värde: " + newValue);
                 settings.setAudio(newValue);
                 settings.save();
-            } else {
-                System.out.println("langlådan fick en null");
             }
         });
         HBox lang = new HBox(languageText, languageChoiceBox);
@@ -451,9 +445,14 @@ public class SvtpkApplication extends Application {
 
     private void updateUI() {
         mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
-
-
-        if (!currentEpisode.getSvtId().equals("")) {
+        System.out.println("currentEpisode is live? "+currentEpisode.isLive());
+        if (currentEpisode.isLive()){
+            infoText.setVisible(true);
+            infoText.setFill(Color.FIREBRICK);
+            infoText.setText("\n\nDu kan tyvärr inte kopiera en live-sändning.");
+            currentEpisode = new EpisodeEntity();
+        }
+        else if (!currentEpisode.getSvtId().equals("")) {
             setVideoRes();
             setAudioLanguage();
             setSubs();
@@ -493,16 +492,16 @@ public class SvtpkApplication extends Application {
         String selectedRes = "";
         ArrayList<String> res = new ArrayList<>();
         for (Map.Entry<String, VideoReferencesEntity> entry : currentEpisode.getAvailableResolutions().entrySet()) {
-            System.out.println("entry: " + entry.getKey());
             res.add(entry.getKey());
+            System.out.println("Entry: "+entry.getKey());
             if (settings.getResolution().equals(entry.getKey())) {
                 selectedRes = entry.getKey();
-                System.out.println("hittade en RES som va samma som i settings!");
+                resolutionChoiceBox.setValue(selectedRes);
             }
         }
         if (resolutionChoiceBox.getValue() == null) {
             selectedRes = res.get(0);
-            System.out.println("en null res, sätter till: " + res.get(0));
+            System.out.println("ingen matchande res, sätter till: " + res.get(0));
         }
         resolutionChoiceBox.setItems(FXCollections.observableArrayList(res));
         resolutionChoiceBox.setValue(selectedRes);
@@ -516,12 +515,12 @@ public class SvtpkApplication extends Application {
             lang.add(entry.getKey());
             if (settings.getAudio().equals(entry.getKey())) {
                 selectedAudio = entry.getKey();
-                System.out.println("hittade en AUDIO som va samma som i settings!");
+                languageChoiceBox.setValue(selectedAudio);
             }
         }
         if (languageChoiceBox.getValue() == null) {
             selectedAudio = lang.get(0);
-            System.out.println("en null Auidio, sätter till " + lang.get(0));
+            System.out.println("ingen matchande Auidio, sätter till " + lang.get(0));
         }
         languageChoiceBox.setItems(FXCollections.observableArrayList(lang));
         languageChoiceBox.setValue(selectedAudio);
@@ -535,12 +534,12 @@ public class SvtpkApplication extends Application {
             subs.add(entry.getKey());
             if (settings.getSubs().equals(entry.getKey())) {
                 selectedSubs = entry.getKey();
-                System.out.println("hittade en SUBS som va samma som i settings!");
+                subsChoiceBox.setValue(selectedSubs);
             }
         }
         if (subsChoiceBox.getValue() == null) {
             selectedSubs = subs.get(0);
-            System.out.println("en null subs, sätter till " + subs.get(0));
+            System.out.println("inga matchande subs, sätter till " + subs.get(0));
         }
         subsChoiceBox.setItems(FXCollections.observableArrayList(subs));
         subsChoiceBox.setValue(selectedSubs);

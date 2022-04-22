@@ -18,12 +18,25 @@ public class EpisodeEntity {
     private HashMap<String, SubtitleReferencesEntity> availableSubs;
     private HashMap<String, VideoReferencesEntity> availableResolutions;
     private HashMap<String, AudioReferencesEntity> availableAudio;
+    private boolean isLive;
 
     public EpisodeEntity() {
         svtId = "";
         availableSubs = new HashMap<>();
         availableResolutions = new HashMap<>();
         availableAudio = new HashMap<>();
+    }
+    public EpisodeEntity(boolean isLive){
+        super();
+        this.isLive = isLive;
+    }
+
+    public boolean isLive() {
+        return isLive;
+    }
+
+    public void setLive(boolean live) {
+        isLive = live;
     }
 
     public String getMpdURL() {

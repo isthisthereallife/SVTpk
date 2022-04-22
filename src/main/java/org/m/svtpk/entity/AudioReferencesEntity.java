@@ -1,6 +1,7 @@
 package org.m.svtpk.entity;
 
 public class AudioReferencesEntity {
+    private int id;
     private String label;
     private String url;
     private int range;
@@ -11,6 +12,14 @@ public class AudioReferencesEntity {
 
     public AudioReferencesEntity(String label) {
         this.label =label;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getSuffix() {
