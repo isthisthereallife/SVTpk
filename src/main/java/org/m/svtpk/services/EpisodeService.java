@@ -8,20 +8,13 @@ import org.m.svtpk.utils.RunnableCopier;
 import org.m.svtpk.utils.Settings;
 import org.m.svtpk.utils.StringHelpers;
 import org.springframework.http.*;
-import org.springframework.http.converter.ByteArrayHttpMessageConverter;
-import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 @Service

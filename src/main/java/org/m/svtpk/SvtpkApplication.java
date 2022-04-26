@@ -5,7 +5,6 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -62,85 +61,6 @@ public class SvtpkApplication extends Application {
         window.show();
     }
 
-    private Scene optionsScene() {
-        GridPane grid = basicGrid();
-        //HBox navbar = Navbar.getNavbar(window);
-        HBox navbar = new HBox(10);
-        navbar.prefHeight(160);
-        navbar.setSpacing(100);
-
-        // left part
-
-        ImageView imgArrowLeft = Arrow.getImgViewArrowLeft();
-
-
-        HBox goBackButtonBox = new HBox(10);
-        Text goBackText = new Text("Gå Tillbaka");
-        goBackText.setTextAlignment(TextAlignment.LEFT);
-        goBackButtonBox.getChildren().add(imgArrowLeft);
-        goBackButtonBox.getChildren().add(goBackText);
-        goBackButtonBox.setOnMouseClicked(e -> {
-            window.setScene(homeScene());
-        });
-
-
-        navbar.getChildren().add(goBackButtonBox);
-
-
-        //right part
-        Label resolutionLabel = new Label("Inställningar");
-        resolutionLabel.setAlignment(Pos.CENTER_LEFT);
-        navbar.getChildren().add(resolutionLabel);
-
-
-        grid.add(navbar, 0, 8);
-        return new Scene(grid, 640, 480);
-    }
-
-    private Scene optionsScene2(EpisodeEntity currentEpisode) {
-
-        BorderPane borderPane = new BorderPane();
-        MenuBar menuBar = new MenuBar();
-        Menu filesMenu = new Menu("Fil");
-        filesMenu.getItems().addAll(new MenuItem("Klickity Klick"), new SeparatorMenuItem(), new MenuItem("Exit"));
-        Menu helpMenu = new Menu("Hjälp");
-        helpMenu.getItems().addAll(new MenuItem("ffmpeg"), new MenuItem("SvtPlay"));
-        menuBar.getMenus().addAll(filesMenu, helpMenu);
-        ImageView imgArrowLeft = new ImageView(new Image("file:src/main/resources/images/arrow_green.png"));
-
-        HBox navbar = new HBox(10);
-        navbar.prefHeight(160);
-        navbar.setSpacing(100);
-
-        // left part
-
-        imgArrowLeft.rotateProperty().setValue(90);
-        imgArrowLeft.setPreserveRatio(true);
-        imgArrowLeft.setFitWidth(20);
-
-        HBox goBackButtonBox = new HBox(10);
-        Text goBackText = new Text("Gå Tillbaka");
-        goBackText.setTextAlignment(TextAlignment.LEFT);
-        goBackButtonBox.getChildren().add(imgArrowLeft);
-        goBackButtonBox.getChildren().add(goBackText);
-        goBackButtonBox.setOnMouseClicked(e -> {
-            window.setScene(homeScene());
-        });
-
-
-        navbar.getChildren().add(goBackButtonBox);
-        VBox vbox = new VBox();
-        vbox.getChildren().add(menuBar);
-        vbox.getChildren().add(navbar);
-        borderPane.setTop(vbox);
-        borderPane.setCenter(new Text("CENTERN"));
-        borderPane.setRight(new Text("Höger"));
-
-
-        return new Scene(borderPane, 640, 480);
-
-    }
-
     public Scene homeScene() {
         System.out.println("System property: " + System.getProperty("user.dir"));
         System.out.println("Operating System: " + System.getProperty("os.name"));
@@ -173,7 +93,6 @@ public class SvtpkApplication extends Application {
         resolutionChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(resolutionsList));
         resolutionChoiceBox.valueProperty().addListener((observableValue, s, newValue) -> {
             if (newValue != null) {
-                System.out.println("res lådan pingade, nytt värde: " + newValue);
                 settings.setResolution(newValue);
                 settings.save();
             }
@@ -188,7 +107,6 @@ public class SvtpkApplication extends Application {
         subsChoiceBox = new ChoiceBox<>(FXCollections.observableArrayList(subs));
         subsChoiceBox.valueProperty().addListener((observableValue, s, newValue) -> {
             if (newValue != null && !newValue.trim().equals("")) {
-                System.out.println("subs lådan pingade, nytt värde: " + newValue);
                 settings.setSubs(newValue);
                 settings.save();
             }
@@ -206,7 +124,6 @@ public class SvtpkApplication extends Application {
         languageChoiceBox.setItems(FXCollections.observableArrayList(audioList));
         languageChoiceBox.valueProperty().addListener((observableValue, s, newValue) -> {
             if (newValue != null) {
-                System.out.println("languagelådan pingade, nytt värde: " + newValue);
                 settings.setAudio(newValue);
                 settings.save();
             }
@@ -233,13 +150,11 @@ public class SvtpkApplication extends Application {
                     System.out.println("path:" + path);
                     if (!path.equals("null")) {
                         settings.setPath(path);
-                        settings.save();
-                        currentSavePath.setText(settings.getPath());
                     } else {
                         settings.setPath();
-                        settings.save();
-                        currentSavePath.setText(settings.getPath());
                     }
+                    settings.save();
+                    currentSavePath.setText(settings.getPath());
                 }
         );
         VBox copy = new VBox(hBoxCopy, currentSavePath);
@@ -252,7 +167,7 @@ public class SvtpkApplication extends Application {
         vBoxSettings.getChildren().add(res);
         vBoxSettings.getChildren().add(lang);
         vBoxSettings.getChildren().add(sub);
-        vBoxSettings.getChildren().add(copy);
+        //  vBoxSettings.getChildren().add(copy);
 
 
         TitledPane settingsPane = new TitledPane("Inställningar", vBoxSettings);
@@ -358,90 +273,6 @@ public class SvtpkApplication extends Application {
         loadingCounter.set(loaderCounter);
     }
 
-
-    public Scene homeScene2() {
-        BorderPane bp = new BorderPane();
-
-        // INPUT FIELD AND HITTA BUTTON
-        Label addressFieldLabel = new Label("Ange adress");
-        addressFieldLabel.setAlignment(Pos.CENTER);
-        Group addressFieldGroup = new Group(addressFieldLabel);
-        addressFieldGroup.prefHeight(300);
-        addressFieldGroup.prefWidth(500);
-        addressFieldGroup.setAutoSizeChildren(true);
-
-
-        addressTextField = addressTextField == null ? new TextField() : addressTextField;
-        addressTextField.setPrefWidth(400);
-        addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (addressTextField.getText().length() < 1) {
-                currentEpisode = new EpisodeEntity();
-                updateUI();
-            }
-        });
-
-
-        addressTextField.setOnKeyPressed(e -> {
-            if (e.getCode().toString().equals("ENTER")) {
-                currentEpisode = episodeService.findEpisode(addressTextField.getText());
-                updateUI();
-            }
-        });
-        addressFieldGroup.getChildren().add(addressTextField);
-
-
-        Button findEpisodeBtn = new Button("Hitta");
-        findEpisodeBtn.setOnAction(e -> {
-            currentEpisode = episodeService.findEpisode(addressTextField.getText());
-            updateUI();
-        });
-        addressFieldGroup.getChildren().add(findEpisodeBtn);
-
-
-        episodeImageView = currentEpisode.getImageURL() == null ? new ImageView() : new ImageView(new Image(currentEpisode.getImageURL()));
-        episodeImageView.setPreserveRatio(true);
-        episodeImageView.setFitWidth(200);
-
-        infoText = new Text(currentEpisode.hasID(currentEpisode) ? currentEpisode.toString() : "");
-        infoText.prefHeight(160);
-        infoText.setFill(Color.DARKGREEN);
-
-        VBox vBoxInfoText = new VBox(episodeImageView, infoText);
-        vBoxInfoText.prefHeight(400);
-
-        Group infoTextGroup = new Group(vBoxInfoText);
-        infoTextGroup.prefWidth(500);
-        infoTextGroup.prefHeight(400);
-        infoTextGroup.setAutoSizeChildren(true);
-
-        dlBtn = new Button("Privatkopiera");
-        dlBtn.setAlignment(Pos.CENTER);
-        dlBtn.setDisable(!currentEpisode.hasID(currentEpisode));
-        HBox hboxDlBtn = new HBox(dlBtn);
-        hboxDlBtn.setAlignment(Pos.CENTER);
-        Group dlGroup = new Group(hboxDlBtn);
-        dlGroup.prefHeight(200);
-        dlGroup.prefWidth(500);
-        dlGroup.setAutoSizeChildren(true);
-
-
-        HBox search = new HBox(addressTextField, findEpisodeBtn);
-        addressFieldGroup.getChildren().add(search);
-
-        dlBtn.setOnAction(e -> {
-            infoText.setText(episodeService.copyEpisodeToDisk(currentEpisode).toString());
-        });
-        Button debugBtn = new Button("DEBUG");
-        debugBtn.setOnAction(e -> {
-            window.setScene(optionsScene2(currentEpisode));
-        });
-        //grid.add(debugBtn, 0, 6);
-        bp.setTop(addressFieldGroup);
-        bp.setCenter(infoTextGroup);
-        bp.setBottom(dlGroup);
-
-        return new Scene(bp, 640, 480);
-    }
 
     private void updateUI() {
         mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
