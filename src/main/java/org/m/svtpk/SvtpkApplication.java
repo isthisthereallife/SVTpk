@@ -25,13 +25,11 @@ import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
 import org.m.svtpk.utils.RunnableCopier;
 import org.m.svtpk.utils.Settings;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-@SpringBootApplication
 public class SvtpkApplication extends Application {
     EpisodeEntity currentEpisode = new EpisodeEntity();
     EpisodeService episodeService = new EpisodeService();
