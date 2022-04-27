@@ -15,6 +15,7 @@ public class EpisodeEntity {
     private SubtitleReferencesEntity[] subtitleReferences;
     private String imageURL;
     private String mpdURL;
+    private String filename;
     private HashMap<String, SubtitleReferencesEntity> availableSubs;
     private HashMap<String, VideoReferencesEntity> availableResolutions;
     private HashMap<String, AudioReferencesEntity> availableAudio;
@@ -37,6 +38,14 @@ public class EpisodeEntity {
 
     public void setLive(boolean live) {
         isLive = live;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     public String getMpdURL() {

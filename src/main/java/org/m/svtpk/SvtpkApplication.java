@@ -23,7 +23,7 @@ import org.m.svtpk.entity.SubtitleReferencesEntity;
 import org.m.svtpk.entity.VideoReferencesEntity;
 import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
-import org.m.svtpk.utils.CopyEpisodeThread;
+import org.m.svtpk.utils.EpisodeCopier;
 import org.m.svtpk.utils.Settings;
 
 import java.util.ArrayList;
@@ -166,7 +166,7 @@ public class SvtpkApplication extends Application {
         vBoxSettings.getChildren().add(res);
         vBoxSettings.getChildren().add(lang);
         vBoxSettings.getChildren().add(sub);
-        //vBoxSettings.getChildren().add(copy);
+        vBoxSettings.getChildren().add(copy);
 
 
         TitledPane settingsPane = new TitledPane("Inställningar", vBoxSettings);
@@ -244,7 +244,7 @@ public class SvtpkApplication extends Application {
             //ändra statusIndicator
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             dlBtn.setText("Kopierar...");
-            CopyEpisodeThread t = new CopyEpisodeThread(currentEpisode);
+            EpisodeCopier t = new EpisodeCopier(currentEpisode);
             Thread th = new Thread(t);
             th.start();
         });

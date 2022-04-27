@@ -4,7 +4,8 @@ import org.m.svtpk.entity.AudioReferencesEntity;
 import org.m.svtpk.entity.EpisodeEntity;
 import org.m.svtpk.entity.SubtitleReferencesEntity;
 import org.m.svtpk.entity.VideoReferencesEntity;
-import org.m.svtpk.utils.CopyEpisodeThread;
+import org.m.svtpk.utils.EpisodeCopier;
+import org.m.svtpk.utils.StringHelpers;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
@@ -75,7 +76,7 @@ public class EpisodeService {
                     episode.setProgramTitle(res.split("programTitle\":\"")[1].split("\",")[0]);
                     episode.setEpisodeTitle(res.split("episodeTitle\":\"")[1].split("\",")[0]);
                     episode.setContentDuration(Integer.parseInt(res.split("contentDuration\":")[1].split(",")[0]));
-
+                    episode.setFilename(StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv"));
                     episode = updateEpisodeLinks(episode);
                     try {
                         episode.setImageURL(getImgURL(address));
@@ -192,7 +193,7 @@ public class EpisodeService {
 
     public HttpStatus copyEpisodeToDisk(EpisodeEntity episode) {
 
-        CopyEpisodeThread t = new CopyEpisodeThread(episode);
+        EpisodeCopier t = new EpisodeCopier(episode);
         Thread th = new Thread(t);
         th.start();
 
