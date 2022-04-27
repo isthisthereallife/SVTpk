@@ -23,7 +23,7 @@ import org.m.svtpk.entity.SubtitleReferencesEntity;
 import org.m.svtpk.entity.VideoReferencesEntity;
 import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
-import org.m.svtpk.utils.RunnableCopier;
+import org.m.svtpk.utils.CopyEpisodeThread;
 import org.m.svtpk.utils.Settings;
 
 import java.util.ArrayList;
@@ -41,6 +41,7 @@ public class SvtpkApplication extends Application {
     Stage window;
     Settings settings;
     HBox mainContentBox;
+    VBox settingsBox;
     ChoiceBox<String> resolutionChoiceBox;
     ChoiceBox<String> languageChoiceBox;
     ChoiceBox<String> subsChoiceBox;
@@ -53,7 +54,7 @@ public class SvtpkApplication extends Application {
     @Override
     public void start(Stage stage) {
         window = stage;
-        window.getIcons().add(new Image("file:src/main/resources/images/arrow_green.png"));
+        window.getIcons().add(Arrow.getImgArrowDown("green"));
         window.setTitle("SVTpk");
         window.setScene(homeScene());
         window.show();
@@ -62,7 +63,7 @@ public class SvtpkApplication extends Application {
     public Scene homeScene() {
         System.out.println("System property: " + System.getProperty("user.dir"));
         System.out.println("Operating System: " + System.getProperty("os.name"));
-        System.out.println("Java runtime version: " + System.getProperty("java.runtime.version" ));
+        System.out.println("Java runtime version: " + System.getProperty("java.runtime.version"));
 
         settings = Settings.load();
         GridPane grid = basicGrid();
@@ -165,7 +166,7 @@ public class SvtpkApplication extends Application {
         vBoxSettings.getChildren().add(res);
         vBoxSettings.getChildren().add(lang);
         vBoxSettings.getChildren().add(sub);
-        //  vBoxSettings.getChildren().add(copy);
+        //vBoxSettings.getChildren().add(copy);
 
 
         TitledPane settingsPane = new TitledPane("Inställningar", vBoxSettings);
@@ -175,7 +176,7 @@ public class SvtpkApplication extends Application {
 
         Accordion accordion = new Accordion();
         accordion.getPanes().add(settingsPane);
-        VBox settingsBox = new VBox(accordion);
+        settingsBox = new VBox(accordion);
 
         mainContentBox = mainContentBox != null ? mainContentBox : new HBox(vBoxInfoText, settingsBox);
         mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
@@ -185,11 +186,19 @@ public class SvtpkApplication extends Application {
         statusIndicator.prefHeight(100);
         statusIndicator.setAlignment(Pos.BOTTOM_CENTER);
         statusIndicator.setDisable(!currentEpisode.hasID(currentEpisode));
+        dlBtn = new Button("Kopiera");
 
         loadingCounter = loadingCounter != null ? loadingCounter : new SimpleDoubleProperty();
         loadingCounter.addListener(((observableValue, number, newValue) -> {
             System.out.println("obsValue:" + observableValue + "\tnumber:" + number + "\tnewValue:" + newValue);
             loadingCounter.set((Double) newValue);
+            if (loadingCounter.getValue() > 0) {
+                dlBtn.setText("Kopierar...");
+                dlBtn.setDisable(true);
+            }
+            if (loadingCounter.getValue() == 100) {
+                dlBtn.setText("Kopierat!");
+            }
         }));
 
         progress = progress != null ? progress : new VBox();
@@ -199,7 +208,7 @@ public class SvtpkApplication extends Application {
         progress.getChildren().add(loaded);
         progress.setAlignment(Pos.BOTTOM_CENTER);
 
-        dlBtn = new Button("Kopiera");
+
         dlBtn.setDisable(!currentEpisode.hasID(currentEpisode));
         HBox hboxDlBtn = new HBox(10);
         hboxDlBtn.setAlignment(Pos.BOTTOM_CENTER);
@@ -234,22 +243,14 @@ public class SvtpkApplication extends Application {
         dlBtn.setOnAction(e -> {
             //ändra statusIndicator
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
-            String status = episodeService.copyEpisodeToDisk(currentEpisode).toString();
-            if ("200 OK".equals(status)) {
-                System.out.println(status + " it goooood!");
-                dlBtn.setText("Kopierat!");
-                dlBtn.setDisable(true);
-            } else {
-                System.out.println(status);
-                statusIcon.setImage(Arrow.getImgArrowDown("red"));
-                infoText.setText(infoText.getText() + "\nNågot gick snett!");
-            }
+            dlBtn.setText("Kopierar...");
+            CopyEpisodeThread t = new CopyEpisodeThread(currentEpisode);
+            Thread th = new Thread(t);
+            th.start();
         });
         Button debugBtn = new Button("DEBUG");
         debugBtn.setAlignment(Pos.BOTTOM_CENTER);
         debugBtn.setOnAction(e -> {
-            RunnableCopier.test();
-            //window.setScene(optionsScene2(currentEpisode));
         });
 
 
@@ -260,7 +261,7 @@ public class SvtpkApplication extends Application {
         grid.add(progress, 0, 5);
         grid.add(hboxDlBtn, 0, 6);
 
-        grid.add(debugBtn, 0, 7);
+        //grid.add(debugBtn, 0, 7);
 
         return new Scene(grid, 640, 480);
     }
@@ -274,14 +275,15 @@ public class SvtpkApplication extends Application {
 
     private void updateUI() {
         mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
-        System.out.println("currentEpisode is live? "+currentEpisode.isLive());
-        if (currentEpisode.isLive()){
+        System.out.println("currentEpisode is live? " + currentEpisode.isLive());
+        if (currentEpisode.isLive()) {
             infoText.setVisible(true);
             infoText.setFill(Color.FIREBRICK);
             infoText.setText("\n\nDu kan tyvärr inte kopiera en live-sändning.");
+            episodeImageView.setVisible(false);
+            settingsBox.setVisible(false);
             currentEpisode = new EpisodeEntity();
-        }
-        else if (!currentEpisode.getSvtId().equals("")) {
+        } else if (!currentEpisode.getSvtId().equals("")) {
             setVideoRes();
             setAudioLanguage();
             setSubs();
@@ -289,8 +291,11 @@ public class SvtpkApplication extends Application {
             infoText.setVisible(true);
             infoText.setFill(Color.DARKGREEN);
             infoText.setText(currentEpisode.toString());
-            if(currentEpisode.getImageURL()!=null)
-            episodeImageView.setImage(new Image(currentEpisode.getImageURL()));
+            settingsBox.setVisible(true);
+            if (currentEpisode.getImageURL() != null) {
+                episodeImageView.setImage(new Image(currentEpisode.getImageURL()));
+                episodeImageView.setVisible(true);
+            }
             statusIcon.setImage(Arrow.getImgArrowDown("green"));
             statusIcon.setDisable(false);
             dlBtn.setText("Kopiera");
@@ -322,7 +327,7 @@ public class SvtpkApplication extends Application {
         ArrayList<String> res = new ArrayList<>();
         for (Map.Entry<String, VideoReferencesEntity> entry : currentEpisode.getAvailableResolutions().entrySet()) {
             res.add(entry.getKey());
-            System.out.println("Entry: "+entry.getKey());
+            System.out.println("Entry: " + entry.getKey());
             if (settings.getResolution().equals(entry.getKey())) {
                 selectedRes = entry.getKey();
                 resolutionChoiceBox.setValue(selectedRes);

@@ -4,18 +4,13 @@ import org.m.svtpk.entity.AudioReferencesEntity;
 import org.m.svtpk.entity.EpisodeEntity;
 import org.m.svtpk.entity.SubtitleReferencesEntity;
 import org.m.svtpk.entity.VideoReferencesEntity;
-import org.m.svtpk.utils.RunnableCopier;
-import org.m.svtpk.utils.Settings;
-import org.m.svtpk.utils.StringHelpers;
+import org.m.svtpk.utils.CopyEpisodeThread;
 import org.springframework.http.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
-import java.util.*;
 
 public class EpisodeService {
 
@@ -62,7 +57,7 @@ public class EpisodeService {
         if (id.length > 1 && id[1].trim().length() > 5) {
             System.out.println("Close enough, trying to get: " + address);
             String episodeId = address.split("id=")[1];
-            System.out.println("episodeId= "+episodeId);
+            System.out.println("episodeId= " + episodeId);
             String URI = "https://api.svt.se/video/" + episodeId;
 
             ResponseEntity<String> response;
@@ -196,47 +191,11 @@ public class EpisodeService {
     }
 
     public HttpStatus copyEpisodeToDisk(EpisodeEntity episode) {
-        RunnableCopier runnable = new RunnableCopier("New runnable RunnableCopier started");
-        runnable.start();
-        runnable.run();
-        Settings settings = Settings.load();
 
-        String vidArgs = "-map 0:" + episode.getAvailableResolutions().get(settings.getResolution()).getId();
-        String audArgs = " -map 0:" + episode.getAvailableAudio().get(settings.getAudio()).getId();
-        String subArgs = settings.getSubs().equalsIgnoreCase("Inga undertexter") ?
-                ""
-                :
-                " -map 0:" + episode.getAvailableSubs().get(settings.getSubs()).getId();
+        CopyEpisodeThread t = new CopyEpisodeThread(episode);
+        Thread th = new Thread(t);
+        th.start();
 
-
-        String filename = episode.getProgramTitle() + "-" + episode.getEpisodeTitle();
-        String[] cmd = {
-                "ffmpeg",
-                "-i",
-                "\"" + episode.getMpdURL() + "\"",
-                //vidArgs,
-                //audArgs,
-                //subArgs,
-                StringHelpers.fileNameFixerUpper(filename).concat(".mkv")};
-
-        System.out.println("command:" + Arrays.toString(cmd));
-
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.directory(new File(System.getProperty("user.dir")));
-        pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
-        pb.redirectErrorStream(true);
-        try {
-            System.out.println("innan");
-            Process process = pb.start();
-            process.getInputStream().close();
-            process.waitFor();
-            System.out.println("efter");
-            System.out.println("Exited with error code " + process.waitFor());
-
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("DET FUNKADE?????");
         return HttpStatus.OK;
     }
 
