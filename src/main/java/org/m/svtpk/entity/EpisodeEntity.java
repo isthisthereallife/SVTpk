@@ -1,6 +1,7 @@
 package org.m.svtpk.entity;
 
 
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -13,8 +14,8 @@ public class EpisodeEntity {
     private String episodeTitle;
     private VideoReferencesEntity[] videoReferences;
     private SubtitleReferencesEntity[] subtitleReferences;
-    private String imageURL;
-    private String mpdURL;
+    private URL imageURL;
+    private URL mpdURL;
     private String filename;
     private HashMap<String, SubtitleReferencesEntity> availableSubs;
     private HashMap<String, VideoReferencesEntity> availableResolutions;
@@ -27,7 +28,8 @@ public class EpisodeEntity {
         availableResolutions = new HashMap<>();
         availableAudio = new HashMap<>();
     }
-    public EpisodeEntity(boolean isLive){
+
+    public EpisodeEntity(boolean isLive) {
         super();
         this.isLive = isLive;
     }
@@ -48,11 +50,11 @@ public class EpisodeEntity {
         this.filename = filename;
     }
 
-    public String getMpdURL() {
+    public URL getMpdURL() {
         return mpdURL;
     }
 
-    public void setMpdURL(String mpdURL) {
+    public void setMpdURL(URL mpdURL) {
         this.mpdURL = mpdURL;
     }
 
@@ -191,11 +193,11 @@ public class EpisodeEntity {
         this.subtitleReferences = subtitleReferences;
     }
 
-    public String getImageURL() {
+    public URL getImageURL() {
         return imageURL;
     }
 
-    public void setImageURL(String imageURL) {
+    public void setImageURL(URL imageURL) {
         this.imageURL = imageURL;
     }
 

@@ -4,12 +4,10 @@ import javafx.application.Platform;
 import org.m.svtpk.SvtpkApplication;
 import org.m.svtpk.entity.EpisodeEntity;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -56,11 +54,36 @@ public class EpisodeCopier implements Runnable {
         try {
             System.out.println("innan");
             Process process = pb.start();
-            process.getInputStream().close();
+            //process.getInputStream().close();
             Platform.runLater(() -> {
                 SvtpkApplication.updateLoadingBar(50);
             });
 
+            //läs från strömmen hur mycket av avsnittet som bearbetats
+            //jämför med episode.getContentDuration()
+           /* boolean debug = false;
+            int timestamp = 1;
+            InputStream inputStream = process.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String line = reader.readLine();
+            while (line!= null && ! line.trim().equals("---EOF---")){
+                System.out.println("LINJEN: "+line);
+                line = reader.readLine();
+            }
+            //System.out.println("what is "+ br.readLine());
+
+            //read line from stream
+            while (debug) {
+            //line has "time="
+                if (false) {
+                    //timestamp = line.split
+                    assert episode.getContentDuration() != 0;
+                    Platform.runLater(() -> {
+                        SvtpkApplication.updateLoadingBar((int) (timestamp / episode.getContentDuration() * 100));
+                    });
+                }
+            }
+            */
             process.waitFor();
             System.out.println("efter");
             Platform.runLater(() -> {
@@ -68,7 +91,6 @@ public class EpisodeCopier implements Runnable {
             });
             System.out.println("Exited with error code " + process.waitFor());
 
-            //kolla om det finns en fil där med samma namn. om så, lägg till en 1a på namnet lol xP
             //flytta skiten
             Path source = Paths.get(System.getProperty("user.dir")).resolve(filename);
             Path target = Paths.get(settings.getPath()).resolve(filename);
@@ -80,6 +102,5 @@ public class EpisodeCopier implements Runnable {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println("DET FUNKADE?????");
     }
 }

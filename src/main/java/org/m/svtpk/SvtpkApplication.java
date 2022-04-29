@@ -74,7 +74,7 @@ public class SvtpkApplication extends Application {
         addressTextField.setPrefWidth(400);
 
 
-        episodeImageView = currentEpisode.getImageURL() == null ? new ImageView() : new ImageView(new Image(currentEpisode.getImageURL()));
+        episodeImageView = currentEpisode.getImageURL() == null ? new ImageView() : new ImageView(new Image(String.valueOf(currentEpisode.getImageURL())));
         episodeImageView.setPreserveRatio(true);
         episodeImageView.setFitWidth(200);
 
@@ -275,7 +275,6 @@ public class SvtpkApplication extends Application {
 
     private void updateUI() {
         mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
-        System.out.println("currentEpisode is live? " + currentEpisode.isLive());
         if (currentEpisode.isLive()) {
             infoText.setVisible(true);
             infoText.setFill(Color.FIREBRICK);
@@ -293,7 +292,7 @@ public class SvtpkApplication extends Application {
             infoText.setText(currentEpisode.toString());
             settingsBox.setVisible(true);
             if (currentEpisode.getImageURL() != null) {
-                episodeImageView.setImage(new Image(currentEpisode.getImageURL()));
+                episodeImageView.setImage(new Image(String.valueOf(currentEpisode.getImageURL())));
                 episodeImageView.setVisible(true);
             }
             statusIcon.setImage(Arrow.getImgArrowDown("green"));

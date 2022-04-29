@@ -4,14 +4,14 @@ import org.m.svtpk.entity.AudioReferencesEntity;
 import org.m.svtpk.entity.EpisodeEntity;
 import org.m.svtpk.entity.SubtitleReferencesEntity;
 import org.m.svtpk.entity.VideoReferencesEntity;
-import org.m.svtpk.utils.EpisodeCopier;
 import org.m.svtpk.utils.StringHelpers;
-import org.springframework.http.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 
 public class EpisodeService {
 
@@ -23,6 +23,7 @@ public class EpisodeService {
         if (address.length() > 9) {
             try {
                 URI uri = URI.create(address);
+                URL url = new URL(address);
                 //address = URLEncoder.encode(address, StandardCharsets.UTF_8);
                 if (uri.isAbsolute() && address.contains("\\id=")) {
                     System.out.println("uri was absolute and contained id");
@@ -30,20 +31,17 @@ public class EpisodeService {
                 } else if (uri.isAbsolute()) {
                     System.out.println("uri was absolute");
 
-                    ResponseEntity<String> response = new RestTemplate().exchange(address, HttpMethod.GET, new HttpEntity<String>(getHeaders()), String.class);
-                    if (response.getBody() != null) {
-                        String id = response.getBody().split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
+                    String res = connectToURLReturnBodyAsString(url);
+
+
+                    //ResponseEntity<String> response = new RestTemplate().exchange(address, HttpMethod.GET, new HttpEntity<String>(getHeaders()), String.class);
+                    if (!res.equals("")) {
+                        String id = res.split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
                         episode = getEpisodeInfo(address + "?" + id);
                     }
                 } else System.out.println("URI was not absolute, didn't search.");
-            } catch (HttpClientErrorException e) {
-                System.out.println("Couldn't find episode");
-                System.out.println(e.getMessage());
-            } catch (NullPointerException e) {
-                System.out.println("Error in body, error in regex?");
-                System.out.println(e.getMessage());
-            } catch (IllegalArgumentException | ResourceAccessException e) {
-                System.out.println(e.getMessage());
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
@@ -60,26 +58,25 @@ public class EpisodeService {
             String episodeId = address.split("id=")[1];
             System.out.println("episodeId= " + episodeId);
             String URI = "https://api.svt.se/video/" + episodeId;
-
-            ResponseEntity<String> response;
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = getHeaders();
-            HttpEntity<String> entity = new HttpEntity<>(headers);
+            String body = "";
             try {
-                response = restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
-                if (response.getStatusCode().equals(HttpStatus.OK)) {
-                    String res = response.getBody();
-                    assert res != null;
+                body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episodeId));
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                if (!body.equals("")) {
                     //check if it is a live stream
-                    if (res.contains("\"live\":true")) return new EpisodeEntity(true);
-                    episode.setSvtId(res.split("svtId\":\"")[1].split("\"")[0]);
-                    episode.setProgramTitle(res.split("programTitle\":\"")[1].split("\",")[0]);
-                    episode.setEpisodeTitle(res.split("episodeTitle\":\"")[1].split("\",")[0]);
-                    episode.setContentDuration(Integer.parseInt(res.split("contentDuration\":")[1].split(",")[0]));
+                    if (body.contains("\"live\":true")) return new EpisodeEntity(true);
+                    episode.setSvtId(body.split("svtId\":\"")[1].split("\"")[0]);
+                    episode.setProgramTitle(body.split("programTitle\":\"")[1].split("\",")[0]);
+                    episode.setEpisodeTitle(body.split("episodeTitle\":\"")[1].split("\",")[0]);
+                    episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
                     episode.setFilename(StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv"));
                     episode = updateEpisodeLinks(episode);
                     try {
-                        episode.setImageURL(getImgURL(address));
+                        episode.setImageURL(new URL(getImgURL(address)));
                     } catch (Exception e) {
                         System.out.println("bildhämtningen fuckade upp");
                         e.printStackTrace();
@@ -112,38 +109,51 @@ public class EpisodeService {
         return episode;
     }
 
-    private String getImgURL(String addressWithId) throws NullPointerException, HttpClientErrorException {
-        String HTML_URI = addressWithId.split("\\?id=")[0];
-        ResponseEntity<String> response = new RestTemplate().exchange(HTML_URI, HttpMethod.GET, new HttpEntity<String>(getHeaders()), String.class);
-        if (response.getBody() == null) {
-            return "";
+    private String getImgURL(String addressWithId) throws NullPointerException {
+        String body = "";
+
+        try {
+            body = connectToURLReturnBodyAsString(new URL(addressWithId.split("\\?id=")[0]));
+            if (!body.equals("")) {
+                return body.split("data-src=\"")[1].split("\"")[0];
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return response.getBody().split("data-src=\"")[1].split("\"")[0];
+        return "";
     }
 
     public EpisodeEntity updateEpisodeLinks(EpisodeEntity episode) {
+        String episodeInfoString = "";
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
-        ResponseEntity<String> response;
-        RestTemplate restTemplate = new RestTemplate();
-        HttpEntity<String> entity = new HttpEntity<>(getHeaders());
-        response = restTemplate.exchange(URI, HttpMethod.GET, entity, String.class);
-        if (response.getBody() == null) return new EpisodeEntity();
-        String resolveURI = response.getBody().split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0];
+        String body = "";
+        try {
+            //anrop 1
+            body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episode.getSvtId()));
+            if (!body.equals("")) {
+                //anrop 2
+                body = connectToURLReturnBodyAsString(new URL(body.split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0]));
+                if (!body.equals("")) {
+                    episode.setMpdURL(new URL("https://api.svt.se/ditto/api/v1/web?manifestUrl=" + body.split("location\":\"")[1].split("\"")[0] + "&excludeCodecs=hvc&excludeCodecs=ac-3"));
+                    //anrop 3, till mpdURLen
+                    body = connectToURLReturnBodyAsString(episode.getMpdURL());
+                    if (!body.equals("")) {
+                        episodeInfoString = body;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        response = restTemplate.exchange(resolveURI, HttpMethod.GET, entity, String.class);
-        episode.setMpdURL("https://api.svt.se/ditto/api/v1/web?manifestUrl=" + response.getBody().split("location\":\"")[1].split("\"")[0] + "&excludeCodecs=hvc&excludeCodecs=ac-3");
+        System.out.println("episodeInfoString:" + episodeInfoString);
+        if (episodeInfoString == "") return new EpisodeEntity();
+        if (episodeInfoString.contains("\"live\":true")) return new EpisodeEntity(true);
 
-        response = restTemplate.exchange(episode.getMpdURL(), HttpMethod.GET, entity, String.class);
-
-        String resbody = response.getBody();
-
-        if (resbody == null) return new EpisodeEntity();
-        if (resbody.contains("\"live\":true")) return new EpisodeEntity(true);
-
-        String BASE_URL = resbody.split("<BaseURL>")[1].split("</BaseURL>")[0];
+        String BASE_URL = episodeInfoString.split("<BaseURL>")[1].split("</BaseURL>")[0];
 
         //Set Available resolutions
-        String[] adaptationSet = resbody.split("<AdaptationSet");
+        String[] adaptationSet = episodeInfoString.split("<AdaptationSet");
         int streamId = 0;
         for (String set : adaptationSet) {
             if (set.contains("contentType=\"video")) {
@@ -159,7 +169,7 @@ public class EpisodeService {
                         vid.setHeight(rep.split("height=\"")[1].split("\"")[0]);
                         vid.setWidth(rep.split("width=\"")[1].split("\"")[0]);
                         vid.setCodecs(rep.split("codecs=\"")[0].split("\"")[0]);
-                        vid.setRange(Integer.parseInt(resbody.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]));
+                        vid.setRange(Integer.parseInt(episodeInfoString.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]));
                         episode.addAvailableResolutions(vid.getHeight(), vid);
                         streamId++;
                     }
@@ -173,7 +183,7 @@ public class EpisodeService {
                 aud.setLabel(set.split("<Label>")[1].split("</Label>")[0]);
                 aud.setUrl(BASE_URL + set.split("media=\"")[1].split("\\$Number\\$")[0]);
                 aud.setSuffix(set.split("\\$Number\\$")[1].split("\"")[0]);
-                aud.setRange(Integer.parseInt(resbody.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]));
+                aud.setRange(Integer.parseInt(episodeInfoString.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]));
                 episode.addAvailableAudio(aud.getLabel(), aud);
                 streamId++;
             } else if (set.contains("mimeType=\"text")) {
@@ -191,20 +201,37 @@ public class EpisodeService {
         return episode;
     }
 
-    public HttpStatus copyEpisodeToDisk(EpisodeEntity episode) {
 
-        EpisodeCopier t = new EpisodeCopier(episode);
-        Thread th = new Thread(t);
-        th.start();
+    private String connectToURLReturnBodyAsString(URL url) {
+        BufferedReader reader = null;
+        StringBuilder stringBuilder = null;
+        try {
+            HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+            huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0");
+            huc.connect();
+            // read the output from the server
+            reader = new BufferedReader(new InputStreamReader(huc.getInputStream()));
+            stringBuilder = new StringBuilder();
 
-        return HttpStatus.OK;
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                stringBuilder.append(line).append("\n");
+            }
+            huc.disconnect();
+            return stringBuilder.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();
+                }
+            }
+        }
+        System.out.println("returning empty string, something went wronk");
+        return "";
     }
-
-
-    static HttpHeaders getHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0");
-        return headers;
-    }
-
 }
