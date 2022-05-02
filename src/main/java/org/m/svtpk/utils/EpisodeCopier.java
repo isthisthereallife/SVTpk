@@ -8,7 +8,9 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
@@ -32,20 +34,21 @@ public class EpisodeCopier implements Runnable {
 
         String map = "-map";
         String filename = StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv");
-        String[] cmd = {
-                "ffmpeg",
+        ArrayList<String> temp = new ArrayList<>(List.of(new String[]{"tools\\ffmpeg",
                 "-i",
                 "\"" + episode.getMpdURL() + "\"",
                 map,
                 vidArgs,
                 map,
-                audArgs,
-                map,
-                subArgs,
-                filename
-        };
+                audArgs}));
+        if (!subArgs.equals("")) {
+            temp.add(map);
+            temp.add(subArgs);
+        }
+        temp.add(filename);
+        String[] cmd = temp.toArray(new String[0]);
 
-        System.out.println("command:" + Arrays.toString(cmd));
+        System.out.println("command:" + Arrays.toString(cmd).replace(",", ""));
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.directory(new File(System.getProperty("user.dir")));

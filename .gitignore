@@ -4,6 +4,10 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 out/
+tools/
+*.mkv
+*.exe
+
 ### STS ###
 .apt_generated
 .classpath

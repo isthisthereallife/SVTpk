@@ -67,7 +67,7 @@ public class SvtpkApplication extends Application {
 
         settings = Settings.load();
         GridPane grid = basicGrid();
-        Label addressFieldLabel = new Label("Ange adress");
+        Label addressFieldLabel = new Label("Ange adress till avsnitt");
         addressFieldLabel.setAlignment(Pos.CENTER);
 
         addressTextField = addressTextField == null ? new TextField() : addressTextField;
@@ -276,9 +276,9 @@ public class SvtpkApplication extends Application {
     private void updateUI() {
         mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
         if (currentEpisode.isLive()) {
-            infoText.setVisible(true);
-            infoText.setFill(Color.FIREBRICK);
-            infoText.setText("\n\nDu kan tyvärr inte kopiera en live-sändning.");
+            loaded.setVisible(true);
+            loaded.setFill(Color.FIREBRICK);
+            loaded.setText("\n\nDu kan tyvärr inte kopiera en live-sändning.");
             episodeImageView.setVisible(false);
             settingsBox.setVisible(false);
             currentEpisode = new EpisodeEntity();
@@ -299,13 +299,11 @@ public class SvtpkApplication extends Application {
             statusIcon.setDisable(false);
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(false);
-            System.out.println("hej ui");
         } else if (addressTextField.getText().length() > 0) {
-            loaded.setText("");
             currentEpisode = new EpisodeEntity();
-            infoText.setVisible(true);
-            infoText.setFill(Color.FIREBRICK);
-            infoText.setText("Tyvärr, hittar inte det avsnittet.");
+            loaded.setVisible(true);
+            loaded.setFill(Color.FIREBRICK);
+            loaded.setText("Tyvärr, hittar inte det avsnittet.");
             episodeImageView.setImage(null);
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             statusIcon.setDisable(true);
@@ -326,7 +324,6 @@ public class SvtpkApplication extends Application {
         ArrayList<String> res = new ArrayList<>();
         for (Map.Entry<String, VideoReferencesEntity> entry : currentEpisode.getAvailableResolutions().entrySet()) {
             res.add(entry.getKey());
-            System.out.println("Entry: " + entry.getKey());
             if (settings.getResolution().equals(entry.getKey())) {
                 selectedRes = entry.getKey();
                 resolutionChoiceBox.setValue(selectedRes);
@@ -334,7 +331,6 @@ public class SvtpkApplication extends Application {
         }
         if (resolutionChoiceBox.getValue() == null) {
             selectedRes = res.get(0);
-            System.out.println("ingen matchande res, sätter till: " + res.get(0));
         }
         resolutionChoiceBox.setItems(FXCollections.observableArrayList(res));
         resolutionChoiceBox.setValue(selectedRes);
@@ -353,7 +349,6 @@ public class SvtpkApplication extends Application {
         }
         if (languageChoiceBox.getValue() == null) {
             selectedAudio = lang.get(0);
-            System.out.println("ingen matchande Auidio, sätter till " + lang.get(0));
         }
         languageChoiceBox.setItems(FXCollections.observableArrayList(lang));
         languageChoiceBox.setValue(selectedAudio);
@@ -372,7 +367,6 @@ public class SvtpkApplication extends Application {
         }
         if (subsChoiceBox.getValue() == null) {
             selectedSubs = subs.get(0);
-            System.out.println("inga matchande subs, sätter till " + subs.get(0));
         }
         subsChoiceBox.setItems(FXCollections.observableArrayList(subs));
         subsChoiceBox.setValue(selectedSubs);

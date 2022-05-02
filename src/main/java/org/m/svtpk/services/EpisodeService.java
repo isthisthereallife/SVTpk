@@ -10,15 +10,14 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 
 public class EpisodeService {
 
     public EpisodeEntity findEpisode(String address) {
-        System.out.println("address supplied to findEpisode: " + address);
         address = address.replace(" ", "");
-        System.out.println("removed spaces");
         EpisodeEntity episode = new EpisodeEntity();
         if (address.length() > 9) {
             try {
@@ -26,37 +25,32 @@ public class EpisodeService {
                 URL url = new URL(address);
                 //address = URLEncoder.encode(address, StandardCharsets.UTF_8);
                 if (uri.isAbsolute() && address.contains("\\id=")) {
-                    System.out.println("uri was absolute and contained id");
                     episode = getEpisodeInfo(address);
                 } else if (uri.isAbsolute()) {
-                    System.out.println("uri was absolute");
-
-                    String res = connectToURLReturnBodyAsString(url);
-
-
-                    //ResponseEntity<String> response = new RestTemplate().exchange(address, HttpMethod.GET, new HttpEntity<String>(getHeaders()), String.class);
-                    if (!res.equals("")) {
-                        String id = res.split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
-                        episode = getEpisodeInfo(address + "?" + id);
+                    if (url.toString().contains("svtplay")) {
+                        String res = connectToURLReturnBodyAsString(url);
+                        if (!res.equals("")) {
+                            String id = res.split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
+                            episode = getEpisodeInfo(address + "?" + id);
+                        } else System.out.println("URI was not absolute, didn't search.");
+                    } else {
+                        System.out.println("Please enter an address to SVT Play");
                     }
-                } else System.out.println("URI was not absolute, didn't search.");
-            } catch (IOException e) {
+                }
+            } catch (MalformedURLException e) {
+                System.out.println("The supplied url was malformed.");
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
-        System.out.println("returning episode named: " + episode.getEpisodeTitle());
         return episode;
     }
 
     public EpisodeEntity getEpisodeInfo(String address) {
         EpisodeEntity episode = new EpisodeEntity();
-        System.out.println("getEpisodeInfo says address = " + address);
         String[] id = address.split("id=");
         if (id.length > 1 && id[1].trim().length() > 5) {
-            System.out.println("Close enough, trying to get: " + address);
             String episodeId = address.split("id=")[1];
-            System.out.println("episodeId= " + episodeId);
             String URI = "https://api.svt.se/video/" + episodeId;
             String body = "";
             try {
@@ -78,12 +72,12 @@ public class EpisodeService {
                     try {
                         episode.setImageURL(new URL(getImgURL(address)));
                     } catch (Exception e) {
-                        System.out.println("bildhämtningen fuckade upp");
+                        System.out.println("Could not get episode image");
                         e.printStackTrace();
                     }
                 }
             } catch (Exception e) {
-                System.out.println("hämtningen av avsnittsinfon fuckade upp");
+                System.out.println("Could not get episode info");
                 System.out.println(e.getMessage());
             }
         }
@@ -146,7 +140,6 @@ public class EpisodeService {
             e.printStackTrace();
         }
 
-        System.out.println("episodeInfoString:" + episodeInfoString);
         if (episodeInfoString == "") return new EpisodeEntity();
         if (episodeInfoString.contains("\"live\":true")) return new EpisodeEntity(true);
 
@@ -161,7 +154,6 @@ public class EpisodeService {
                 String[] representation = set.split("</AdaptationSet>")[0].split(("<Representation"));
                 for (String rep : representation) {
                     if (rep.contains("mimeType")) {
-                        System.out.println("nummer " + streamId + " är " + rep);
                         VideoReferencesEntity vid = new VideoReferencesEntity();
                         vid.setId(streamId);
                         vid.setUrl(BASE_URL + rep.split("media=\"")[1].split("\\$Number\\$")[0]);
@@ -176,8 +168,6 @@ public class EpisodeService {
                 }
             } else if (set.contains("contentType=\"audio\"")) {
                 //audio
-                System.out.println("nummer " + streamId + " är " + set);
-
                 AudioReferencesEntity aud = new AudioReferencesEntity();
                 aud.setId(streamId);
                 aud.setLabel(set.split("<Label>")[1].split("</Label>")[0]);
@@ -188,8 +178,6 @@ public class EpisodeService {
                 streamId++;
             } else if (set.contains("mimeType=\"text")) {
                 //subs
-                System.out.println("nummer " + streamId + " är " + set);
-
                 SubtitleReferencesEntity sub = new SubtitleReferencesEntity();
                 sub.setId(streamId);
                 sub.setLabel(set.split("<Label>")[1].split("</Label")[0]);
@@ -231,7 +219,7 @@ public class EpisodeService {
                 }
             }
         }
-        System.out.println("returning empty string, something went wronk");
+        System.out.println("Returning empty string, something went wrong");
         return "";
     }
 }
