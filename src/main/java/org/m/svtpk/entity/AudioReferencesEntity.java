@@ -11,7 +11,7 @@ public class AudioReferencesEntity {
     }
 
     public AudioReferencesEntity(String label) {
-        this.label =label;
+        this.label = label;
     }
 
     public int getId() {

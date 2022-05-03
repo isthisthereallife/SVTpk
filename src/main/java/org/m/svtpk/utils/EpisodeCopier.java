@@ -25,6 +25,10 @@ public class EpisodeCopier implements Runnable {
     public void run() {
         Settings settings = Settings.load();
 
+        Platform.runLater(() -> {
+            SvtpkApplication.updateLoadingBar(0);
+        });
+
         String vidArgs = "0:" + episode.getAvailableResolutions().get(settings.getResolution()).getId();
         String audArgs = "0:" + episode.getAvailableAudio().get(settings.getAudio()).getId();
         String subArgs = settings.getSubs().equalsIgnoreCase("Inga undertexter") ?
@@ -48,58 +52,41 @@ public class EpisodeCopier implements Runnable {
         temp.add(filename);
         String[] cmd = temp.toArray(new String[0]);
 
-        System.out.println("command:" + Arrays.toString(cmd).replace(",", ""));
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.directory(new File(System.getProperty("user.dir")));
-        pb.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        pb.redirectOutput(ProcessBuilder.Redirect.PIPE);
         pb.redirectErrorStream(true);
         try {
-            System.out.println("innan");
             Process process = pb.start();
-            //process.getInputStream().close();
-            Platform.runLater(() -> {
-                SvtpkApplication.updateLoadingBar(50);
-            });
 
-            //läs från strömmen hur mycket av avsnittet som bearbetats
-            //jämför med episode.getContentDuration()
-           /* boolean debug = false;
-            int timestamp = 1;
             InputStream inputStream = process.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-            String line = reader.readLine();
-            while (line!= null && ! line.trim().equals("---EOF---")){
-                System.out.println("LINJEN: "+line);
-                line = reader.readLine();
-            }
-            //System.out.println("what is "+ br.readLine());
-
-            //read line from stream
-            while (debug) {
-            //line has "time="
-                if (false) {
-                    //timestamp = line.split
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("time=")) {
+                    String[] time = line.split("time=")[1].split(" ")[0].split(":");
+                    int hours = Integer.parseInt(time[0]);
+                    int minutes = Integer.parseInt(time[1]);
+                    int seconds = Integer.parseInt(time[2].split("\\.")[0]);
+                    //int millisec = Integer.parseInt(time[2].split("\\.")[1]);
+                    int elapsedTime = (hours * 60 * 60) + (minutes * 60) + seconds;
                     assert episode.getContentDuration() != 0;
                     Platform.runLater(() -> {
-                        SvtpkApplication.updateLoadingBar((int) (timestamp / episode.getContentDuration() * 100));
+                        SvtpkApplication.updateLoadingBar(((double) elapsedTime / episode.getContentDuration()));
                     });
                 }
             }
-            */
             process.waitFor();
-            System.out.println("efter");
             Platform.runLater(() -> {
-                SvtpkApplication.updateLoadingBar(100);
+                SvtpkApplication.updateLoadingBar(1.0);
             });
-            System.out.println("Exited with error code " + process.waitFor());
 
             //flytta skiten
             Path source = Paths.get(System.getProperty("user.dir")).resolve(filename);
             Path target = Paths.get(settings.getPath()).resolve(filename);
 
             Files.copy(source, target, REPLACE_EXISTING);
-            System.out.println("Flyttat!");
             Files.delete(source);
 
         } catch (IOException | InterruptedException e) {

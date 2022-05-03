@@ -75,18 +75,14 @@ public class EpisodeEntity {
     }
 
     public AudioReferencesEntity getSelectedAudio(String audio) {
-        System.out.println("String audio=" + audio);
         if (availableAudio.containsKey(audio)) {
-            System.out.println("det fanns en!");
             return availableAudio.get(audio);
         } else if (availableAudio.containsKey("Svenska")) {
-            System.out.println("det blev svenska");
             return availableAudio.get("Svenska");
         } else if (availableAudio.containsKey("Engelska"))
             return availableAudio.get("Engelska");
         else if (availableAudio.containsKey("English"))
             return availableAudio.get("English");
-        System.out.println("det fanns inget passande ljud");
         return new AudioReferencesEntity("No Audio");
     }
 

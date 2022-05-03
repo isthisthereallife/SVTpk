@@ -74,7 +74,6 @@ public class Settings {
     }
 
     public String getAudio() {
-        System.out.println("Getting audio: " + audio);
         return audio;
     }
 

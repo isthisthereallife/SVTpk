@@ -48,6 +48,7 @@ public class SvtpkApplication extends Application {
 
     static SimpleDoubleProperty loadingCounter;
     static Text loaded;
+    static ProgressBar progressBar;
     VBox progress;
 
 
@@ -146,7 +147,6 @@ public class SvtpkApplication extends Application {
 
         dirBtn.setOnAction(e -> {
                     String path = String.valueOf(d.showDialog(window));
-                    System.out.println("path:" + path);
                     if (!path.equals("null")) {
                         settings.setPath(path);
                     } else {
@@ -190,11 +190,10 @@ public class SvtpkApplication extends Application {
 
         loadingCounter = loadingCounter != null ? loadingCounter : new SimpleDoubleProperty();
         loadingCounter.addListener(((observableValue, number, newValue) -> {
-            System.out.println("obsValue:" + observableValue + "\tnumber:" + number + "\tnewValue:" + newValue);
             loadingCounter.set((Double) newValue);
-            if (loadingCounter.getValue() > 0) {
+            dlBtn.setDisable(true);
+            if (loadingCounter.getValue() >= 0) {
                 dlBtn.setText("Kopierar...");
-                dlBtn.setDisable(true);
             }
             if (loadingCounter.getValue() == 100) {
                 dlBtn.setText("Kopierat!");
@@ -205,6 +204,10 @@ public class SvtpkApplication extends Application {
         progress.prefWidth(200);
         loaded = loaded != null ? loaded : new Text();
         loaded.setText("");
+        progressBar = new ProgressBar();
+        progressBar.setProgress(0);
+        progressBar.setVisible(false);
+        progress.getChildren().add(progressBar);
         progress.getChildren().add(loaded);
         progress.setAlignment(Pos.BOTTOM_CENTER);
 
@@ -244,6 +247,7 @@ public class SvtpkApplication extends Application {
             //ändra statusIndicator
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             dlBtn.setText("Kopierar...");
+            dlBtn.setDisable(true);
             EpisodeCopier t = new EpisodeCopier(currentEpisode);
             Thread th = new Thread(t);
             th.start();
@@ -267,14 +271,16 @@ public class SvtpkApplication extends Application {
     }
 
     public static void updateLoadingBar(double loaderCounter) {
-        System.out.println("loaderCounter säger: " + loaderCounter);
-        loaded.setText(loaderCounter + "%");
-        loadingCounter.set(loaderCounter);
+        progressBar.setVisible(true);
+        progressBar.setProgress(loaderCounter);
+        loaded.setText(Math.round(loaderCounter * 100) + "%");
+        loadingCounter.set(loaderCounter * 100);
     }
 
 
     private void updateUI() {
         mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
+        progressBar.setVisible(false);
         if (currentEpisode.isLive()) {
             loaded.setVisible(true);
             loaded.setFill(Color.FIREBRICK);

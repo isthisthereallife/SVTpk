@@ -34,11 +34,11 @@ public class EpisodeService {
                             episode = getEpisodeInfo(address + "?" + id);
                         } else System.out.println("URI was not absolute, didn't search.");
                     } else {
-                        System.out.println("Please enter an address to SVT Play");
+                        System.out.println("Vänligen ange en adress till SVT Play");
                     }
                 }
             } catch (MalformedURLException e) {
-                System.out.println("The supplied url was malformed.");
+                System.out.println(e.getMessage());
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -73,33 +73,14 @@ public class EpisodeService {
                         episode.setImageURL(new URL(getImgURL(address)));
                     } catch (Exception e) {
                         System.out.println("Could not get episode image");
-                        e.printStackTrace();
                     }
                 }
             } catch (Exception e) {
                 System.out.println("Could not get episode info");
                 System.out.println(e.getMessage());
+                return new EpisodeEntity();
             }
         }
-
-       /* System.out.println("Bild finns på: " + episode.getImageURL());
-        System.out.println("Dessa ljudkanaler finns: ");
-
-        HashMap<String, AudioReferencesEntity> au = episode.getAvailableAudio();
-
-        for (Map.Entry<String, AudioReferencesEntity> entry : au.entrySet()) {
-            System.out.println("key:" + entry.getKey() + "\tvalue.getLabel:" + entry.getValue().getLabel());
-        }
-        System.out.println("Dessa upplösningar finns: ");
-        for (Map.Entry<String, VideoReferencesEntity> entry : episode.getAvailableResolutions().entrySet()) {
-            System.out.println("key:" + entry.getKey() + "\tvalue:" + entry.getValue());
-        }
-        System.out.println("Dessa subs finns: ");
-        for (Map.Entry<String, SubtitleReferencesEntity> entry : episode.getAvailableSubs().entrySet()) {
-            System.out.println("key:" + entry.getKey() + "\tvalue.getLabel:" + entry.getValue().getLabel());
-        }
-
-        */
         return episode;
     }
 
@@ -140,7 +121,7 @@ public class EpisodeService {
             e.printStackTrace();
         }
 
-        if (episodeInfoString == "") return new EpisodeEntity();
+        if (episodeInfoString.equals("")) return new EpisodeEntity();
         if (episodeInfoString.contains("\"live\":true")) return new EpisodeEntity(true);
 
         String BASE_URL = episodeInfoString.split("<BaseURL>")[1].split("</BaseURL>")[0];
@@ -170,7 +151,12 @@ public class EpisodeService {
                 //audio
                 AudioReferencesEntity aud = new AudioReferencesEntity();
                 aud.setId(streamId);
-                aud.setLabel(set.split("<Label>")[1].split("</Label>")[0]);
+                try {
+                    aud.setLabel(set.split("<Label>")[1].split("</Label>")[0]);
+                } catch (IndexOutOfBoundsException e) {
+                    System.out.println("Nån på svt har glömt ge ljudspåret en Label :/ Sätter den till \"Svenska\"");
+                    aud.setLabel("Svenska");
+                }
                 aud.setUrl(BASE_URL + set.split("media=\"")[1].split("\\$Number\\$")[0]);
                 aud.setSuffix(set.split("\\$Number\\$")[1].split("\"")[0]);
                 aud.setRange(Integer.parseInt(episodeInfoString.split("<S t=\"")[1].split("r=\"")[1].split("\"/>")[0]));
@@ -180,7 +166,11 @@ public class EpisodeService {
                 //subs
                 SubtitleReferencesEntity sub = new SubtitleReferencesEntity();
                 sub.setId(streamId);
-                sub.setLabel(set.split("<Label>")[1].split("</Label")[0]);
+                try {
+                    sub.setLabel(set.split("<Label>")[1].split("</Label")[0]);
+                } catch (IndexOutOfBoundsException e) {
+                    sub.setLabel("Svenska");
+                }
                 sub.setUrl(BASE_URL + set.split("<BaseURL>")[1].split("</BaseURL>")[0]);
                 episode.addAvailableSubs(sub);
                 streamId++;
