@@ -62,11 +62,13 @@ public class SvtpkApplication extends Application {
     }
 
     public Scene homeScene() {
-        System.out.println("System property: " + System.getProperty("user.dir"));
-        System.out.println("Operating System: " + System.getProperty("os.name"));
-        System.out.println("Java runtime version: " + System.getProperty("java.runtime.version"));
 
         settings = Settings.load();
+        if (settings.isAdvancedUser()) {
+            System.out.println("System property: " + System.getProperty("user.dir"));
+            System.out.println("Operating System: " + System.getProperty("os.name"));
+            System.out.println("Java runtime version: " + System.getProperty("java.runtime.version"));
+        }
         GridPane grid = basicGrid();
         Label addressFieldLabel = new Label("Ange adress till avsnitt");
         addressFieldLabel.setAlignment(Pos.CENTER);

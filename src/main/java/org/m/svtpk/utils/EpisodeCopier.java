@@ -38,7 +38,7 @@ public class EpisodeCopier implements Runnable {
 
         String map = "-map";
         String filename = StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv");
-        ArrayList<String> temp = new ArrayList<>(List.of(new String[]{"tools\\ffmpeg",
+        ArrayList<String> temp = new ArrayList<>(List.of(new String[]{"ffmpeg",
                 "-i",
                 "\"" + episode.getMpdURL() + "\"",
                 map,
@@ -51,6 +51,7 @@ public class EpisodeCopier implements Runnable {
         }
         temp.add(filename);
         String[] cmd = temp.toArray(new String[0]);
+        if (settings.isAdvancedUser()) System.out.println("command: \n" + Arrays.toString(cmd).replace(",", ""));
 
 
         ProcessBuilder pb = new ProcessBuilder(cmd);
@@ -64,6 +65,9 @@ public class EpisodeCopier implements Runnable {
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             String line;
             while ((line = reader.readLine()) != null) {
+                if (settings.isAdvancedUser()) {
+                    System.out.println(line);
+                }
                 if (line.contains("time=")) {
                     String[] time = line.split("time=")[1].split(" ")[0].split(":");
                     int hours = Integer.parseInt(time[0]);

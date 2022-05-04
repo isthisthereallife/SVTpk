@@ -8,7 +8,7 @@ import java.util.Collections;
 public class Settings {
     private final String STANDARD_PATH_WIN = "C:\\";
 
-    private boolean isVisible;
+    private boolean isAdvancedUser;
     private String resolution;
     private String subs;
     private String path;
@@ -51,7 +51,7 @@ public class Settings {
     public static Settings parseSettings(String settingsString) {
         Settings s = new Settings();
         try {
-            s.setVisible(Boolean.parseBoolean(settingsString.split("advanced_user=")[1].split(",")[0].trim()));
+            s.setAdvancedUser(Boolean.parseBoolean(settingsString.split("advanced_user=")[1].split(",")[0].trim()));
             s.setResolution(settingsString.split("resolution=")[1].split(",")[0].trim());
             s.setAudio(settingsString.split("audio=")[1].split(",")[0].trim());
             s.setSubs(settingsString.split("subs=")[1].split(",")[0].trim());
@@ -65,7 +65,7 @@ public class Settings {
 
     @Override
     public String toString() {
-        return "advanced_user=" + isVisible +
+        return "advanced_user=" + isAdvancedUser +
                 ",audio=" + audio +
                 ",resolution=" + resolution +
                 ",subs=" + subs +
@@ -81,12 +81,12 @@ public class Settings {
         this.audio = audio;
     }
 
-    public boolean isVisible() {
-        return isVisible;
+    public boolean isAdvancedUser() {
+        return isAdvancedUser;
     }
 
-    public void setVisible(boolean visible) {
-        isVisible = visible;
+    public void setAdvancedUser(boolean advancedUser) {
+        isAdvancedUser = advancedUser;
     }
 
     public String getResolution() {
