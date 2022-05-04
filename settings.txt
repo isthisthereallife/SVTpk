@@ -1,0 +1,1 @@
+advanced_user=true,audio=Svenska,resolution=720,subs=Svenska,path=D:\Downloads

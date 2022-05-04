@@ -89,10 +89,15 @@ public class EpisodeCopier implements Runnable {
             //flytta skiten
             Path source = Paths.get(System.getProperty("user.dir")).resolve(filename);
             Path target = Paths.get(settings.getPath()).resolve(filename);
-
+            if (settings.isAdvancedUser()) System.out.println("Flyttar filen.");
+            if (!Files.exists(Paths.get(settings.getPath()))){
+                System.out.println("Skapar mapp \"Downloads\"");
+                    Files.createDirectories(Paths.get(settings.getPath()));
+            }
             Files.copy(source, target, REPLACE_EXISTING);
+            if (settings.isAdvancedUser()) System.out.println("Fil flyttad.");
             Files.delete(source);
-
+            if (settings.isAdvancedUser()) System.out.println("Orginalfil borttagen.");
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

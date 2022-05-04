@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import java.util.Collections;
 
 public class Settings {
-    private final String STANDARD_PATH_WIN = "C:\\";
+    private final String STANDARD_PATH_WIN = System.getProperty("user.dir").concat("\\Downloads");
 
     private boolean isAdvancedUser;
     private String resolution;
@@ -35,9 +35,11 @@ public class Settings {
             String settingsString = Files.readString(Paths.get("settings.txt"));
             s = parseSettings(settingsString);
 
-        } catch (Exception e) {
+        } catch (IOException e) {
+            /*
             System.out.println("Bad settings file or no settings file");
             System.out.println("Making a new file...");
+            */
             try {
                 Files.write(Paths.get("settings.txt"), Collections.singleton(new Settings().toString()));
             } catch (IOException ex) {
