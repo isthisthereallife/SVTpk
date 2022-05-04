@@ -14,9 +14,10 @@
 <h4>Lägg till detta som VM Options under Run/Debug Configurations:</h4>
 
     --module-path "%Mappnamn%\javafx-sdk-17.0.2\lib" --add-modules=javafx.controls
+
 <br/>
 <br/>
-byt ut %Mappnamn% till relevant adress, exempelvis:
+<p>byt ut %Mappnamn% till relevant adress, exempelvis:</p>
 <br/>
 
     --module-path "C:\Program Files\Java\javafx-sdk-17.0.2\lib" --add-modules=javafx.controls
