@@ -1,6 +1,6 @@
 <h1>SVTpk - Privatkopiera från SVT Play</h1>
 
-<h2><a href="https://mega.nz/folder/ZjYzlTZD#fqac1VEosxcg1iC8D64pyQ">Klicka här för att komma till nedladdningssidan.</a></h2>
+<h2><a href="https://mega.nz/file/U7ABTIzZ#dtHnHtryLUInrxiRqcf0nT9QndljDshkQNde0o-A7pc">Klicka här för att komma till nedladdningssidan.</a></h2>
 <hr>
 <a href="https://github.com/isthisthereallife/svtpk">Klicka här för att komma till källkoden.</a> 
 <hr>
