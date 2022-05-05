@@ -38,7 +38,7 @@ public class EpisodeCopier implements Runnable {
 
         String map = "-map";
         String filename = StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv");
-        ArrayList<String> temp = new ArrayList<>(List.of(new String[]{"ffmpeg",
+        ArrayList<String> temp = new ArrayList<>(List.of(new String[]{"resources/ffmpeg",
                 "-i",
                 "\"" + episode.getMpdURL() + "\"",
                 map,

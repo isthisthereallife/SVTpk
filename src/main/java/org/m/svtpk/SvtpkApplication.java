@@ -62,8 +62,8 @@ public class SvtpkApplication extends Application {
     }
 
     public Scene homeScene() {
-
         settings = Settings.load();
+        System.out.println("SVTpk - v0.1.1");
         if (settings.isAdvancedUser()) {
             System.out.println("System property: " + System.getProperty("user.dir"));
             System.out.println("Operating System: " + System.getProperty("os.name"));
