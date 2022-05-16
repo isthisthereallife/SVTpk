@@ -5,14 +5,12 @@ import org.m.svtpk.entity.EpisodeEntity;
 import org.m.svtpk.entity.SubtitleReferencesEntity;
 import org.m.svtpk.entity.VideoReferencesEntity;
 import org.m.svtpk.utils.StringHelpers;
-
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+
+import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 
 public class EpisodeService {
 
@@ -171,7 +169,11 @@ public class EpisodeService {
                 } catch (IndexOutOfBoundsException e) {
                     sub.setLabel("Svenska");
                 }
-                sub.setUrl(BASE_URL + set.split("<BaseURL>")[1].split("</BaseURL>")[0]);
+                try {
+                    sub.setUrl(new URL(BASE_URL + set.split("<BaseURL>")[1].split("</BaseURL>")[0]));
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                }
                 episode.addAvailableSubs(sub);
                 streamId++;
             }
@@ -180,36 +182,5 @@ public class EpisodeService {
     }
 
 
-    private String connectToURLReturnBodyAsString(URL url) {
-        BufferedReader reader = null;
-        StringBuilder stringBuilder = null;
-        try {
-            HttpURLConnection huc = (HttpURLConnection) url.openConnection();
-            huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0");
-            huc.connect();
-            // read the output from the server
-            reader = new BufferedReader(new InputStreamReader(huc.getInputStream()));
-            stringBuilder = new StringBuilder();
 
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                stringBuilder.append(line).append("\n");
-            }
-            huc.disconnect();
-            return stringBuilder.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
-                }
-            }
-        }
-        System.out.println("Returning empty string, something went wrong");
-        return "";
-    }
 }

@@ -1,9 +1,11 @@
 package org.m.svtpk.entity;
 
+import java.net.URL;
+
 public class SubtitleReferencesEntity {
     private int id;
     private String label;
-    private String url;
+    private URL url;
 
     public int getId() {
         return id;
@@ -21,11 +23,11 @@ public class SubtitleReferencesEntity {
         this.label = label;
     }
 
-    public String getUrl() {
+    public URL getUrl() {
         return url;
     }
 
-    public void setUrl(String url) {
+    public void setUrl(URL url) {
         this.url = url;
     }
 }

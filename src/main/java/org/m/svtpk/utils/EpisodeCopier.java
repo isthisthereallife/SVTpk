@@ -13,6 +13,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
+
 
 public class EpisodeCopier implements Runnable {
     private final EpisodeEntity episode;
@@ -24,6 +26,11 @@ public class EpisodeCopier implements Runnable {
     @Override
     public void run() {
         Settings settings = Settings.load();
+        String videoFiletype = ".mp4";
+        String subsFiletype = ".srt";
+        String filename = StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(videoFiletype);
+        String subsname = StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(subsFiletype);
+
 
         Platform.runLater(() -> {
             SvtpkApplication.updateLoadingBar(0);
@@ -37,7 +44,6 @@ public class EpisodeCopier implements Runnable {
                 "0:" + episode.getAvailableSubs().get(settings.getSubs()).getId();
 
         String map = "-map";
-        String filename = StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv");
         ArrayList<String> temp = new ArrayList<>(List.of(new String[]{"ffmpeg",
                 "-i",
                 "\"" + episode.getMpdURL() + "\"",
@@ -45,10 +51,10 @@ public class EpisodeCopier implements Runnable {
                 vidArgs,
                 map,
                 audArgs}));
-        if (!subArgs.equals("")) {
+        /*if (!subArgs.equals("")) {
             temp.add(map);
             temp.add(subArgs);
-        }
+        }*/
         temp.add(filename);
         String[] cmd = temp.toArray(new String[0]);
         if (settings.isAdvancedUser()) System.out.println("command: \n" + Arrays.toString(cmd).replace(",", ""));
@@ -90,7 +96,7 @@ public class EpisodeCopier implements Runnable {
             Path source = Paths.get(System.getProperty("user.dir")).resolve(filename);
             Path target = Paths.get(settings.getPath()).resolve(filename);
             if (settings.isAdvancedUser()) System.out.println("Flyttar filen.");
-            if (!Files.exists(Paths.get(settings.getPath()))){
+            if (!Files.exists(Paths.get(settings.getPath()))) {
                 System.out.println("Skapar mapp \"Downloads\"");
                 Files.createDirectories(Paths.get(settings.getPath()));
             }
@@ -98,8 +104,28 @@ public class EpisodeCopier implements Runnable {
             if (settings.isAdvancedUser()) System.out.println("Fil flyttad.");
             Files.delete(source);
             if (settings.isAdvancedUser()) System.out.println("Orginalfil borttagen.");
+
+            //if subs
+            System.out.println("getsubs? "+ !settings.getSubs().equalsIgnoreCase("Inga undertexter"));
+            if ( !settings.getSubs().equalsIgnoreCase("Inga undertexter")) {
+                String subs = connectToURLReturnBodyAsString(episode.getAvailableSubs().get(settings.getSubs()).getUrl());
+                System.out.println(subs);
+                FileWriter fw = new FileWriter(subsname);
+                fw.write(subs);
+                fw.close();
+
+                Files.copy(
+                        Paths.get(System.getProperty("user.dir")).resolve(subsname),
+                        Paths.get(settings.getPath()).resolve(subsname),
+                        REPLACE_EXISTING
+                );
+                Files.delete(Paths.get(System.getProperty("user.dir")).resolve(subsname));
+
+            }
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
+
 }
