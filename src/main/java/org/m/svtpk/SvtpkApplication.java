@@ -9,6 +9,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -73,7 +75,12 @@ public class SvtpkApplication extends Application {
         Label addressFieldLabel = new Label("Ange adress till avsnitt");
         addressFieldLabel.setAlignment(Pos.CENTER);
 
-        addressTextField = addressTextField == null ? new TextField() : addressTextField;
+        addressTextField = addressTextField == null ?
+                Clipboard.getSystemClipboard().getString().contains("svt") ?
+                        new TextField(Clipboard.getSystemClipboard().getString())
+                        :
+                        new TextField()
+                : addressTextField;
         addressTextField.setPrefWidth(400);
 
 
@@ -221,9 +228,6 @@ public class SvtpkApplication extends Application {
 
 
         addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-           /* search every time user types a letter in search box. not good now, maybe good later.
-             currentEpisode = episodeService.findEpisode(addressTextField.getText());
-           */
             if (addressTextField.getText().length() < 1) {
                 currentEpisode = new EpisodeEntity();
                 updateUI();
@@ -290,6 +294,8 @@ public class SvtpkApplication extends Application {
             episodeImageView.setVisible(false);
             settingsBox.setVisible(false);
             currentEpisode = new EpisodeEntity();
+            dlBtn.setText("Kopiera");
+            dlBtn.setDisable(true);
         } else if (!currentEpisode.getSvtId().equals("")) {
             setVideoRes();
             setAudioLanguage();
@@ -315,6 +321,7 @@ public class SvtpkApplication extends Application {
             episodeImageView.setImage(null);
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             statusIcon.setDisable(true);
+            dlBtn.setText("Kopiera");
             dlBtn.setDisable(true);
         } else {
             loaded.setText("");
@@ -323,11 +330,12 @@ public class SvtpkApplication extends Application {
             episodeImageView.setImage(null);
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             statusIcon.setDisable(true);
+            dlBtn.setText("Kopiera");
             dlBtn.setDisable(true);
         }
     }
 
-    private String setVideoRes() {
+    private void setVideoRes() {
         String selectedRes = "";
         ArrayList<String> res = new ArrayList<>();
         for (Map.Entry<String, VideoReferencesEntity> entry : currentEpisode.getAvailableResolutions().entrySet()) {
@@ -342,7 +350,6 @@ public class SvtpkApplication extends Application {
         }
         resolutionChoiceBox.setItems(FXCollections.observableArrayList(res));
         resolutionChoiceBox.setValue(selectedRes);
-        return selectedRes;
     }
 
     private void setAudioLanguage() {
