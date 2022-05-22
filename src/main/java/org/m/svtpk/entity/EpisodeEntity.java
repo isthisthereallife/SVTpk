@@ -21,8 +21,19 @@ public class EpisodeEntity {
     private HashMap<String, VideoReferencesEntity> availableResolutions;
     private HashMap<String, AudioReferencesEntity> availableAudio;
     private boolean isLive;
+    private ProgressStates progressState;
+    private int progressInt;
+    private String saveLocation;
 
     public EpisodeEntity() {
+        svtId = "";
+        availableSubs = new HashMap<>();
+        availableResolutions = new HashMap<>();
+        availableAudio = new HashMap<>();
+    }
+
+    public EpisodeEntity(String test) {
+        episodeTitle = test;
         svtId = "";
         availableSubs = new HashMap<>();
         availableResolutions = new HashMap<>();
@@ -199,6 +210,34 @@ public class EpisodeEntity {
 
     public Boolean hasID(EpisodeEntity e) {
         return !Objects.equals(e.getSvtId(), "");
+    }
+
+    public void setAvailableSubs(HashMap<String, SubtitleReferencesEntity> availableSubs) {
+        this.availableSubs = availableSubs;
+    }
+
+    public ProgressStates getProgressState() {
+        return progressState;
+    }
+
+    public void setProgressState(ProgressStates progressState) {
+        this.progressState = progressState;
+    }
+
+    public int getProgressInt() {
+        return progressInt;
+    }
+
+    public void setProgressInt(int progressInt) {
+        this.progressInt = progressInt;
+    }
+
+    public String getSaveLocation() {
+        return saveLocation;
+    }
+
+    public void setSaveLocation(String saveLocation) {
+        this.saveLocation = saveLocation;
     }
 
     @Override

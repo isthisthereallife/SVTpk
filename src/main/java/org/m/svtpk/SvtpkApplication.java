@@ -3,6 +3,7 @@ package org.m.svtpk;
 import javafx.application.Application;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -10,7 +11,6 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -19,10 +19,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import org.m.svtpk.entity.AudioReferencesEntity;
-import org.m.svtpk.entity.EpisodeEntity;
-import org.m.svtpk.entity.SubtitleReferencesEntity;
-import org.m.svtpk.entity.VideoReferencesEntity;
+import org.m.svtpk.entity.*;
 import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
 import org.m.svtpk.utils.EpisodeCopier;
@@ -42,8 +39,10 @@ public class SvtpkApplication extends Application {
     TextField addressTextField;
     Stage window;
     Settings settings;
+    HBox episodeHBox;
     HBox mainContentBox;
     VBox settingsBox;
+    VBox queueVBox;
     ChoiceBox<String> resolutionChoiceBox;
     ChoiceBox<String> languageChoiceBox;
     ChoiceBox<String> subsChoiceBox;
@@ -52,7 +51,8 @@ public class SvtpkApplication extends Application {
     static Text loaded;
     static ProgressBar progressBar;
     VBox progress;
-
+    ArrayList<EpisodeEntity> entityArrayList;
+    ObservableList<EpisodeEntity> queue;
 
     @Override
     public void start(Stage stage) {
@@ -72,17 +72,35 @@ public class SvtpkApplication extends Application {
             System.out.println("Java runtime version: " + System.getProperty("java.runtime.version"));
         }
         GridPane grid = basicGrid();
+
         Label addressFieldLabel = new Label("Ange adress till avsnitt");
         addressFieldLabel.setAlignment(Pos.CENTER);
 
+        //paste from clipboard if clipboard text exists and seems relevant
+        Clipboard clip = Clipboard.getSystemClipboard();
         addressTextField = addressTextField == null ?
-                Clipboard.getSystemClipboard().getString().contains("svt") ?
+                clip == null ?
+                        new TextField()
+                        : clip.getString().contains("svt") ?
                         new TextField(Clipboard.getSystemClipboard().getString())
                         :
                         new TextField()
                 : addressTextField;
         addressTextField.setPrefWidth(400);
 
+
+        // QUEUE
+
+        ListView<EpisodeEntity> queueListView = new ListView<>();
+        entityArrayList = new ArrayList<>();
+        queue = FXCollections.observableArrayList(entityArrayList);
+
+        queueListView.setItems(queue);
+        queueListView.setPrefWidth(200);
+        queueListView.setPrefHeight(600);
+        queueListView.setContextMenu(getContextMenu(currentEpisode));
+
+        queueVBox = new VBox(queueListView);
 
         episodeImageView = currentEpisode.getImageURL() == null ? new ImageView() : new ImageView(new Image(String.valueOf(currentEpisode.getImageURL())));
         episodeImageView.setPreserveRatio(true);
@@ -95,7 +113,7 @@ public class SvtpkApplication extends Application {
 
         //lägg till alternativen till den här,
         VBox vBoxSettings = new VBox();
-        vBoxSettings.prefWidth(200);
+        vBoxSettings.prefWidth(100);
 
         Text resText = new Text("Upplösning");
         ArrayList<String> resolutionsList = new ArrayList<>();
@@ -166,6 +184,7 @@ public class SvtpkApplication extends Application {
                 }
         );
         VBox copy = new VBox(hBoxCopy, currentSavePath);
+
        /*
         path.valueProperty().addListener((observableValue, s, newValue) -> {
             settings.setResolution(newValue);
@@ -181,14 +200,18 @@ public class SvtpkApplication extends Application {
         TitledPane settingsPane = new TitledPane("Inställningar", vBoxSettings);
         settingsPane.setLayoutX(1);
         settingsPane.setLayoutY(1);
-        settingsPane.prefWidth(200);
+        //settingsPane.prefWidth(200);
 
         Accordion accordion = new Accordion();
         accordion.getPanes().add(settingsPane);
         settingsBox = new VBox(accordion);
 
-        mainContentBox = mainContentBox != null ? mainContentBox : new HBox(vBoxInfoText, settingsBox);
-        mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
+        episodeHBox = new HBox(vBoxInfoText, settingsBox);
+        mainContentBox = mainContentBox != null ? mainContentBox : new HBox(episodeHBox);
+        //mainContentBox = mainContentBox != null ? mainContentBox : episodeHBox;
+
+        //byt den här till en separat låda
+        episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
 
         statusIcon = currentEpisode.hasID(currentEpisode) ? Arrow.getImgViewArrowDown("green") : Arrow.getImgViewArrowDown("grey");
         HBox statusIndicator = new HBox(statusIcon);
@@ -202,15 +225,17 @@ public class SvtpkApplication extends Application {
             loadingCounter.set((Double) newValue);
             dlBtn.setDisable(true);
             if (loadingCounter.getValue() >= 0) {
+                loaded.setFill(Color.DARKGREY);
                 dlBtn.setText("Kopierar...");
             }
             if (loadingCounter.getValue() == 100) {
+                loaded.setFill(Color.DARKGREEN);
                 dlBtn.setText("Kopierat!");
             }
         }));
 
         progress = progress != null ? progress : new VBox();
-        progress.prefWidth(200);
+        //progress.prefWidth(200);
         loaded = loaded != null ? loaded : new Text();
         loaded.setText("");
         progressBar = new ProgressBar();
@@ -254,22 +279,41 @@ public class SvtpkApplication extends Application {
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             dlBtn.setText("Kopierar...");
             dlBtn.setDisable(true);
+            //QueueHandler(currentEpisode)
+
             EpisodeCopier t = new EpisodeCopier(currentEpisode);
             Thread th = new Thread(t);
             th.start();
+
+            currentEpisode.setProgressState(ProgressStates.QUEUED);
+            queue.add(currentEpisode);
+            System.out.println("\nadded " + currentEpisode.getEpisodeTitle() + " to queue");
+            //add to queue
+
         });
         Button debugBtn = new Button("DEBUG");
         debugBtn.setAlignment(Pos.BOTTOM_CENTER);
         debugBtn.setOnAction(e -> {
         });
 
+        HBox episodeTree = new HBox();
 
+        //grid.setGridLinesVisible(true);
+        ColumnConstraints cC = new ColumnConstraints();
+        cC.setPercentWidth(100);
+        grid.getColumnConstraints().add(cC);
         grid.add(addressFieldLabel, 0, 1);
-        grid.add(search, 0, 2);
-        grid.add(mainContentBox, 0, 3);
+        grid.add(search, 0, 2, 6, 1);
+        queueVBox.setVisible(true);
+
+        mainContentBox.getChildren().add(queueVBox);
+
+        grid.add(mainContentBox, 0, 4);
+        //grid.add(queueVBox, 1, 4, 3, 3);
         grid.add(statusIndicator, 0, 4);
-        grid.add(progress, 0, 5);
-        grid.add(hboxDlBtn, 0, 6);
+        grid.add(progress, 0, 6);
+        grid.add(episodeTree, 0, 5, 2, 6);
+        grid.add(hboxDlBtn, 0, 7);
 
         //grid.add(debugBtn, 0, 7);
 
@@ -280,14 +324,60 @@ public class SvtpkApplication extends Application {
         progressBar.setVisible(true);
         progressBar.setProgress(loaderCounter);
         loaded.setText(Math.round(loaderCounter * 100) + "%");
+
         loadingCounter.set(loaderCounter * 100);
     }
 
+    private ContextMenu getContextMenu(EpisodeEntity currentEpisode) {
+        // Open a menu
+        final ContextMenu contextMenu = new ContextMenu();
+        MenuItem miPlay = new MenuItem("Start");
+        //MenuItem miPause = new MenuItem("Pause");
+        MenuItem miAbort = new MenuItem("Stop");
+        MenuItem miRemove = new MenuItem("Ta Bort från listan");
+        MenuItem miRemoveDone = new MenuItem("Ta Bort Färdiga");
+        MenuItem miRemoveAll = new MenuItem("Rensa Listan");
+
+        contextMenu.getItems().addAll(miPlay, /*miPause,*/ miAbort, miRemove, miRemoveAll);
+        miPlay.setOnAction((mi) -> {
+            // pausa dom andra/den aktiva.
+            // börja denna
+        });
+        /*
+        miPause.setOnAction((mi) -> {
+            // pausa denna
+        });
+        */
+        miAbort.setOnAction((mi) -> {
+            // avsluta denna
+        });
+        miRemove.setOnAction((mi) -> {
+            //ta bort denna från queue
+        });
+        miRemoveDone.setOnAction((mi) ->{
+            //Ta bort dom i queue som är ProgressState.DONE
+            queue.removeIf((u)->{
+                return u.getProgressState().equals(ProgressStates.DONE);
+            });
+        });
+        miRemoveAll.setOnAction((mi) -> {
+            //ta bort alla från queue
+        });
+
+        //contextMenu.show(m, e.getScreenX(), e.getScreenY());
+
+
+        System.out.println("\nJAPP!");
+
+        return contextMenu;
+    }
 
     private void updateUI() {
-        mainContentBox.setVisible(currentEpisode.hasID(currentEpisode));
+        episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
+        queueVBox.setVisible(true);
         progressBar.setVisible(false);
         if (currentEpisode.isLive()) {
+            // if requested episode is a live-stream
             loaded.setVisible(true);
             loaded.setFill(Color.FIREBRICK);
             loaded.setText("\n\nDu kan tyvärr inte kopiera en live-sändning.");
@@ -297,6 +387,7 @@ public class SvtpkApplication extends Application {
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(true);
         } else if (!currentEpisode.getSvtId().equals("")) {
+            //if there is a SvtId
             setVideoRes();
             setAudioLanguage();
             setSubs();
@@ -306,6 +397,7 @@ public class SvtpkApplication extends Application {
             infoText.setText(currentEpisode.toString());
             settingsBox.setVisible(true);
             if (currentEpisode.getImageURL() != null) {
+                // if there is an image URL
                 episodeImageView.setImage(new Image(String.valueOf(currentEpisode.getImageURL())));
                 episodeImageView.setVisible(true);
             }
@@ -314,6 +406,7 @@ public class SvtpkApplication extends Application {
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(false);
         } else if (addressTextField.getText().length() > 0) {
+            //if text supplied but no episode found
             currentEpisode = new EpisodeEntity();
             loaded.setVisible(true);
             loaded.setFill(Color.FIREBRICK);
@@ -324,9 +417,12 @@ public class SvtpkApplication extends Application {
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(true);
         } else {
+            // no text in text field, clear UI
             loaded.setText("");
             currentEpisode = new EpisodeEntity();
             infoText.setVisible(false);
+
+            queueVBox.setVisible(true);
             episodeImageView.setImage(null);
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             statusIcon.setDisable(true);
@@ -394,13 +490,13 @@ public class SvtpkApplication extends Application {
         grid.setHgap(10);
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
-        grid.setPrefSize(500, 400);
-        grid.setMinSize(500, 400);
-        grid.setPrefWidth(600);
+        //grid.setPrefSize(500, 400);
+        //grid.setMinSize(500, 400);
+        //grid.setPrefWidth(600);
         //grid.setGridLinesVisible(true);
         Text title = new Text("SVTpk");
         title.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
-        title.setTextAlignment(TextAlignment.LEFT);
+        title.setTextAlignment(TextAlignment.CENTER);
         grid.add(title, 0, 0, 2, 1);
         return grid;
     }

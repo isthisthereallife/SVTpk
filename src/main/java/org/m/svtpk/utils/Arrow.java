@@ -14,7 +14,7 @@ public class Arrow {
     }
 
     public static ImageView getImgViewArrowDown(String colour) {
-        ImageView imgArrowDown = new ImageView(new Image("file:src/main/resources/images/arrow_" + colour + ".png"));
+        ImageView imgArrowDown = new ImageView(getImgArrowDown(colour));
         imgArrowDown.setPreserveRatio(true);
         imgArrowDown.setFitWidth(40);
         return imgArrowDown;
