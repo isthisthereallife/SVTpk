@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
@@ -51,8 +52,8 @@ public class SvtpkApplication extends Application {
     static Text loaded;
     static ProgressBar progressBar;
     VBox progress;
-    ArrayList<EpisodeEntity> entityArrayList;
-    ObservableList<EpisodeEntity> queue;
+    ArrayList<QueueEntity> entityArrayList;
+    ObservableList<QueueEntity> queue;
 
     @Override
     public void start(Stage stage) {
@@ -79,7 +80,7 @@ public class SvtpkApplication extends Application {
         //paste from clipboard if clipboard text exists and seems relevant
         Clipboard clip = Clipboard.getSystemClipboard();
         addressTextField = addressTextField == null ?
-                clip == null ?
+                clip.getString() == null ?
                         new TextField()
                         : clip.getString().contains("svt") ?
                         new TextField(Clipboard.getSystemClipboard().getString())
@@ -91,14 +92,16 @@ public class SvtpkApplication extends Application {
 
         // QUEUE
 
-        ListView<EpisodeEntity> queueListView = new ListView<>();
+        ListView<QueueEntity> queueListView = new ListView<>();
         entityArrayList = new ArrayList<>();
         queue = FXCollections.observableArrayList(entityArrayList);
 
+
+        //QueueEntity qE = new QueueEntity(currentEpisode);
         queueListView.setItems(queue);
         queueListView.setPrefWidth(200);
         queueListView.setPrefHeight(600);
-        queueListView.setContextMenu(getContextMenu(currentEpisode));
+        //queueListView.setContextMenu(getContextMenu());
 
         queueVBox = new VBox(queueListView);
 
@@ -274,6 +277,7 @@ public class SvtpkApplication extends Application {
         HBox search = new HBox(10);
         search.getChildren().add(addressTextField);
         search.getChildren().add(findEpisodeBtn);
+
         dlBtn.setOnAction(e -> {
             //ändra statusIndicator
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
@@ -281,16 +285,35 @@ public class SvtpkApplication extends Application {
             dlBtn.setDisable(true);
             //QueueHandler(currentEpisode)
 
+
             EpisodeCopier t = new EpisodeCopier(currentEpisode);
             Thread th = new Thread(t);
             th.start();
 
-            currentEpisode.setProgressState(ProgressStates.QUEUED);
-            queue.add(currentEpisode);
-            System.out.println("\nadded " + currentEpisode.getEpisodeTitle() + " to queue");
-            //add to queue
 
+            currentEpisode.setProgressState(ProgressStates.QUEUED);
+
+            QueueEntity queueEntity = new QueueEntity(currentEpisode);
+            queueEntity.setContextMenu(queueEntity.createContextMenu());
+            queueEntity.setText(queueEntity.getEpisode().getEpisodeTitle());
+            queueEntity.setBackground(new Background(new BackgroundFill(Color.DARKGREEN, null, null)));
+            queueEntity.setPrefWidth(140);
+            queueEntity.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
+            queueEntity.setPrefHeight(30);
+
+
+            queue.add(queueEntity);
+
+            //queueListView.setContextMenu(contextMenu);
+            queueListView.setItems(queue);
+
+            System.out.println("\nadded " + queueEntity.getEpisode().getEpisodeTitle() + " to queue");
+            //add to queue
+            System.out.println("queue is now:\n");
+
+            queue.forEach(System.out::println);
         });
+
         Button debugBtn = new Button("DEBUG");
         debugBtn.setAlignment(Pos.BOTTOM_CENTER);
         debugBtn.setOnAction(e -> {
@@ -328,49 +351,6 @@ public class SvtpkApplication extends Application {
         loadingCounter.set(loaderCounter * 100);
     }
 
-    private ContextMenu getContextMenu(EpisodeEntity currentEpisode) {
-        // Open a menu
-        final ContextMenu contextMenu = new ContextMenu();
-        MenuItem miPlay = new MenuItem("Start");
-        //MenuItem miPause = new MenuItem("Pause");
-        MenuItem miAbort = new MenuItem("Stop");
-        MenuItem miRemove = new MenuItem("Ta Bort från listan");
-        MenuItem miRemoveDone = new MenuItem("Ta Bort Färdiga");
-        MenuItem miRemoveAll = new MenuItem("Rensa Listan");
-
-        contextMenu.getItems().addAll(miPlay, /*miPause,*/ miAbort, miRemove, miRemoveAll);
-        miPlay.setOnAction((mi) -> {
-            // pausa dom andra/den aktiva.
-            // börja denna
-        });
-        /*
-        miPause.setOnAction((mi) -> {
-            // pausa denna
-        });
-        */
-        miAbort.setOnAction((mi) -> {
-            // avsluta denna
-        });
-        miRemove.setOnAction((mi) -> {
-            //ta bort denna från queue
-        });
-        miRemoveDone.setOnAction((mi) ->{
-            //Ta bort dom i queue som är ProgressState.DONE
-            queue.removeIf((u)->{
-                return u.getProgressState().equals(ProgressStates.DONE);
-            });
-        });
-        miRemoveAll.setOnAction((mi) -> {
-            //ta bort alla från queue
-        });
-
-        //contextMenu.show(m, e.getScreenX(), e.getScreenY());
-
-
-        System.out.println("\nJAPP!");
-
-        return contextMenu;
-    }
 
     private void updateUI() {
         episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
