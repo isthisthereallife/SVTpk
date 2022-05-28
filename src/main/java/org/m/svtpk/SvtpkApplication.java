@@ -24,11 +24,16 @@ import org.m.svtpk.entity.*;
 import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
 import org.m.svtpk.utils.EpisodeCopier;
+import org.m.svtpk.utils.QueueHandler;
 import org.m.svtpk.utils.Settings;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import static javafx.scene.paint.Color.BLACK;
+import static javafx.scene.paint.Color.DARKGREEN;
 
 public class SvtpkApplication extends Application {
     EpisodeEntity currentEpisode = new EpisodeEntity();
@@ -52,8 +57,11 @@ public class SvtpkApplication extends Application {
     static Text loaded;
     static ProgressBar progressBar;
     VBox progress;
-    ArrayList<QueueEntity> entityArrayList;
-    ObservableList<QueueEntity> queue;
+    static ArrayList<QueueEntity> entityArrayList = new ArrayList<>();
+    public static ObservableList<QueueEntity> queue = FXCollections.observableArrayList(entityArrayList);
+    EpisodeCopier episodeCopier;
+    Thread downThread = new Thread(episodeCopier);
+    org.m.svtpk.utils.QueueHandler QueueHandler = new QueueHandler();
 
     @Override
     public void start(Stage stage) {
@@ -65,8 +73,9 @@ public class SvtpkApplication extends Application {
     }
 
     public Scene homeScene() {
-
+        downThread.start();
         settings = Settings.load();
+
         if (settings.isAdvancedUser()) {
             System.out.println("System property: " + System.getProperty("user.dir"));
             System.out.println("Operating System: " + System.getProperty("os.name"));
@@ -93,10 +102,6 @@ public class SvtpkApplication extends Application {
         // QUEUE
 
         ListView<QueueEntity> queueListView = new ListView<>();
-        entityArrayList = new ArrayList<>();
-        queue = FXCollections.observableArrayList(entityArrayList);
-
-
         //QueueEntity qE = new QueueEntity(currentEpisode);
         queueListView.setItems(queue);
         queueListView.setPrefWidth(200);
@@ -104,14 +109,13 @@ public class SvtpkApplication extends Application {
         //queueListView.setContextMenu(getContextMenu());
 
         queueVBox = new VBox(queueListView);
-
         episodeImageView = currentEpisode.getImageURL() == null ? new ImageView() : new ImageView(new Image(String.valueOf(currentEpisode.getImageURL())));
         episodeImageView.setPreserveRatio(true);
         episodeImageView.setFitWidth(200);
 
         infoText = new Text(currentEpisode.hasID(currentEpisode) ? currentEpisode.toString() : "");
         infoText.prefHeight(160);
-        infoText.setFill(Color.DARKGREEN);
+        infoText.setFill(DARKGREEN);
         VBox vBoxInfoText = new VBox(addressFieldLabel, addressTextField, episodeImageView, infoText);
 
         //lägg till alternativen till den här,
@@ -167,10 +171,25 @@ public class SvtpkApplication extends Application {
 
         HBox hBoxCopy = new HBox(dirText, dirBtn);
         Text currentSavePath = settings.getPath() == null ? new Text() : new Text(settings.getPath());//settings.getPath()==null ? "" : settings.getPath());
+        //settingsPane.setWrapText(true);
+        //currentSavePath.setSmooth(true);
+        currentSavePath.setOnMouseEntered(e->{
+            currentSavePath.setFill(Paint.valueOf(String.valueOf(DARKGREEN)));
+        });currentSavePath.setOnMouseExited(e->{
+            currentSavePath.setFill(Paint.valueOf(String.valueOf(BLACK)));
+        });
+        currentSavePath.setWrappingWidth(150);
         currentSavePath.textProperty().addListener((observableValue, s, newValue) -> {
             if (newValue != null) {
                 settings.setPath(newValue);
                 settings.save();
+            }
+        });
+        currentSavePath.setOnMouseClicked(e->{
+            try {
+                Runtime.getRuntime().exec("explorer.exe /select," + currentSavePath);
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
         });
         hBoxCopy.setSpacing(38);
@@ -203,6 +222,8 @@ public class SvtpkApplication extends Application {
         TitledPane settingsPane = new TitledPane("Inställningar", vBoxSettings);
         settingsPane.setLayoutX(1);
         settingsPane.setLayoutY(1);
+        settingsPane.maxWidth(50);
+
         //settingsPane.prefWidth(200);
 
         Accordion accordion = new Accordion();
@@ -232,7 +253,7 @@ public class SvtpkApplication extends Application {
                 dlBtn.setText("Kopierar...");
             }
             if (loadingCounter.getValue() == 100) {
-                loaded.setFill(Color.DARKGREEN);
+                loaded.setFill(DARKGREEN);
                 dlBtn.setText("Kopierat!");
             }
         }));
@@ -278,47 +299,30 @@ public class SvtpkApplication extends Application {
         search.getChildren().add(addressTextField);
         search.getChildren().add(findEpisodeBtn);
 
+        // Button "Kopiera"
         dlBtn.setOnAction(e -> {
-            //ändra statusIndicator
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             dlBtn.setText("Kopierar...");
             dlBtn.setDisable(true);
-            //QueueHandler(currentEpisode)
-
-
-            EpisodeCopier t = new EpisodeCopier(currentEpisode);
-            Thread th = new Thread(t);
-            th.start();
-
-
             currentEpisode.setProgressState(ProgressStates.QUEUED);
 
             QueueEntity queueEntity = new QueueEntity(currentEpisode);
             queueEntity.setContextMenu(queueEntity.createContextMenu());
             queueEntity.setText(queueEntity.getEpisode().getEpisodeTitle());
-            queueEntity.setBackground(new Background(new BackgroundFill(Color.DARKGREEN, null, null)));
+            queueEntity.setWrapText(true);
+            queueEntity.setBackground(new Background(new BackgroundFill(Color.LIGHTGREY, null, null)));
             queueEntity.setPrefWidth(140);
             queueEntity.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
-            queueEntity.setPrefHeight(30);
-
+            queueEntity.setPrefHeight(60);
 
             queue.add(queueEntity);
-
-            //queueListView.setContextMenu(contextMenu);
             queueListView.setItems(queue);
-
-            System.out.println("\nadded " + queueEntity.getEpisode().getEpisodeTitle() + " to queue");
-            //add to queue
-            System.out.println("queue is now:\n");
-
-            queue.forEach(System.out::println);
         });
 
         Button debugBtn = new Button("DEBUG");
         debugBtn.setAlignment(Pos.BOTTOM_CENTER);
         debugBtn.setOnAction(e -> {
         });
-
         HBox episodeTree = new HBox();
 
         //grid.setGridLinesVisible(true);
@@ -327,19 +331,14 @@ public class SvtpkApplication extends Application {
         grid.getColumnConstraints().add(cC);
         grid.add(addressFieldLabel, 0, 1);
         grid.add(search, 0, 2, 6, 1);
-        queueVBox.setVisible(true);
-
         mainContentBox.getChildren().add(queueVBox);
-
         grid.add(mainContentBox, 0, 4);
-        //grid.add(queueVBox, 1, 4, 3, 3);
         grid.add(statusIndicator, 0, 4);
         grid.add(progress, 0, 6);
         grid.add(episodeTree, 0, 5, 2, 6);
         grid.add(hboxDlBtn, 0, 7);
 
         //grid.add(debugBtn, 0, 7);
-
         return new Scene(grid, 640, 480);
     }
 
@@ -354,8 +353,8 @@ public class SvtpkApplication extends Application {
 
     private void updateUI() {
         episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
-        queueVBox.setVisible(true);
         progressBar.setVisible(false);
+        if (queue.size() > 0) queueVBox.setDisable(false);
         if (currentEpisode.isLive()) {
             // if requested episode is a live-stream
             loaded.setVisible(true);
@@ -373,7 +372,7 @@ public class SvtpkApplication extends Application {
             setSubs();
             loaded.setText("");
             infoText.setVisible(true);
-            infoText.setFill(Color.DARKGREEN);
+            infoText.setFill(DARKGREEN);
             infoText.setText(currentEpisode.toString());
             settingsBox.setVisible(true);
             if (currentEpisode.getImageURL() != null) {
@@ -402,7 +401,6 @@ public class SvtpkApplication extends Application {
             currentEpisode = new EpisodeEntity();
             infoText.setVisible(false);
 
-            queueVBox.setVisible(true);
             episodeImageView.setImage(null);
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             statusIcon.setDisable(true);

@@ -32,8 +32,10 @@ public class EpisodeEntity {
         availableAudio = new HashMap<>();
     }
 
-    public EpisodeEntity(String test) {
-        episodeTitle = test;
+    public EpisodeEntity(String episodeTitle, String programTitle, ProgressStates progressState) {
+        this.episodeTitle = episodeTitle;
+        this.programTitle = programTitle;
+        this.progressState = progressState;
         svtId = "";
         availableSubs = new HashMap<>();
         availableResolutions = new HashMap<>();

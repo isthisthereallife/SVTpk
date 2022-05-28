@@ -1,8 +1,11 @@
 package org.m.svtpk.utils;
 
 import javafx.application.Platform;
-import org.m.svtpk.SvtpkApplication;
-import org.m.svtpk.entity.EpisodeEntity;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.paint.Color;
+import org.m.svtpk.entity.ProgressStates;
+import org.m.svtpk.entity.QueueEntity;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -15,38 +18,42 @@ import java.util.List;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 
-
 public class EpisodeCopier implements Runnable {
-    private final EpisodeEntity episode;
 
-    public EpisodeCopier(EpisodeEntity episode) {
-        this.episode = episode;
+    QueueEntity queueEntity;
+
+    public EpisodeCopier(QueueEntity queueEntity) {
+        this.queueEntity = queueEntity;
     }
 
     @Override
     public void run() {
+        queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(123,152, 115), null, null)));
+        queueEntity.getEpisode().setProgressState(ProgressStates.ACTIVE);
         Settings settings = Settings.load();
         String videoFiletype = ".mp4";
         String subsFiletype = ".srt";
-        String filename = StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(videoFiletype);
-        String subsname = StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(subsFiletype);
+        String filename = StringHelpers.fileNameFixerUpper(queueEntity.getEpisode().getProgramTitle() + "-" + queueEntity.getEpisode().getEpisodeTitle()).concat(videoFiletype);
+        String subsname = StringHelpers.fileNameFixerUpper(queueEntity.getEpisode().getProgramTitle() + "-" + queueEntity.getEpisode().getEpisodeTitle()).concat(subsFiletype);
 
 
+        /*
         Platform.runLater(() -> {
             SvtpkApplication.updateLoadingBar(0);
         });
+         */
 
-        String vidArgs = "0:" + episode.getAvailableResolutions().get(settings.getResolution()).getId();
-        String audArgs = "0:" + episode.getAvailableAudio().get(settings.getAudio()).getId();
+        String vidArgs = "0:" + queueEntity.getEpisode().getAvailableResolutions().get(settings.getResolution()).getId();
+        String audArgs = "0:" + queueEntity.getEpisode().getAvailableAudio().get(settings.getAudio()).getId();
         String subArgs = settings.getSubs().equalsIgnoreCase("Inga undertexter") ?
                 ""
                 :
-                "0:" + episode.getAvailableSubs().get(settings.getSubs()).getId();
+                "0:" + queueEntity.getEpisode().getAvailableSubs().get(settings.getSubs()).getId();
 
         String map = "-map";
         ArrayList<String> temp = new ArrayList<>(List.of(new String[]{"ffmpeg",
                 "-i",
-                "\"" + episode.getMpdURL() + "\"",
+                "\"" + queueEntity.getEpisode().getMpdURL() + "\"",
                 map,
                 vidArgs,
                 map,
@@ -81,16 +88,12 @@ public class EpisodeCopier implements Runnable {
                     int seconds = Integer.parseInt(time[2].split("\\.")[0]);
                     //int millisec = Integer.parseInt(time[2].split("\\.")[1]);
                     int elapsedTime = (hours * 60 * 60) + (minutes * 60) + seconds;
-                    assert episode.getContentDuration() != 0;
-                    Platform.runLater(() -> {
-                        SvtpkApplication.updateLoadingBar(((double) elapsedTime / episode.getContentDuration()));
-                    });
+                    assert queueEntity.getEpisode().getContentDuration() != 0;
+                    //Platform.runLater(() -> SvtpkApplication.updateLoadingBar(((double) elapsedTime / queueEntity.getEpisode().getContentDuration())));
                 }
             }
             process.waitFor();
-            Platform.runLater(() -> {
-                SvtpkApplication.updateLoadingBar(1.0);
-            });
+            //Platform.runLater(() -> SvtpkApplication.updateLoadingBar(1.0));
 
             //flytta skiten
             Path source = Paths.get(System.getProperty("user.dir")).resolve(filename);
@@ -106,10 +109,8 @@ public class EpisodeCopier implements Runnable {
             if (settings.isAdvancedUser()) System.out.println("Orginalfil borttagen.");
 
             //if subs
-            System.out.println("getsubs? "+ !settings.getSubs().equalsIgnoreCase("Inga undertexter"));
-            if ( !settings.getSubs().equalsIgnoreCase("Inga undertexter")) {
-                String subs = connectToURLReturnBodyAsString(episode.getAvailableSubs().get(settings.getSubs()).getUrl());
-                System.out.println(subs);
+            if (!settings.getSubs().equalsIgnoreCase("Inga undertexter")) {
+                String subs = connectToURLReturnBodyAsString(queueEntity.getEpisode().getAvailableSubs().get(settings.getSubs()).getUrl());
                 FileWriter fw = new FileWriter(subsname);
                 fw.write(subs);
                 fw.close();
@@ -123,8 +124,18 @@ public class EpisodeCopier implements Runnable {
 
             }
 
+            Platform.runLater(()->{
+                queueEntity.getEpisode().setProgressState(ProgressStates.DONE);
+                queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(0,194,0), null, null)));
+                queueEntity.setText(queueEntity.getText()+" - KLART");
+            });
+            QueueHandler.processQueue();
+
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+            queueEntity.getEpisode().setProgressState(ProgressStates.ERROR);
+            queueEntity.setBackground(new Background(new BackgroundFill(Color.FIREBRICK, null, null)));
+
         }
     }
 
