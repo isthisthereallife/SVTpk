@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
+import org.m.svtpk.SvtpkApplication;
 import org.m.svtpk.entity.ProgressStates;
 import org.m.svtpk.entity.QueueEntity;
 
@@ -28,8 +29,9 @@ public class EpisodeCopier implements Runnable {
 
     @Override
     public void run() {
-        queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(123,152, 115), null, null)));
-        queueEntity.getEpisode().setProgressState(ProgressStates.ACTIVE);
+        Platform.runLater(()->{
+            queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(123, 152, 115), null, null)));
+        });
         Settings settings = Settings.load();
         String videoFiletype = ".mp4";
         String subsFiletype = ".srt";
@@ -90,10 +92,16 @@ public class EpisodeCopier implements Runnable {
                     int elapsedTime = (hours * 60 * 60) + (minutes * 60) + seconds;
                     assert queueEntity.getEpisode().getContentDuration() != 0;
                     //Platform.runLater(() -> SvtpkApplication.updateLoadingBar(((double) elapsedTime / queueEntity.getEpisode().getContentDuration())));
+                    //istället ska jag göra den här platform.runLater-grejen från ett annat ställe
+                    //men ändra progressInt kan jag göra
+                    double progress = (double) elapsedTime / queueEntity.getEpisode().getContentDuration();
+                    Platform.runLater(() -> {
+                        //queueEntity.getEpisode().setProgressDouble(progress);
+                        SvtpkApplication.updateLoadingBar(queueEntity,progress);
+                    });
                 }
             }
             process.waitFor();
-            //Platform.runLater(() -> SvtpkApplication.updateLoadingBar(1.0));
 
             //flytta skiten
             Path source = Paths.get(System.getProperty("user.dir")).resolve(filename);
@@ -104,6 +112,7 @@ public class EpisodeCopier implements Runnable {
                 Files.createDirectories(Paths.get(settings.getPath()));
             }
             Files.copy(source, target, REPLACE_EXISTING);
+            queueEntity.getEpisode().setSaveLocation(target);
             if (settings.isAdvancedUser()) System.out.println("Fil flyttad.");
             Files.delete(source);
             if (settings.isAdvancedUser()) System.out.println("Orginalfil borttagen.");
@@ -124,10 +133,13 @@ public class EpisodeCopier implements Runnable {
 
             }
 
-            Platform.runLater(()->{
-                queueEntity.getEpisode().setProgressState(ProgressStates.DONE);
-                queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(0,194,0), null, null)));
-                queueEntity.setText(queueEntity.getText()+" - KLART");
+            queueEntity.getEpisode().setProgressState(ProgressStates.DONE);
+            Platform.runLater(() -> {
+                queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(0, 194, 0), null, null)));
+                queueEntity.getEpisode().setProgressDouble(1);
+                queueEntity.setText(queueEntity.toString());
+                queueEntity.setContextMenu(queueEntity.createContextMenu());
+
             });
             QueueHandler.processQueue();
 

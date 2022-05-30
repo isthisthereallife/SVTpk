@@ -1,14 +1,15 @@
 package org.m.svtpk.entity;
 
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.cell.CheckBoxListCell;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import static org.m.svtpk.SvtpkApplication.queue;
 
-public class QueueEntity extends ListCell {
+public class QueueEntity extends CheckBoxListCell {
     ContextMenu contextMenu;
     EpisodeEntity episode;
     String priority;
@@ -41,16 +42,21 @@ public class QueueEntity extends ListCell {
 
 
     public ContextMenu createContextMenu() {
-        // Open a menu
         final ContextMenu contextMenu = new ContextMenu();
         //MenuItem miPlay = new MenuItem("Start");
         //MenuItem miPause = new MenuItem("Pause");
         //MenuItem miAbort = new MenuItem("Stop");
         //MenuItem miRemove = new MenuItem("Ta Bort från listan");
+        MenuItem miOpenFolder = new MenuItem("Öppna filens sökväg");
         MenuItem miRemoveDone = new MenuItem("Ta Bort Färdiga");
         //MenuItem miRemoveAll = new MenuItem("Rensa Listan");
-
-        contextMenu.getItems().addAll(/*miPlay,*/ /*miPause,*/ /*miAbort,*/ /*miRemove*/miRemoveDone/*, miRemoveAll*/);
+        ArrayList<MenuItem> list = new ArrayList<>();
+        if (this.episode.getSaveLocation() != null) {
+            list.add(miOpenFolder);
+        }
+        list.add(miRemoveDone);
+        contextMenu.getItems().addAll(list);
+        //contextMenu.getItems().addAll(/*miPlay,*/ /*miPause,*/ /*miAbort,*/ /*miRemove*/miRemoveDone/*, miRemoveAll*/);
         /*
         miPlay.setOnAction((mi) -> {
             System.out.println("jag är miPlay mi: " + mi.toString());
@@ -88,6 +94,18 @@ public class QueueEntity extends ListCell {
             //ta bort denna från queue
         });
         */
+
+        miOpenFolder.setOnAction((mi) -> {
+            //samma som den gröna texten, typ
+            System.out.println("öppna folder");
+
+            try {
+                Runtime.getRuntime().exec("explorer.exe /select," + episode.getSaveLocation());
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        });
+
         miRemoveDone.setOnAction((mi) -> {
             //System.out.println("jag är miRemoveDone mi: " + mi.toString());
             //System.out.println("mitt avsnitt är: \n" + this.episode.getEpisodeTitle());
@@ -117,6 +135,6 @@ public class QueueEntity extends ListCell {
 
     @Override
     public String toString() {
-        return episode.getProgramTitle() + " - " + episode.getEpisodeTitle() + episode.getProgressState();
+        return episode.getEpisodeTitle() + "\n" + episode.getProgramTitle() + "\n" + (int) (episode.getProgressDouble() * 100) + "%";
     }
 }

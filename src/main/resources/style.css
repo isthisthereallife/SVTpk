@@ -1,0 +1,8 @@
+.list-cell{
+    -fx-font-size: 12;
+    -fx-fill: true;
+    -fx-padding: 0;
+    -fx-start-margin: 0;
+    -fx-end-margin: 0;
+    -fx-fill-width: true;
+}

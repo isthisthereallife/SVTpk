@@ -27,7 +27,9 @@ import org.m.svtpk.utils.EpisodeCopier;
 import org.m.svtpk.utils.QueueHandler;
 import org.m.svtpk.utils.Settings;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,13 +38,13 @@ import static javafx.scene.paint.Color.BLACK;
 import static javafx.scene.paint.Color.DARKGREEN;
 
 public class SvtpkApplication extends Application {
-    EpisodeEntity currentEpisode = new EpisodeEntity();
+    static EpisodeEntity currentEpisode = new EpisodeEntity();
     EpisodeService episodeService = new EpisodeService();
     Text infoText;
-    Button dlBtn;
+    static Button dlBtn;
     ImageView episodeImageView;
     ImageView statusIcon;
-    TextField addressTextField;
+    TextField addressTextField = new TextField("");
     Stage window;
     Settings settings;
     HBox episodeHBox;
@@ -62,6 +64,7 @@ public class SvtpkApplication extends Application {
     EpisodeCopier episodeCopier;
     Thread downThread = new Thread(episodeCopier);
     org.m.svtpk.utils.QueueHandler QueueHandler = new QueueHandler();
+    Clipboard clip;
 
     @Override
     public void start(Stage stage) {
@@ -82,12 +85,11 @@ public class SvtpkApplication extends Application {
             System.out.println("Java runtime version: " + System.getProperty("java.runtime.version"));
         }
         GridPane grid = basicGrid();
-
         Label addressFieldLabel = new Label("Ange adress till avsnitt");
         addressFieldLabel.setAlignment(Pos.CENTER);
 
         //paste from clipboard if clipboard text exists and seems relevant
-        Clipboard clip = Clipboard.getSystemClipboard();
+        clip = Clipboard.getSystemClipboard();
         addressTextField = addressTextField == null ?
                 clip.getString() == null ?
                         new TextField()
@@ -103,6 +105,7 @@ public class SvtpkApplication extends Application {
 
         ListView<QueueEntity> queueListView = new ListView<>();
         //QueueEntity qE = new QueueEntity(currentEpisode);
+        queueListView.setVisible(false);
         queueListView.setItems(queue);
         queueListView.setPrefWidth(200);
         queueListView.setPrefHeight(600);
@@ -173,9 +176,10 @@ public class SvtpkApplication extends Application {
         Text currentSavePath = settings.getPath() == null ? new Text() : new Text(settings.getPath());//settings.getPath()==null ? "" : settings.getPath());
         //settingsPane.setWrapText(true);
         //currentSavePath.setSmooth(true);
-        currentSavePath.setOnMouseEntered(e->{
+        currentSavePath.setOnMouseEntered(e -> {
             currentSavePath.setFill(Paint.valueOf(String.valueOf(DARKGREEN)));
-        });currentSavePath.setOnMouseExited(e->{
+        });
+        currentSavePath.setOnMouseExited(e -> {
             currentSavePath.setFill(Paint.valueOf(String.valueOf(BLACK)));
         });
         currentSavePath.setWrappingWidth(150);
@@ -185,7 +189,7 @@ public class SvtpkApplication extends Application {
                 settings.save();
             }
         });
-        currentSavePath.setOnMouseClicked(e->{
+        currentSavePath.setOnMouseClicked(e -> {
             try {
                 Runtime.getRuntime().exec("explorer.exe /select," + currentSavePath);
             } catch (IOException ex) {
@@ -276,24 +280,34 @@ public class SvtpkApplication extends Application {
         hboxDlBtn.getChildren().add(dlBtn);
 
 
-        addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (addressTextField.getText().length() < 1) {
-                currentEpisode = new EpisodeEntity();
-                updateUI();
-            }
-        });
         addressTextField.setOnKeyPressed(e -> {
             if (e.getCode().toString().equals("ENTER")) {
                 currentEpisode = episodeService.findEpisode(addressTextField.getText());
                 updateUI();
             }
         });
-
-        Button findEpisodeBtn = new Button("Hitta");
+        String findEpisodeBtnText = clip.getString().contains("svt") ? "Klistra in och Hitta" : "Hitta";
+        Button findEpisodeBtn = new Button(findEpisodeBtnText);
         findEpisodeBtn.setOnAction(e -> {
-            currentEpisode = episodeService.findEpisode(addressTextField.getText());
+            if (addressTextField.getText().equals("") && clip.getString().contains("svt")) {
+                addressTextField.setText(clip.getString());
+                currentEpisode = episodeService.findEpisode(clip.getString());
+            } else currentEpisode = episodeService.findEpisode(addressTextField.getText());
             updateUI();
         });
+
+
+        addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (addressTextField.getText().length() < 1) {
+                currentEpisode = new EpisodeEntity();
+                findEpisodeBtn.setText("Klistra in och Hitta");
+                updateUI();
+            } else {
+                findEpisodeBtn.setText("Hitta");
+            }
+
+        });
+
 
         HBox search = new HBox(10);
         search.getChildren().add(addressTextField);
@@ -308,14 +322,25 @@ public class SvtpkApplication extends Application {
 
             QueueEntity queueEntity = new QueueEntity(currentEpisode);
             queueEntity.setContextMenu(queueEntity.createContextMenu());
-            queueEntity.setText(queueEntity.getEpisode().getEpisodeTitle());
-            queueEntity.setWrapText(true);
+            queueEntity.setText(queueEntity.toString());
+            queueEntity.setWrapText(false);
             queueEntity.setBackground(new Background(new BackgroundFill(Color.LIGHTGREY, null, null)));
-            queueEntity.setPrefWidth(140);
-            queueEntity.setTextOverrun(OverrunStyle.WORD_ELLIPSIS);
-            queueEntity.setPrefHeight(60);
+            queueEntity.setPrefWidth(135);
+            queueEntity.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
+            queueEntity.setPadding(Insets.EMPTY);
+
+
+            //queueEntity.setPrefHeight(90);
 
             queue.add(queueEntity);
+            queueListView.setVisible(true);
+            File f = new File("src/main/resources/style.css");
+            try {
+                queueListView.getStyleClass().add(f.toURI().toURL().toString());
+            } catch (MalformedURLException ex) {
+                ex.printStackTrace();
+            }
+
             queueListView.setItems(queue);
         });
 
@@ -342,12 +367,18 @@ public class SvtpkApplication extends Application {
         return new Scene(grid, 640, 480);
     }
 
-    public static void updateLoadingBar(double loaderCounter) {
-        progressBar.setVisible(true);
-        progressBar.setProgress(loaderCounter);
-        loaded.setText(Math.round(loaderCounter * 100) + "%");
+    public static void updateLoadingBar(QueueEntity qE, double progress) {
+        qE.getEpisode().setProgressDouble(progress);
+        qE.setText(qE.toString());
+        if ((int) progress == 1 && qE.getEpisode().getSvtId().toString().equals(currentEpisode.getSvtId().toString())) {
+            dlBtn.setText("Kopierat!");
 
-        loadingCounter.set(loaderCounter * 100);
+        }
+        //progressBar.setVisible(true);
+        //progressBar.setProgress(loaderCounter);
+        //loaded.setText(Math.round(loaderCounter * 100) + "%");
+
+        // loadingCounter.set(loaderCounter * 100);
     }
 
 

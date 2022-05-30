@@ -4,7 +4,9 @@ import org.m.svtpk.entity.AudioReferencesEntity;
 import org.m.svtpk.entity.EpisodeEntity;
 import org.m.svtpk.entity.SubtitleReferencesEntity;
 import org.m.svtpk.entity.VideoReferencesEntity;
+import org.m.svtpk.utils.Settings;
 import org.m.svtpk.utils.StringHelpers;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -13,9 +15,10 @@ import java.net.URL;
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 
 public class EpisodeService {
+    Settings settings = Settings.load();
 
     public EpisodeEntity findEpisode(String address) {
-        address = address.replace(" ", "");
+        address = address.replace(" ", "").trim();
         EpisodeEntity episode = new EpisodeEntity();
         if (address.length() > 9) {
             try {
@@ -30,15 +33,15 @@ public class EpisodeService {
                         if (!res.equals("")) {
                             String id = res.split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
                             episode = getEpisodeInfo(address + "?" + id);
-                        } else System.out.println("URI was not absolute, didn't search.");
+                        } else {
+                            if (settings.isAdvancedUser()) System.out.println("URI was not absolute, didn't search.");
+                        }
                     } else {
-                        System.out.println("Vänligen ange en adress till SVT Play");
+                        if (settings.isAdvancedUser()) System.out.println("Vänligen ange en adress till SVT Play");
                     }
                 }
-            } catch (MalformedURLException e) {
-                System.out.println(e.getMessage());
             } catch (Exception e) {
-                e.printStackTrace();
+                if (settings.isAdvancedUser()) e.printStackTrace();
             }
         }
         return episode;
@@ -70,12 +73,14 @@ public class EpisodeService {
                     try {
                         episode.setImageURL(new URL(getImgURL(address)));
                     } catch (Exception e) {
-                        System.out.println("Could not get episode image");
+                        if(settings.isAdvancedUser()) System.out.println("Could not get episode image");
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Could not get episode info");
-                System.out.println(e.getMessage());
+                if(settings.isAdvancedUser()) {
+                    System.out.println("Could not get episode info");
+                    System.out.println(e.getMessage());
+                }
                 return new EpisodeEntity();
             }
         }
@@ -180,7 +185,6 @@ public class EpisodeService {
         }
         return episode;
     }
-
 
 
 }

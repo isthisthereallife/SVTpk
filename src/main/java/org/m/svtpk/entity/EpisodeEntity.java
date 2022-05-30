@@ -2,6 +2,7 @@ package org.m.svtpk.entity;
 
 
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -22,8 +23,8 @@ public class EpisodeEntity {
     private HashMap<String, AudioReferencesEntity> availableAudio;
     private boolean isLive;
     private ProgressStates progressState;
-    private int progressInt;
-    private String saveLocation;
+    private double progressDouble;
+    private Path saveLocation;
 
     public EpisodeEntity() {
         svtId = "";
@@ -226,19 +227,19 @@ public class EpisodeEntity {
         this.progressState = progressState;
     }
 
-    public int getProgressInt() {
-        return progressInt;
+    public double getProgressDouble() {
+        return progressDouble;
     }
 
-    public void setProgressInt(int progressInt) {
-        this.progressInt = progressInt;
+    public void setProgressDouble(double progressDouble) {
+        this.progressDouble = progressDouble;
     }
 
-    public String getSaveLocation() {
+    public Path getSaveLocation() {
         return saveLocation;
     }
 
-    public void setSaveLocation(String saveLocation) {
+    public void setSaveLocation(Path saveLocation) {
         this.saveLocation = saveLocation;
     }
 
