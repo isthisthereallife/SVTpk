@@ -1,9 +1,30 @@
 <h1>SVTpk - Privatkopiera från SVT Play</h1>
 
-<h2><a href="https://mega.nz/file/h64yFLLY#AQNMfWHo9Sp9wTMAvbUa7OqNRPdyqU-9vK3D4uDYbVU">Klicka här för att komma till nedladdningssidan.</a></h2>
+<h2><a href="https://mega.nz/file/kiwmRCwQ#56gIx8q8gr_oTTCFX3K_me3ApseWpFhR0RdAOvhAedg"> Ladda ner Version 0.2</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h2>
+<p><a href="https://mega.nz/file/BnJGBbaD#nCGQq3IUwuzfodYJmZta3prHbYKQCOe1i1qNRC5dZY4">(jag har redan ffmpeg på min dator)</a></p>
+
 <hr>
+<br/>
+<ul>
+    Nyheter i version 0.2
+    <li>Alla avsnitt går att ladda ner</li>
+    <li>Möjligt att köa nedladdningar</li>
+
+</ul>
+<br/>
+<hr>
+<br/>
+<br/>
+<br/>
 <a href="https://github.com/isthisthereallife/svtpk">Klicka här för att komma till källkoden.</a> 
 <hr>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 <br/>
 <br/>
 <h3>För utvecklare</h3>
