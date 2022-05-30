@@ -1,8 +1,13 @@
 <h1>SVTpk - Privatkopiera från SVT Play</h1>
 
-<h2><a href="https://mega.nz/file/kiwmRCwQ#56gIx8q8gr_oTTCFX3K_me3ApseWpFhR0RdAOvhAedg"> Ladda ner Version 0.2</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h2>
-<p><a href="https://mega.nz/file/BnJGBbaD#nCGQq3IUwuzfodYJmZta3prHbYKQCOe1i1qNRC5dZY4">(jag har redan ffmpeg på min dator)</a></p>
-
+<hr>
+<h2>Windows:</h2>
+<h3><a href="https://mega.nz/file/kiwmRCwQ#56gIx8q8gr_oTTCFX3K_me3ApseWpFhR0RdAOvhAedg"> Ladda ner Version 0.2</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
+<p><a href="https://mega.nz/file/BnJGBbaD#nCGQq3IUwuzfodYJmZta3prHbYKQCOe1i1qNRC5dZY4">(Jag har redan ffmpeg på min dator)</a></p>
+<h2>Mac</h2>
+<p>Kommer snart!</p>
+<h2>Linux</h2>
+Inte aktuellt.
 <hr>
 <br/>
 <ul>
