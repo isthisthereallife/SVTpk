@@ -77,6 +77,7 @@ public class SvtpkApplication extends Application {
     }
 
     public Scene homeScene() {
+        System.out.println("SVTpk - v0.2.1");
         downThread.start();
         settings = Settings.load();
 
@@ -279,7 +280,7 @@ public class SvtpkApplication extends Application {
             }
         });
         String findEpisodeBtnText = clip.getString() == null ?
-                "Hitta" : clip.getString().contains("svt") ? "Klistra in och Hitta" : "Hitta";
+                "Hitta" : clip.getString().contains("svt") && addressTextField.getText().trim().length()<1 ? "Klistra in och Hitta" : "Hitta";
         Button findEpisodeBtn = new Button(findEpisodeBtnText);
         findEpisodeBtn.setOnAction(e -> {
             if (addressTextField.getText().equals("") && clip.getString() != null && clip.getString().contains("svt")) {

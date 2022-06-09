@@ -2,8 +2,8 @@
 
 <hr>
 <h2>Windows:</h2>
-<h3><a href="https://mega.nz/file/kiwmRCwQ#56gIx8q8gr_oTTCFX3K_me3ApseWpFhR0RdAOvhAedg"> Ladda ner Version 0.2</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
-<p><a href="https://mega.nz/file/BnJGBbaD#nCGQq3IUwuzfodYJmZta3prHbYKQCOe1i1qNRC5dZY4">(Jag har redan ffmpeg på min dator)</a></p>
+<h3><a href="https://mega.nz/file/J7IS3DLK#gNFpIkJsAmeLYkv06PfIBBsXhpLAJBe_gtKfgWkJSKs"> Ladda ner Version 0.2</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
+<p><a href="https://mega.nz/file/h25E1C5a#5FKfcsGZl5_6ODMBJ_WxSE6SeJUrpxx9pLTUpxLwzvE">(Jag har redan ffmpeg på min dator)</a></p>
 <h2>Mac</h2>
 <p>Kommer snart!</p>
 <h2>Linux</h2>
@@ -11,7 +11,11 @@ Inte aktuellt.
 <hr>
 <br/>
 <ul>
-    Nyheter i version 0.2
+    
+    Uppdateringar
+    <li>Klistrar automatiskt in kopierad adress om den är relevant.</li>
+
+    0.2
     <li>Alla avsnitt går att ladda ner</li>
     <li>Möjligt att köa nedladdningar</li>
 
