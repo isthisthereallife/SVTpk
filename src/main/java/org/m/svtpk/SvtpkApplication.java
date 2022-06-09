@@ -100,7 +100,6 @@ public class SvtpkApplication extends Application {
                                 :
                                 new TextField()
                         : addressTextField;
-        System.out.println("satte textfield till " + addressTextField.getText());
         addressTextField.setPrefWidth(400);
 
 
