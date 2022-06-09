@@ -2,19 +2,26 @@
 
 <hr>
 <h2>Windows:</h2>
-<h3><a href="https://mega.nz/file/kiwmRCwQ#56gIx8q8gr_oTTCFX3K_me3ApseWpFhR0RdAOvhAedg"> Ladda ner Version 0.2</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
-<p><a href="https://mega.nz/file/BnJGBbaD#nCGQq3IUwuzfodYJmZta3prHbYKQCOe1i1qNRC5dZY4">(Jag har redan ffmpeg på min dator)</a></p>
+<h3><a href="https://mega.nz/file/J7IS3DLK#gNFpIkJsAmeLYkv06PfIBBsXhpLAJBe_gtKfgWkJSKs"> Ladda ner Version 0.2.1</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
+<p><a href="https://mega.nz/file/h25E1C5a#5FKfcsGZl5_6ODMBJ_WxSE6SeJUrpxx9pLTUpxLwzvE">(Jag har redan ffmpeg på min dator)</a></p>
 <h2>Mac</h2>
 <p>Kommer snart!</p>
 <h2>Linux</h2>
 Inte aktuellt.
 <hr>
 <br/>
-<ul>
-    Nyheter i version 0.2
+<ul style="list-style-type:square">
+    <h4>Uppdateringshistorik</h4>
+    <h5><a href="https://mega.nz/file/J7IS3DLK#gNFpIkJsAmeLYkv06PfIBBsXhpLAJBe_gtKfgWkJSKs">Version 0.2.1</a></h5>
+    <li>Klistrar automatiskt in kopierad adress om den är relevant.</li>
+    <li>Små buggfixar.</li>
+    <h5><a href="https://mega.nz/file/kiwmRCwQ#56gIx8q8gr_oTTCFX3K_me3ApseWpFhR0RdAOvhAedg">Version 0.2</a></h5>
     <li>Alla avsnitt går att ladda ner</li>
     <li>Möjligt att köa nedladdningar</li>
-
+    <h5><a href="https://mega.nz/file/h64yFLLY#AQNMfWHo9Sp9wTMAvbUa7OqNRPdyqU-9vK3D4uDYbVU">Version 0.1.1</a></h5>
+    <li>Lagt till ikoner och bilder</li>
+    <h5><a href="https://mega.nz/file/U7ABTIzZ#dtHnHtryLUInrxiRqcf0nT9QndljDshkQNde0o-A7pc">Version 0.1</a></h5>
+    <li>Grundläggande funktionalitet</li>
 </ul>
 <br/>
 <hr>
