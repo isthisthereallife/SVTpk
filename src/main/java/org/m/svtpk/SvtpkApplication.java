@@ -33,6 +33,7 @@ import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static javafx.scene.paint.Color.BLACK;
 import static javafx.scene.paint.Color.DARKGREEN;
@@ -90,14 +91,16 @@ public class SvtpkApplication extends Application {
 
         //paste from clipboard if clipboard text exists and seems relevant
         clip = Clipboard.getSystemClipboard();
-        addressTextField = addressTextField == null ?
-                clip.getString() == null ?
-                        new TextField()
-                        : clip.getString().contains("svt") ?
-                        new TextField(Clipboard.getSystemClipboard().getString())
-                        :
-                        new TextField()
-                : addressTextField;
+        addressTextField =
+                Objects.equals(addressTextField.getText(), "") ?
+                        clip.getString() == null ?
+                                new TextField()
+                                : clip.getString().contains("svt") ?
+                                new TextField(Clipboard.getSystemClipboard().getString())
+                                :
+                                new TextField()
+                        : addressTextField;
+        System.out.println("satte textfield till " + addressTextField.getText());
         addressTextField.setPrefWidth(400);
 
 
@@ -174,8 +177,7 @@ public class SvtpkApplication extends Application {
 
         HBox hBoxCopy = new HBox(dirText, dirBtn);
         Text currentSavePath = settings.getPath() == null ? new Text() : new Text(settings.getPath());//settings.getPath()==null ? "" : settings.getPath());
-        //settingsPane.setWrapText(true);
-        //currentSavePath.setSmooth(true);
+
         currentSavePath.setOnMouseEntered(e -> {
             currentSavePath.setFill(Paint.valueOf(String.valueOf(DARKGREEN)));
         });
@@ -211,12 +213,6 @@ public class SvtpkApplication extends Application {
         );
         VBox copy = new VBox(hBoxCopy, currentSavePath);
 
-       /*
-        path.valueProperty().addListener((observableValue, s, newValue) -> {
-            settings.setResolution(newValue);
-            settings.save();
-        });
-        */
         vBoxSettings.getChildren().add(res);
         vBoxSettings.getChildren().add(lang);
         vBoxSettings.getChildren().add(sub);
@@ -228,7 +224,6 @@ public class SvtpkApplication extends Application {
         settingsPane.setLayoutY(1);
         settingsPane.maxWidth(50);
 
-        //settingsPane.prefWidth(200);
 
         Accordion accordion = new Accordion();
         accordion.getPanes().add(settingsPane);
@@ -236,9 +231,7 @@ public class SvtpkApplication extends Application {
 
         episodeHBox = new HBox(vBoxInfoText, settingsBox);
         mainContentBox = mainContentBox != null ? mainContentBox : new HBox(episodeHBox);
-        //mainContentBox = mainContentBox != null ? mainContentBox : episodeHBox;
 
-        //byt den här till en separat låda
         episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
 
         statusIcon = currentEpisode.hasID(currentEpisode) ? Arrow.getImgViewArrowDown("green") : Arrow.getImgViewArrowDown("grey");
@@ -286,10 +279,11 @@ public class SvtpkApplication extends Application {
                 updateUI();
             }
         });
-        String findEpisodeBtnText = clip.getString().contains("svt") ? "Klistra in och Hitta" : "Hitta";
+        String findEpisodeBtnText = clip.getString() == null ?
+                "Hitta" : clip.getString().contains("svt") ? "Klistra in och Hitta" : "Hitta";
         Button findEpisodeBtn = new Button(findEpisodeBtnText);
         findEpisodeBtn.setOnAction(e -> {
-            if (addressTextField.getText().equals("") && clip.getString().contains("svt")) {
+            if (addressTextField.getText().equals("") && clip.getString() != null && clip.getString().contains("svt")) {
                 addressTextField.setText(clip.getString());
                 currentEpisode = episodeService.findEpisode(clip.getString());
             } else currentEpisode = episodeService.findEpisode(addressTextField.getText());
@@ -298,7 +292,7 @@ public class SvtpkApplication extends Application {
 
 
         addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (addressTextField.getText().length() < 1) {
+            if (addressTextField.getText().length() < 1 && clip.getString() != null && clip.getString().contains("svt")) {
                 currentEpisode = new EpisodeEntity();
                 findEpisodeBtn.setText("Klistra in och Hitta");
                 updateUI();
@@ -401,7 +395,6 @@ public class SvtpkApplication extends Application {
             setVideoRes();
             setAudioLanguage();
             setSubs();
-            loaded.setText("");
             infoText.setVisible(true);
             infoText.setFill(DARKGREEN);
             infoText.setText(currentEpisode.toString());
