@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class HttpBodyGetter {
     public static String connectToURLReturnBodyAsString(URL url) {
@@ -13,10 +14,10 @@ public class HttpBodyGetter {
         try {
             HttpURLConnection huc = (HttpURLConnection) url.openConnection();
             huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0");
-            huc.setRequestProperty("content-type","text/html; charset=utf-8");
+            huc.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
             huc.connect();
             // read the output from the server
-            reader = new BufferedReader(new InputStreamReader(huc.getInputStream()));
+            reader = new BufferedReader(new InputStreamReader(huc.getInputStream(), StandardCharsets.UTF_8));
             stringBuilder = new StringBuilder();
 
             String line = null;

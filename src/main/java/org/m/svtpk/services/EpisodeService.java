@@ -89,7 +89,6 @@ public class EpisodeService {
                     episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
 
                     episode.setFilename(StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv"));
-                    System.out.println("File name is set in EpisodeService 95: "+episode.getFilename());
                     episode = updateEpisodeLinks(episode);
                     try {
                         episode.setImageURL(new URL(getImgURL(address)));
