@@ -2,7 +2,7 @@
 
 <hr>
 <h2>Windows:</h2>
-<h3><a href="https://mega.nz/file/V74CFJgD#DEl7mHPQZFMARjYBmoYm9SwJfyazrT1zOLSZM_VoEsM"> Ladda ner Version 0.2.1</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
+<h3><a href="https://mega.nz/file/V74CFJgD#DEl7mHPQZFMARjYBmoYm9SwJfyazrT1zOLSZM_VoEsM"> Ladda ner Version 0.2.2</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
 <p><a href="https://mega.nz/file/R3gRUawL#PqaYmtnvIzYuX-Rb7mMfBD69BlRuhkKSk5TueptwkqI">(Jag har redan ffmpeg på min dator)</a></p>
 <h2>Mac</h2>
 <p>Kommer snart!</p>
