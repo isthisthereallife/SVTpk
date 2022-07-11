@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.time.LocalDateTime;
 
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 
@@ -26,6 +27,7 @@ public class EpisodeService {
                 URL url = new URL(address);
                 //address = URLEncoder.encode(address, StandardCharsets.UTF_8);
                 if (uri.isAbsolute() && address.contains("\\id=")) {
+
                     episode = getEpisodeInfo(address);
                 } else if (uri.isAbsolute()) {
                     if (url.toString().contains("svtplay")) {
@@ -51,7 +53,12 @@ public class EpisodeService {
         EpisodeEntity episode = new EpisodeEntity();
         String[] id = address.split("id=");
         if (id.length > 1 && id[1].trim().length() > 5) {
-            String episodeId = address.split("id=")[1];
+
+
+            //clean up the id, remove excess
+            id[1] = id[1].split("\\W")[0];
+
+            String episodeId = id[1];
             String URI = "https://api.svt.se/video/" + episodeId;
             String body = "";
             try {
@@ -65,21 +72,35 @@ public class EpisodeService {
                     //check if it is a live stream
                     if (body.contains("\"live\":true")) return new EpisodeEntity(true);
                     episode.setSvtId(body.split("svtId\":\"")[1].split("\"")[0]);
-                    episode.setProgramTitle(body.split("programTitle\":\"")[1].split("\",")[0]);
-                    episode.setEpisodeTitle(body.split("episodeTitle\":\"")[1].split("\",")[0]);
+                    try {
+                        String progTitle = body.split("programTitle\":\"")[1].split("\",")[0];
+                        episode.setProgramTitle(progTitle);
+                    } catch (Exception e) {
+                        episode.setProgramTitle(LocalDateTime.now().toLocalDate().toString());
+                        System.out.println("Couldn't find program title. Setting program title to " + (LocalDateTime.now().toLocalDate().toString()));
+                    }
+                    try {
+                        episode.setEpisodeTitle(body.split("episodeTitle\":\"")[1].split("\",")[0]);
+                    } catch (Exception e) {
+                        episode.setEpisodeTitle(LocalDateTime.now().toLocalTime().toString());
+                        System.out.println("Couldn't find episode title. Setting episode title to " + (LocalDateTime.now().toLocalDate().toString()));
+                    }
+
                     episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
+
                     episode.setFilename(StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv"));
+                    System.out.println("File name is set in EpisodeService 95: "+episode.getFilename());
                     episode = updateEpisodeLinks(episode);
                     try {
                         episode.setImageURL(new URL(getImgURL(address)));
                     } catch (Exception e) {
-                        if(settings.isAdvancedUser()) System.out.println("Could not get episode image");
+                        if (settings.isAdvancedUser()) System.out.println("Could not get episode image");
                     }
                 }
             } catch (Exception e) {
-                if(settings.isAdvancedUser()) {
+                if (settings.isAdvancedUser()) {
                     System.out.println("Could not get episode info");
-                    System.out.println(e.getMessage());
+                    e.printStackTrace();
                 }
                 return new EpisodeEntity();
             }

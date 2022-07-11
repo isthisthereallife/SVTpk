@@ -96,8 +96,6 @@ public class QueueEntity extends CheckBoxListCell {
         */
 
         miOpenFolder.setOnAction((mi) -> {
-            //samma som den gröna texten, typ
-            System.out.println("öppna folder");
 
             try {
                 Runtime.getRuntime().exec("explorer.exe /select," + episode.getSaveLocation());
