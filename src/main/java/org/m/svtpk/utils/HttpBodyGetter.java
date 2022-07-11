@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class HttpBodyGetter {
     public static String connectToURLReturnBodyAsString(URL url) {
@@ -16,7 +17,7 @@ public class HttpBodyGetter {
             huc.setRequestProperty("content-type","text/html; charset=utf-8");
             huc.connect();
             // read the output from the server
-            reader = new BufferedReader(new InputStreamReader(huc.getInputStream()));
+            reader = new BufferedReader(new InputStreamReader(huc.getInputStream(), StandardCharsets.UTF_8));
             stringBuilder = new StringBuilder();
 
             String line = null;

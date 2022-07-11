@@ -4,9 +4,9 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.m</groupId>
     <artifactId>svtpk</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>svtpk</name>
-    <description>svtpk</description>
+    <version>0.2.3-SNAPSHOT</version>
+    <name>SVTpk</name>
+    <description>SVTpk</description>
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
