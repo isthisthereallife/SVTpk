@@ -3,6 +3,7 @@ package org.m.svtpk.entity;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.cell.CheckBoxListCell;
+import org.m.svtpk.utils.QueueHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import static org.m.svtpk.SvtpkApplication.queue;
 public class QueueEntity extends CheckBoxListCell {
     ContextMenu contextMenu;
     EpisodeEntity episode;
-    String priority;
+    int priority;
 
 
     public QueueEntity() {
@@ -24,11 +25,11 @@ public class QueueEntity extends CheckBoxListCell {
         contextMenu = createContextMenu();
     }
 
-    public String getPriority() {
+    public int getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(int priority) {
         this.priority = priority;
     }
 
@@ -47,9 +48,10 @@ public class QueueEntity extends CheckBoxListCell {
         //MenuItem miPause = new MenuItem("Pause");
         //MenuItem miAbort = new MenuItem("Stop");
         //MenuItem miRemove = new MenuItem("Ta Bort från listan");
-        MenuItem miOpenFolder = new MenuItem("Öppna filens sökväg");
+        MenuItem miOpenFolder = new MenuItem("Öppna Filens Sökväg");
         MenuItem miRemoveDone = new MenuItem("Ta Bort Färdiga");
         //MenuItem miRemoveAll = new MenuItem("Rensa Listan");
+        MenuItem miRetry = new MenuItem("Uppdatera Kö");
         ArrayList<MenuItem> list = new ArrayList<>();
         if (this.episode.getSaveLocation() != null) {
             list.add(miOpenFolder);
@@ -128,6 +130,10 @@ public class QueueEntity extends CheckBoxListCell {
             //ta bort alla från queue
         });
         */
+        contextMenu.getItems().add(miRetry);
+        miRetry.setOnAction((mi) -> {
+            QueueHandler.processQueue();
+        });
         return contextMenu;
     }
 

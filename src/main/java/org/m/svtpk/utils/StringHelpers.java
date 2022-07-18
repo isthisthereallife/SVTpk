@@ -21,4 +21,11 @@ public class StringHelpers {
                 .replace("/", "")
                 .replace("\\", "");
     }
+
+    public static String lazyfix(String orig){
+        return orig.replaceAll("\"","")
+                .replaceAll("\\\\","")
+                .replaceAll(":"," ")
+                .trim();
+    }
 }

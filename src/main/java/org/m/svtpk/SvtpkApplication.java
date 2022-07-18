@@ -2,12 +2,21 @@ package org.m.svtpk;
 
 import javafx.application.Application;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
@@ -20,6 +29,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import jdk.jfr.EventType;
 import org.m.svtpk.entity.*;
 import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
@@ -27,6 +37,8 @@ import org.m.svtpk.utils.EpisodeCopier;
 import org.m.svtpk.utils.QueueHandler;
 import org.m.svtpk.utils.Settings;
 
+import javax.swing.event.TreeSelectionEvent;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -39,6 +51,7 @@ import static javafx.scene.paint.Color.BLACK;
 import static javafx.scene.paint.Color.DARKGREEN;
 
 public class SvtpkApplication extends Application {
+    static ArrayList<SeasonEntity> seasons = new ArrayList<>();
     static EpisodeEntity currentEpisode = new EpisodeEntity();
     EpisodeService episodeService = new EpisodeService();
     Text infoText;
@@ -55,6 +68,8 @@ public class SvtpkApplication extends Application {
     ChoiceBox<String> resolutionChoiceBox;
     ChoiceBox<String> languageChoiceBox;
     ChoiceBox<String> subsChoiceBox;
+    TreeView<String> tree = new TreeView<>();
+    CheckBoxTreeItem<String> treeBase;
 
     static SimpleDoubleProperty loadingCounter;
     static Text loaded;
@@ -66,6 +81,7 @@ public class SvtpkApplication extends Application {
     Thread downThread = new Thread(episodeCopier);
     org.m.svtpk.utils.QueueHandler QueueHandler = new QueueHandler();
     Clipboard clip;
+
 
     @Override
     public void start(Stage stage) {
@@ -231,6 +247,8 @@ public class SvtpkApplication extends Application {
         episodeHBox = new HBox(vBoxInfoText, settingsBox);
         mainContentBox = mainContentBox != null ? mainContentBox : new HBox(episodeHBox);
 
+        episodeHBox.getChildren().add(tree);
+
         episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
 
         statusIcon = currentEpisode.hasID(currentEpisode) ? Arrow.getImgViewArrowDown("green") : Arrow.getImgViewArrowDown("grey");
@@ -243,6 +261,7 @@ public class SvtpkApplication extends Application {
         loadingCounter = loadingCounter != null ? loadingCounter : new SimpleDoubleProperty();
         loadingCounter.addListener(((observableValue, number, newValue) -> {
             loadingCounter.set((Double) newValue);
+            /*
             dlBtn.setDisable(true);
             if (loadingCounter.getValue() >= 0) {
                 loaded.setFill(Color.DARKGREY);
@@ -252,6 +271,7 @@ public class SvtpkApplication extends Application {
                 loaded.setFill(DARKGREEN);
                 dlBtn.setText("Kopierat!");
             }
+             */
         }));
 
         progress = progress != null ? progress : new VBox();
@@ -275,17 +295,27 @@ public class SvtpkApplication extends Application {
         addressTextField.setOnKeyPressed(e -> {
             if (e.getCode().toString().equals("ENTER")) {
                 currentEpisode = episodeService.findEpisode(addressTextField.getText());
+                if (currentEpisode.getSvtId() != null) {
+                    seasons = episodeService.getSeasonsFromEpisode(currentEpisode);
+                }
                 updateUI();
             }
         });
         String findEpisodeBtnText = clip.getString() == null ?
-                "Hitta" : clip.getString().contains("svt") ? "Klistra in och Hitta" : "Hitta";
+                "Hitta" : clip.getString().contains("svt") && addressTextField.getText().length() > 0 ? "Klistra in och Hitta" : "Hitta";
         Button findEpisodeBtn = new Button(findEpisodeBtnText);
         findEpisodeBtn.setOnAction(e -> {
             if (addressTextField.getText().equals("") && clip.getString() != null && clip.getString().contains("svt")) {
                 addressTextField.setText(clip.getString());
                 currentEpisode = episodeService.findEpisode(clip.getString());
-            } else currentEpisode = episodeService.findEpisode(addressTextField.getText());
+            } else {
+                currentEpisode = episodeService.findEpisode(addressTextField.getText());
+            }
+            if (currentEpisode.getSvtId() != null) {
+                seasons = episodeService.getSeasonsFromEpisode(currentEpisode);
+            }
+
+
             updateUI();
         });
 
@@ -311,21 +341,39 @@ public class SvtpkApplication extends Application {
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             dlBtn.setText("Kopierar...");
             dlBtn.setDisable(true);
-            currentEpisode.setProgressState(ProgressStates.QUEUED);
 
-            QueueEntity queueEntity = new QueueEntity(currentEpisode);
-            queueEntity.setContextMenu(queueEntity.createContextMenu());
-            queueEntity.setText(queueEntity.toString());
-            queueEntity.setWrapText(false);
-            queueEntity.setBackground(new Background(new BackgroundFill(Color.LIGHTGREY, null, null)));
-            queueEntity.setPrefWidth(135);
-            queueEntity.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
-            queueEntity.setPadding(Insets.EMPTY);
+            //kolla i seasons vilka som är WANTED
 
+            for (SeasonEntity seasonInSeasons : seasons) {
+                for (EpisodeEntity episodeInSeason : seasonInSeasons.getItems()) {
+                    if (episodeInSeason.getProgressState() != null && episodeInSeason.getProgressState().equals(ProgressStates.WANTED)) {
+                        boolean alreadyInQueue = false;
+                        // kolla om avsnittet redan finns i queue, isf så skit i att göra ett nytt
+                        for (QueueEntity episodeFromQueue : queue) {
+                            if (episodeFromQueue.getEpisode().getSvtId().equals(episodeInSeason.getSvtId())) {
+                                alreadyInQueue = true;
+                            }
+                        }
+                        // det är den HÄR jag vill ha
+                        //gör en riktig hämtning av avsnitten. här? kanske inte behövs. innan den ska laddas ner.
+                        if (!alreadyInQueue) {
+                            EpisodeEntity realEntity = episodeService.findEpisode(episodeInSeason.getSplashURL().toString());
+                            realEntity.setProgressState(ProgressStates.QUEUED);
+                            QueueEntity queueEntity = new QueueEntity(realEntity);
+                            queueEntity.setContextMenu(queueEntity.createContextMenu());
+                            queueEntity.setText(queueEntity.toString());
+                            queueEntity.setWrapText(false);
+                            queueEntity.setBackground(new Background(new BackgroundFill(Color.LIGHTGREY, null, null)));
+                            queueEntity.setPrefWidth(135);
+                            queueEntity.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
+                            queueEntity.setPadding(Insets.EMPTY);
+                            queue.add(queueEntity);
+                        }
 
-            //queueEntity.setPrefHeight(90);
+                    }
+                }
 
-            queue.add(queueEntity);
+            }
             queueListView.setVisible(true);
             File f = new File("src/main/resources/style.css");
             try {
@@ -335,14 +383,16 @@ public class SvtpkApplication extends Application {
             }
 
             queueListView.setItems(queue);
+            updateUI();
         });
 
         Button debugBtn = new Button("DEBUG");
         debugBtn.setAlignment(Pos.BOTTOM_CENTER);
         debugBtn.setOnAction(e -> {
         });
-        HBox episodeTree = new HBox();
 
+
+        HBox episodeTree = new HBox();
         //grid.setGridLinesVisible(true);
         ColumnConstraints cC = new ColumnConstraints();
         cC.setPercentWidth(100);
@@ -357,7 +407,7 @@ public class SvtpkApplication extends Application {
         grid.add(hboxDlBtn, 0, 7);
 
         //grid.add(debugBtn, 0, 7);
-        return new Scene(grid, 640, 480);
+        return new Scene(grid, 800, 600);
     }
 
     public static void updateLoadingBar(QueueEntity qE, double progress) {
@@ -378,6 +428,8 @@ public class SvtpkApplication extends Application {
     private void updateUI() {
         episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
         progressBar.setVisible(false);
+        tree.setDisable(true);
+        tree.setVisible(false);
         if (queue.size() > 0) queueVBox.setDisable(false);
         if (currentEpisode.isLive()) {
             // if requested episode is a live-stream
@@ -389,14 +441,14 @@ public class SvtpkApplication extends Application {
             currentEpisode = new EpisodeEntity();
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(true);
-        } else if (!currentEpisode.getSvtId().equals("")) {
+        } else if (!currentEpisode.getSvtId().equals("") && !currentEpisode.getSvtId().equalsIgnoreCase("upcoming")) {
             //if there is a SvtId
             setVideoRes();
             setAudioLanguage();
             setSubs();
             infoText.setVisible(true);
             infoText.setFill(DARKGREEN);
-            infoText.setText(currentEpisode.toString());
+
             settingsBox.setVisible(true);
             if (currentEpisode.getImageURL() != null) {
                 // if there is an image URL
@@ -407,6 +459,98 @@ public class SvtpkApplication extends Application {
             statusIcon.setDisable(false);
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(false);
+            System.out.println("(/#¤()/#¤#¤&#)¤&)#)/)))");
+
+            //tree = new TreeView();
+            tree.setDisable(false);
+            tree.setVisible(true);
+            treeBase = new CheckBoxTreeItem<>(currentEpisode.getProgramTitle());
+
+            tree.setEditable(true);
+
+            tree.getSelectionModel().selectedItemProperty()
+                    .addListener((observableValue, oldItem, newItem) -> {
+                                System.out.println("observableValue: " + observableValue);
+                                System.out.println("old item: " + oldItem);
+                                System.out.println("new item: " + newItem);
+                            }
+                    );
+            // season node
+            for (SeasonEntity season : seasons) {
+                if (season.getType().equals(SeasonTypes.season)
+                        || season.getType().equals(SeasonTypes.accessibility)
+                        || season.getType().equals(SeasonTypes.productionPeriod)
+                        || season.getType().equals(SeasonTypes.clip)
+                        || season.getType().equals(SeasonTypes.unknown)) {
+                    CheckBoxTreeItem<String> seasonNode = new CheckBoxTreeItem<>(season.getName());
+
+                    // Dessa lådor behöver inget veta. Jag gör en lyssnare här istället.
+
+                    treeBase.getChildren().add(seasonNode);
+                    tree.setCellFactory(CheckBoxTreeCell.<String>forTreeView());
+                    for (EpisodeEntity episode : season.getItems()) {
+                        ContextMenu contextMenu = createSeasonItemContextMenu(episode);
+
+
+                        Node arrowImageNode = new ImageView();
+                        boolean inQueue = false;
+                        // om items i seasons återfinns i queue
+                        for (QueueEntity qE : queue) {
+                            if (qE.getEpisode().getSvtId().equals(episode.getSvtId())) {
+                                episode.setProgressState(qE.getEpisode().getProgressState());
+                                arrowImageNode = Arrow.getImgViewArrowDown("green", 15);
+                                inQueue = true;
+
+                            }
+                        }
+
+                        CheckBoxTreeItem<String> episodeLeaf = new CheckBoxTreeItem<String>(episode.getEpisodeTitle(), arrowImageNode);
+                        //ändra deras status
+                        if (inQueue) {
+                            episodeLeaf.setIndeterminate(true);
+                        }
+
+                        if (episode.getSvtId().equals(currentEpisode.getSvtId())) {
+                            
+                            currentEpisode.setDescription(episode.getDescription());//
+
+                            infoText.setText(currentEpisode.toString());
+                            infoText.setWrappingWidth(200);
+
+                            episode.setProgressState(ProgressStates.WANTED);
+                            episodeLeaf.setSelected(true);
+                            treeBase.setExpanded(true);
+                            treeBase.setIndeterminate(true);
+                            seasonNode.setExpanded(true);
+                            seasonNode.setIndeterminate(true);
+                            //episodeLeaf.setExpanded(true);
+                        }
+                        seasonNode.getChildren().add(episodeLeaf);
+
+                        seasonNode.addEventHandler(
+                                CheckBoxTreeItem.<String>checkBoxSelectionChangedEvent(),
+                                (CheckBoxTreeItem.TreeModificationEvent<String> e) -> {
+                                    if (episodeLeaf.isSelected()) {
+                                        episode.setProgressState(ProgressStates.WANTED);
+                                    } else if (!episodeLeaf.isSelected()) {
+                                        episode.setProgressState(ProgressStates.IGNORED);
+                                    }
+                                    //else if( episodeLeaf.isIndeterminate()){
+                                    //    System.out.println("????????????\nIndeterminate???? \n"+episode.toString());
+                                    //}
+                                }
+                        );
+                    }
+                }
+            }
+
+            tree.setRoot(treeBase);
+            tree.setShowRoot(true);
+            ;
+            episodeHBox.setDisable(false);
+            episodeHBox.setVisible(true);
+
+
         } else if (addressTextField.getText().length() > 0) {
             //if text supplied but no episode found
             currentEpisode = new EpisodeEntity();
@@ -430,6 +574,22 @@ public class SvtpkApplication extends Application {
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(true);
         }
+    }
+
+    private ContextMenu createSeasonItemContextMenu(EpisodeEntity episode) {
+        System.out.println("Creating new Context menu for episode: " + episode.getEpisodeTitle());
+        final ContextMenu contextMenu = new ContextMenu();
+
+        MenuItem miDetails = new MenuItem("Visa info");
+
+        ArrayList<MenuItem> list = new ArrayList<>();
+        list.add(miDetails);
+        contextMenu.getItems().addAll(list);
+        miDetails.setOnAction((mi) -> {
+            currentEpisode = episode;
+            updateUI();
+        });
+        return contextMenu;
     }
 
     private void setVideoRes() {

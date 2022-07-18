@@ -13,6 +13,11 @@ public class Arrow {
         return imgArrowLeft;
     }
 
+    public static ImageView getImgViewArrowDown(String colour, int width) {
+        ImageView imgArrowDown = getImgViewArrowDown(colour);
+        imgArrowDown.setFitWidth(width);
+        return imgArrowDown;
+    }
     public static ImageView getImgViewArrowDown(String colour) {
         ImageView imgArrowDown = new ImageView(getImgArrowDown(colour));
         imgArrowDown.setPreserveRatio(true);
@@ -21,6 +26,6 @@ public class Arrow {
     }
 
     public static Image getImgArrowDown(String colour) {
-        return new Image("file:src/main/resources/images/arrow_" + colour + ".png");
+        return new Image("file:src/main/resources/images/arrow_" + colour.toLowerCase() + ".png");
     }
 }

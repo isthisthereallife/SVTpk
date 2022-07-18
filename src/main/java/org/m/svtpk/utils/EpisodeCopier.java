@@ -29,7 +29,7 @@ public class EpisodeCopier implements Runnable {
 
     @Override
     public void run() {
-        Platform.runLater(()->{
+        Platform.runLater(() -> {
             queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(123, 152, 115), null, null)));
         });
         Settings settings = Settings.load();
@@ -47,11 +47,11 @@ public class EpisodeCopier implements Runnable {
 
         String vidArgs = "0:" + queueEntity.getEpisode().getAvailableResolutions().get(settings.getResolution()).getId();
         String audArgs = "0:" + queueEntity.getEpisode().getAvailableAudio().get(settings.getAudio()).getId();
-        String subArgs = settings.getSubs().equalsIgnoreCase("Inga undertexter") ?
+        /*String subArgs = settings.getSubs().equalsIgnoreCase("Inga undertexter") ?
                 ""
                 :
                 "0:" + queueEntity.getEpisode().getAvailableSubs().get(settings.getSubs()).getId();
-
+        */
         String map = "-map";
         ArrayList<String> temp = new ArrayList<>(List.of(new String[]{"ffmpeg",
                 "-i",
@@ -97,7 +97,10 @@ public class EpisodeCopier implements Runnable {
                     double progress = (double) elapsedTime / queueEntity.getEpisode().getContentDuration();
                     Platform.runLater(() -> {
                         //queueEntity.getEpisode().setProgressDouble(progress);
-                        SvtpkApplication.updateLoadingBar(queueEntity,progress);
+                        if (progress > 0) {
+                            queueEntity.getEpisode().setProgressState(ProgressStates.ACTIVE);
+                        }
+                        SvtpkApplication.updateLoadingBar(queueEntity, progress);
                     });
                 }
             }
@@ -119,18 +122,24 @@ public class EpisodeCopier implements Runnable {
 
             //if subs
             if (!settings.getSubs().equalsIgnoreCase("Inga undertexter")) {
-                String subs = connectToURLReturnBodyAsString(queueEntity.getEpisode().getAvailableSubs().get(settings.getSubs()).getUrl());
-                FileWriter fw = new FileWriter(subsname);
-                fw.write(subs);
-                fw.close();
+                try {
+                    String subs = connectToURLReturnBodyAsString(queueEntity.getEpisode().getAvailableSubs().get(settings.getSubs()).getUrl());
 
-                Files.copy(
-                        Paths.get(System.getProperty("user.dir")).resolve(subsname),
-                        Paths.get(settings.getPath()).resolve(subsname),
-                        REPLACE_EXISTING
-                );
-                Files.delete(Paths.get(System.getProperty("user.dir")).resolve(subsname));
+                    FileWriter fw = new FileWriter(subsname);
+                    fw.write(subs);
+                    fw.close();
 
+
+                    Files.copy(
+                            Paths.get(System.getProperty("user.dir")).resolve(subsname),
+                            Paths.get(settings.getPath()).resolve(subsname),
+                            REPLACE_EXISTING
+                    );
+                    Files.delete(Paths.get(System.getProperty("user.dir")).resolve(subsname));
+                } catch (NullPointerException e) {
+                    if (settings.isAdvancedUser()) e.printStackTrace();
+                    System.out.println("Kunde inte kopiera undertexter.");
+                }
             }
 
             queueEntity.getEpisode().setProgressState(ProgressStates.DONE);
@@ -149,6 +158,7 @@ public class EpisodeCopier implements Runnable {
             queueEntity.setBackground(new Background(new BackgroundFill(Color.FIREBRICK, null, null)));
 
         }
+        if (settings.isAdvancedUser()) System.out.println("Finished operation on Thread: " + Thread.currentThread());
     }
 
 }

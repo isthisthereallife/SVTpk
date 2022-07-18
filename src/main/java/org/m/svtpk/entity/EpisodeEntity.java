@@ -13,10 +13,12 @@ public class EpisodeEntity {
     private boolean blockedForChildren;
     private String programTitle;
     private String episodeTitle;
+    private String description;
     private VideoReferencesEntity[] videoReferences;
     private SubtitleReferencesEntity[] subtitleReferences;
     private URL imageURL;
     private URL mpdURL;
+    private URL splashURL;
     private String filename;
     private HashMap<String, SubtitleReferencesEntity> availableSubs;
     private HashMap<String, VideoReferencesEntity> availableResolutions;
@@ -27,16 +29,19 @@ public class EpisodeEntity {
     private Path saveLocation;
 
     public EpisodeEntity() {
+        programTitle = "fun program no bugs";
         svtId = "";
         availableSubs = new HashMap<>();
         availableResolutions = new HashMap<>();
         availableAudio = new HashMap<>();
+        description = "";
     }
 
     public EpisodeEntity(String episodeTitle, String programTitle, ProgressStates progressState) {
         this.episodeTitle = episodeTitle;
         this.programTitle = programTitle;
         this.progressState = progressState;
+        description = "";
         svtId = "";
         availableSubs = new HashMap<>();
         availableResolutions = new HashMap<>();
@@ -176,6 +181,7 @@ public class EpisodeEntity {
     }
 
     public void setProgramTitle(String programTitle) {
+        System.out.println("Satte programtitle till: "+programTitle);
         this.programTitle = programTitle;
     }
 
@@ -211,6 +217,14 @@ public class EpisodeEntity {
         this.imageURL = imageURL;
     }
 
+    public URL getSplashURL() {
+        return splashURL;
+    }
+
+    public void setSplashURL(URL splashURL) {
+        this.splashURL = splashURL;
+    }
+
     public Boolean hasID(EpisodeEntity e) {
         return !Objects.equals(e.getSvtId(), "");
     }
@@ -243,10 +257,19 @@ public class EpisodeEntity {
         this.saveLocation = saveLocation;
     }
 
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
         return "Program: '" + programTitle + "'\n" +
                 "Avsnitt: '" + episodeTitle + "'\n" +
+                "Info: "+ description + "\n\n" +
                 "Längd: " + contentDuration / 60 + " min";
     }
 }

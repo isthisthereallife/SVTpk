@@ -1,9 +1,7 @@
 package org.m.svtpk.services;
 
-import org.m.svtpk.entity.AudioReferencesEntity;
-import org.m.svtpk.entity.EpisodeEntity;
-import org.m.svtpk.entity.SubtitleReferencesEntity;
-import org.m.svtpk.entity.VideoReferencesEntity;
+import org.m.svtpk.SvtpkApplication;
+import org.m.svtpk.entity.*;
 import org.m.svtpk.utils.Settings;
 import org.m.svtpk.utils.StringHelpers;
 
@@ -12,14 +10,124 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 
 public class EpisodeService {
     Settings settings = Settings.load();
 
+    public ArrayList<SeasonEntity> getSeasonsFromEpisode(EpisodeEntity episode) {
+
+        ArrayList<SeasonEntity> seasons = new ArrayList<>();
+
+        String res = connectToURLReturnBodyAsString(episode.getSplashURL());
+
+        if (episode.getSvtId() != null) {
+            res = res.split("<script id=\"__NEXT_DATA__\" type=\"application/json\">")[1];
+            String[] selectionTypes = res.split("selectionType");
+
+            // Season loop
+            for (String selection : selectionTypes) {
+                if (selection.contains("listId")) {
+                    SeasonEntity season = new SeasonEntity();
+                    String type = "";
+                    try {
+                        type = selection.split(":")[1].split(",")[0];
+                        type = StringHelpers.lazyfix(type);
+                        season.setTypeFromString(type);
+                        String listId = "";
+                        if (selection.contains("listId")) {
+                            listId = selection.split("listId")[1].split(",")[0];
+                            listId = StringHelpers.lazyfix(listId);
+                            season.setName(listId);
+                        }
+
+                        if (selection.contains("listType")) {
+                            // split without removing
+                            String[] episodes = selection.split("(?=\"heading)");
+
+                            // check if it is an episode, add to season if so
+                            for (String episodeString : episodes) {
+                                EpisodeEntity episodeFromString = new EpisodeEntity();
+                                String urlString = "";
+                                String episodeTitle = "";
+                                String svtId = "";
+                                try {
+                                    if (episodeString.contains("\"heading")) {
+                                        episodeTitle = episodeString
+                                                .split("\"heading")[1]
+                                                .split(",")[0]
+                                                .replace("\\", "")
+                                                .replace("\"", "")
+                                                .replace(":", "");
+                                    }
+                                    if (episodeString.contains("\"videoSvtId")) {
+                                        svtId = episodeString.split("\"videoSvtId")[1]
+                                                .split(",")[0]
+                                                .replace("\\", "")
+                                                .replace("\"", "")
+                                                .replace(":", "");
+                                    }
+                                    URL url = null;
+                                    if (episodeString.contains("\"urls")) {
+                                        urlString = episodeString
+                                                .split("\"urls")[1]
+                                                .split("\"svtplay")[1]
+                                                .split(",")[0]
+                                                .replace("\\", "")
+                                                .replace("\"", "")
+                                                .replace(":", "");
+                                        url = new URL("https://www.svtplay.se" + urlString);
+                                        //episodeFromString = findEpisode(url.toString());
+                                        //episodeFromString.setSplashURL(url);
+                                    }
+                                    if (url != null) {
+                                        episodeFromString.setSplashURL(url);
+                                        episodeFromString.setEpisodeTitle(episodeTitle);
+                                        episodeFromString.setSvtId(svtId);
+                                        if (episodeString.contains("\"description")) {
+                                            try {
+                                                episodeFromString.setDescription(episodeString
+                                                        .split("\"description")[1]
+                                                        .split("\",")[0]
+                                                        .replace("\\", "")
+                                                        .replace("\"", "")
+                                                        .replaceFirst(":", ""));
+                                                System.out.println(episodeFromString.getDescription());
+                                            } catch (Exception e) {
+                                                episode.setDescription("Ingen information tillgänglig.");
+                                                System.out.println("No description available.");
+                                            }
+                                        }
+
+                                        season.addItem(episodeFromString);
+                                    }
+                                } catch (Exception e) {
+                                    System.out.println("Tråkigt!");
+                                    System.out.println(e.getMessage());
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                        System.out.println("*************************************************");
+
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        if (settings.isAdvancedUser()) e.printStackTrace();
+                    }
+
+                    seasons.add(season);
+                }
+            }
+        }
+
+        return seasons;
+    }
+
     public EpisodeEntity findEpisode(String address) {
+        String res = "";
         address = address.replace(" ", "").trim();
+        if (address.endsWith("/")) address = address.substring(0, address.length() - 1);
         EpisodeEntity episode = new EpisodeEntity();
         if (address.length() > 9) {
             try {
@@ -30,11 +138,12 @@ public class EpisodeService {
 
                     episode = getEpisodeInfo(address);
                 } else if (uri.isAbsolute()) {
-                    if (url.toString().contains("svtplay")) {
-                        String res = connectToURLReturnBodyAsString(url);
+                    if (url.toString().contains("svtplay.se")) {
+                        res = connectToURLReturnBodyAsString(url);
                         if (!res.equals("")) {
                             String id = res.split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
                             episode = getEpisodeInfo(address + "?" + id);
+                            episode.setSplashURL(uri.toURL());
                         } else {
                             if (settings.isAdvancedUser()) System.out.println("URI was not absolute, didn't search.");
                         }
@@ -42,6 +151,7 @@ public class EpisodeService {
                         if (settings.isAdvancedUser()) System.out.println("Vänligen ange en adress till SVT Play");
                     }
                 }
+
             } catch (Exception e) {
                 if (settings.isAdvancedUser()) e.printStackTrace();
             }
@@ -86,10 +196,10 @@ public class EpisodeService {
                         System.out.println("Couldn't find episode title. Setting episode title to " + (LocalDateTime.now().toLocalDate().toString()));
                     }
 
+
                     episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
 
                     episode.setFilename(StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv"));
-                    System.out.println("File name is set in EpisodeService 95: "+episode.getFilename());
                     episode = updateEpisodeLinks(episode);
                     try {
                         episode.setImageURL(new URL(getImgURL(address)));
