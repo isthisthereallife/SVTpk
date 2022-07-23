@@ -45,8 +45,17 @@ public class EpisodeCopier implements Runnable {
         });
          */
 
-        String vidArgs = "0:" + queueEntity.getEpisode().getAvailableResolutions().get(settings.getResolution()).getId();
-        String audArgs = "0:" + queueEntity.getEpisode().getAvailableAudio().get(settings.getAudio()).getId();
+
+        String vidArgs = "0:";
+        vidArgs = vidArgs.concat(queueEntity.getEpisode().getAvailableResolutions() != null ? String.valueOf(queueEntity
+                .getEpisode()
+                .getAvailableResolutions()
+                .get(settings.getResolution()).getId()) : "0");
+        String audArgs = "0:";
+        audArgs = audArgs.concat(queueEntity.getEpisode().getAvailableAudio() != null ? String.valueOf(queueEntity
+                .getEpisode()
+                .getAvailableAudio()
+                .get(settings.getAudio()).getId()) : "0");
         /*String subArgs = settings.getSubs().equalsIgnoreCase("Inga undertexter") ?
                 ""
                 :
@@ -142,7 +151,6 @@ public class EpisodeCopier implements Runnable {
                 }
             }
 
-            queueEntity.getEpisode().setProgressState(ProgressStates.DONE);
             Platform.runLater(() -> {
                 queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(0, 194, 0), null, null)));
                 queueEntity.getEpisode().setProgressDouble(1);
@@ -150,6 +158,7 @@ public class EpisodeCopier implements Runnable {
                 queueEntity.setContextMenu(queueEntity.createContextMenu());
 
             });
+            queueEntity.getEpisode().setProgressState(ProgressStates.DONE);
             QueueHandler.processQueue();
 
         } catch (IOException | InterruptedException e) {

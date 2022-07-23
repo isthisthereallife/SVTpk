@@ -1,5 +1,6 @@
 package org.m.svtpk.services;
 
+import javafx.scene.image.Image;
 import org.m.svtpk.SvtpkApplication;
 import org.m.svtpk.entity.*;
 import org.m.svtpk.utils.Settings;
@@ -11,6 +12,7 @@ import java.net.URI;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 
@@ -31,6 +33,9 @@ public class EpisodeService {
             for (String selection : selectionTypes) {
                 if (selection.contains("listId")) {
                     SeasonEntity season = new SeasonEntity();
+
+                    //https://www.svtstatic.se/image/custom/1024/35680761/1655299163?format=auto&chromaSubSampling=false&enableAvif=true
+
                     String type = "";
                     try {
                         type = selection.split(":")[1].split(",")[0];
@@ -50,9 +55,12 @@ public class EpisodeService {
                             // check if it is an episode, add to season if so
                             for (String episodeString : episodes) {
                                 EpisodeEntity episodeFromString = new EpisodeEntity();
+                                episodeFromString.setProgramTitle(episode.getProgramTitle());
+                                String imagesString = "";
                                 String urlString = "";
                                 String episodeTitle = "";
                                 String svtId = "";
+                                String imageURL = "";
                                 try {
                                     if (episodeString.contains("\"heading")) {
                                         episodeTitle = episodeString
@@ -69,6 +77,44 @@ public class EpisodeService {
                                                 .replace("\"", "")
                                                 .replace(":", "");
                                     }
+
+                                    try {
+                                        if (episodeString.contains("\"images\\")) {
+                                            imagesString = episodeString.split("\"images")[1];
+                                            imagesString = imagesString.split("\"wide")[1];
+                                            imageURL = imagesString.split("\"changed")[1];
+                                            imageURL = imageURL
+                                                    .split(",")[0]
+                                                    .replace("\\", "")
+                                                    .replace("\"", "")
+                                                    .replace(":", "")
+                                                    .trim();
+                                            //jag får en trailer-id för att jag inte klippt den
+
+                                            String imageId =
+                                                    imagesString
+                                                            .split("\"id")[1]
+                                                            .split(",")[0]
+                                                            .replace("\\", "")
+                                                            .replace("\"", "")
+                                                            .replace(":", "")
+                                                            .trim();
+                                            imageURL = imageId.concat("/" + imageURL);
+                                        }
+                                        if (imageURL.isBlank()) {
+                                            imageURL = episode.getImageURL().toString();
+                                        }
+
+
+                                        if (!imageURL.contains("https://www.svtstatic.se/image/custom/1024/")) {
+                                            imageURL = "https://www.svtstatic.se/image/custom/1024/".concat(imageURL);
+                                        }
+                                        episodeFromString.setImageURL(new URL(imageURL));
+                                        episodeFromString.setThumbnail(
+                                                new Image(imageURL, 25, 25, false, false));
+                                    } catch (Exception e) {
+                                        if (settings.isAdvancedUser()) e.printStackTrace();
+                                    }
                                     URL url = null;
                                     if (episodeString.contains("\"urls")) {
                                         urlString = episodeString
@@ -79,9 +125,8 @@ public class EpisodeService {
                                                 .replace("\"", "")
                                                 .replace(":", "");
                                         url = new URL("https://www.svtplay.se" + urlString);
-                                        //episodeFromString = findEpisode(url.toString());
-                                        //episodeFromString.setSplashURL(url);
                                     }
+
                                     if (url != null) {
                                         episodeFromString.setSplashURL(url);
                                         episodeFromString.setEpisodeTitle(episodeTitle);
@@ -110,7 +155,6 @@ public class EpisodeService {
                                 }
                             }
                         }
-                        System.out.println("*************************************************");
 
                     } catch (ArrayIndexOutOfBoundsException e) {
                         if (settings.isAdvancedUser()) e.printStackTrace();
@@ -203,6 +247,9 @@ public class EpisodeService {
                     episode = updateEpisodeLinks(episode);
                     try {
                         episode.setImageURL(new URL(getImgURL(address)));
+                        System.out.println("sätter ImageURL här nere nu, till: " + episode.getImageURL());
+                        episode.setThumbnail(new Image(episode.getImageURL().toString()));
+
                     } catch (Exception e) {
                         if (settings.isAdvancedUser()) System.out.println("Could not get episode image");
                     }

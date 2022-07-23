@@ -58,6 +58,16 @@ public class Settings {
             s.setAudio(settingsString.split("audio=")[1].split(",")[0].trim());
             s.setSubs(settingsString.split("subs=")[1].split(",")[0].trim());
             s.setPath(settingsString.split("path=")[1].split(",")[0].trim());
+
+            if(s.resolution.length()==0){
+                s.setResolution("720");
+            }
+            if (s.audio.length()==0){
+                s.setAudio("Svenska");
+            }
+            if(s.path.length()==0){
+                s.setPath(load().STANDARD_PATH_WIN);
+            }
         } catch (Exception e) {
             System.out.println("error parsing settings");
             return new Settings();

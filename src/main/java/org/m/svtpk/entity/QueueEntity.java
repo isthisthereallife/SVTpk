@@ -139,6 +139,6 @@ public class QueueEntity extends CheckBoxListCell {
 
     @Override
     public String toString() {
-        return episode.getEpisodeTitle() + "\n" + episode.getProgramTitle() + "\n" + (int) (episode.getProgressDouble() * 100) + "%";
+        return episode.getProgramTitle() + "\n" + episode.getEpisodeTitle() + "\n" + (int) (episode.getProgressDouble() * 100) + "%";
     }
 }

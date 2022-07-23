@@ -1,6 +1,7 @@
 package org.m.svtpk;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -81,6 +82,7 @@ public class SvtpkApplication extends Application {
     Thread downThread = new Thread(episodeCopier);
     org.m.svtpk.utils.QueueHandler QueueHandler = new QueueHandler();
     Clipboard clip;
+    static boolean search;
 
 
     @Override
@@ -95,7 +97,7 @@ public class SvtpkApplication extends Application {
     public Scene homeScene() {
         downThread.start();
         settings = Settings.load();
-
+        search = false;
         if (settings.isAdvancedUser()) {
             System.out.println("System property: " + System.getProperty("user.dir"));
             System.out.println("Operating System: " + System.getProperty("os.name"));
@@ -294,6 +296,7 @@ public class SvtpkApplication extends Application {
 
         addressTextField.setOnKeyPressed(e -> {
             if (e.getCode().toString().equals("ENTER")) {
+                search = true;
                 currentEpisode = episodeService.findEpisode(addressTextField.getText());
                 if (currentEpisode.getSvtId() != null) {
                     seasons = episodeService.getSeasonsFromEpisode(currentEpisode);
@@ -301,6 +304,7 @@ public class SvtpkApplication extends Application {
                 updateUI();
             }
         });
+
         String findEpisodeBtnText = clip.getString() == null ?
                 "Hitta" : clip.getString().contains("svt") && addressTextField.getText().length() > 0 ? "Klistra in och Hitta" : "Hitta";
         Button findEpisodeBtn = new Button(findEpisodeBtnText);
@@ -314,8 +318,7 @@ public class SvtpkApplication extends Application {
             if (currentEpisode.getSvtId() != null) {
                 seasons = episodeService.getSeasonsFromEpisode(currentEpisode);
             }
-
-
+            search = true;
             updateUI();
         });
 
@@ -392,7 +395,6 @@ public class SvtpkApplication extends Application {
         });
 
 
-        HBox episodeTree = new HBox();
         //grid.setGridLinesVisible(true);
         ColumnConstraints cC = new ColumnConstraints();
         cC.setPercentWidth(100);
@@ -403,11 +405,10 @@ public class SvtpkApplication extends Application {
         grid.add(mainContentBox, 0, 4);
         grid.add(statusIndicator, 0, 4);
         grid.add(progress, 0, 6);
-        grid.add(episodeTree, 0, 5, 2, 6);
         grid.add(hboxDlBtn, 0, 7);
 
         //grid.add(debugBtn, 0, 7);
-        return new Scene(grid, 800, 600);
+        return new Scene(grid, 1000, 800);
     }
 
     public static void updateLoadingBar(QueueEntity qE, double progress) {
@@ -459,7 +460,6 @@ public class SvtpkApplication extends Application {
             statusIcon.setDisable(false);
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(false);
-            System.out.println("(/#¤()/#¤#¤&#)¤&)#)/)))");
 
             //tree = new TreeView();
             tree.setDisable(false);
@@ -468,13 +468,7 @@ public class SvtpkApplication extends Application {
 
             tree.setEditable(true);
 
-            tree.getSelectionModel().selectedItemProperty()
-                    .addListener((observableValue, oldItem, newItem) -> {
-                                System.out.println("observableValue: " + observableValue);
-                                System.out.println("old item: " + oldItem);
-                                System.out.println("new item: " + newItem);
-                            }
-                    );
+
             // season node
             for (SeasonEntity season : seasons) {
                 if (season.getType().equals(SeasonTypes.season)
@@ -484,19 +478,18 @@ public class SvtpkApplication extends Application {
                         || season.getType().equals(SeasonTypes.unknown)) {
                     CheckBoxTreeItem<String> seasonNode = new CheckBoxTreeItem<>(season.getName());
 
-                    // Dessa lådor behöver inget veta. Jag gör en lyssnare här istället.
 
                     treeBase.getChildren().add(seasonNode);
-                    tree.setCellFactory(CheckBoxTreeCell.<String>forTreeView());
-                    for (EpisodeEntity episode : season.getItems()) {
-                        ContextMenu contextMenu = createSeasonItemContextMenu(episode);
+                    tree.setCellFactory(EpisodeCell.<String>forTreeView());
 
+                    for (EpisodeEntity episode : season.getItems()) {
+                        //ContextMenu contextMenu = createSeasonItemContextMenu(episode);
 
                         Node arrowImageNode = new ImageView();
                         boolean inQueue = false;
                         // om items i seasons återfinns i queue
                         for (QueueEntity qE : queue) {
-                            if (qE.getEpisode().getSvtId().equals(episode.getSvtId())) {
+                            if (search && qE.getEpisode().getSvtId().equals(episode.getSvtId())) {
                                 episode.setProgressState(qE.getEpisode().getProgressState());
                                 arrowImageNode = Arrow.getImgViewArrowDown("green", 15);
                                 inQueue = true;
@@ -504,26 +497,99 @@ public class SvtpkApplication extends Application {
                             }
                         }
 
-                        CheckBoxTreeItem<String> episodeLeaf = new CheckBoxTreeItem<String>(episode.getEpisodeTitle(), arrowImageNode);
+                        EpisodeCell eC = new EpisodeCell(episode);
+                        eC.setItem(episode.getEpisodeTitle()+"satte setItemyy");
+                        //eC.setText(episode.getEpisodeTitle() + episode.getSvtId());
+                        eC.setOnMouseClicked((event) -> {
+                            currentEpisode = episodeService.getEpisodeInfo(episode.getSplashURL().toString());
+                            currentEpisode = episode;
+                            if (currentEpisode.getProgramTitle() == null || currentEpisode.getProgramTitle().isBlank()) {
+                                currentEpisode.setProgramTitle(episode.getProgramTitle());
+                            }
+                            if (currentEpisode.getDescription() == null || currentEpisode.getDescription().isBlank()) {
+
+                                currentEpisode.setDescription(episode.getDescription());
+                            }
+                            if (currentEpisode.getImageURL() == null || currentEpisode.getImageURL().equals("")) {
+                                currentEpisode.setImageURL(episode.getImageURL());
+                            }
+                            updateUI();
+                        });
+
+                        CheckBoxTreeItem<String> episodeLeaf = new CheckBoxTreeItem<String>();
+                        eC.setPrefSize(25, 25);
+                        eC.setMaxSize(25, 25);
+
+                        Paint black = Paint.valueOf("black");
+                        eC.setTextFill(black);
+                        Background b;
+                        //if (episode.getThumbnail() != null) {
+                        try {
+                            b = new Background(
+                                    new BackgroundImage(
+                                            episode.getThumbnail()
+                                            , BackgroundRepeat.ROUND
+                                            , BackgroundRepeat.ROUND
+                                            , BackgroundPosition.CENTER
+                                            , BackgroundSize.DEFAULT
+                                    )
+                            );
+
+                            //} else {
+                        } catch (Exception e) {
+                            b = new Background(
+                                    new BackgroundFill(
+                                            Color.GREEN,
+                                            new CornerRadii(45),
+                                            Insets.EMPTY));
+                            e.printStackTrace();
+                        }
+
+                        eC.setBackground(b);
+                        //eC.setPadding(new Insets(5, 5, 5, 5));
+
+                        eC.setVisible(true);
+                        eC.setAccessibleText(episode.getEpisodeTitle());
+
+                        eC.setGraphicTextGap(3);
+                        eC.setDisable(false);
+
+                        //episodeLeaf.setValue(episode.getEpisodeTitle());
+                        ProgressStates progressState = episode.getProgressState();
+                        System.out.println("search 1 :" + search);
+                        if (progressState != null) {
+                            episodeLeaf.setSelected(progressState.equals(ProgressStates.WANTED));
+                        }
+
+                        eC.setTextOverrun(OverrunStyle.ELLIPSIS);
+                        episodeLeaf.setValue(eC.getEpisode().getEpisodeTitle());
+                        episodeLeaf.setGraphic(eC);
+
+                        //episodeLeaf.setValue(episode.getEpisodeTitle());
                         //ändra deras status
                         if (inQueue) {
                             episodeLeaf.setIndeterminate(true);
                         }
-
                         if (episode.getSvtId().equals(currentEpisode.getSvtId())) {
-                            
+                            //description kommer inte med när vi bygger currentEpisode. ibland.
                             currentEpisode.setDescription(episode.getDescription());//
 
                             infoText.setText(currentEpisode.toString());
                             infoText.setWrappingWidth(200);
 
-                            episode.setProgressState(ProgressStates.WANTED);
-                            episodeLeaf.setSelected(true);
                             treeBase.setExpanded(true);
-                            treeBase.setIndeterminate(true);
+                            treeBase.setIndependent(false);
                             seasonNode.setExpanded(true);
-                            seasonNode.setIndeterminate(true);
-                            //episodeLeaf.setExpanded(true);
+                            seasonNode.setIndependent(false);
+
+                            episodeLeaf.setExpanded(true);
+                            System.out.println("search: " + search);
+                            if (search) {
+                                episode.setProgressState(ProgressStates.WANTED);
+                                episodeLeaf.setSelected(true);
+                                //treeBase.setIndeterminate(true);
+                                //seasonNode.setIndeterminate(true);
+                            }
                         }
                         seasonNode.getChildren().add(episodeLeaf);
 
@@ -531,9 +597,14 @@ public class SvtpkApplication extends Application {
                                 CheckBoxTreeItem.<String>checkBoxSelectionChangedEvent(),
                                 (CheckBoxTreeItem.TreeModificationEvent<String> e) -> {
                                     if (episodeLeaf.isSelected()) {
+                                        System.out.println("leaf is selected");
                                         episode.setProgressState(ProgressStates.WANTED);
+                                        seasonNode.setIndeterminate(true);
+                                        seasonNode.setExpanded(true);
+
                                     } else if (!episodeLeaf.isSelected()) {
                                         episode.setProgressState(ProgressStates.IGNORED);
+                                        //seasonNode.setSelected(false);
                                     }
                                     //else if( episodeLeaf.isIndeterminate()){
                                     //    System.out.println("????????????\nIndeterminate???? \n"+episode.toString());
@@ -544,9 +615,10 @@ public class SvtpkApplication extends Application {
                 }
             }
 
+
             tree.setRoot(treeBase);
             tree.setShowRoot(true);
-            ;
+
             episodeHBox.setDisable(false);
             episodeHBox.setVisible(true);
 
@@ -574,6 +646,15 @@ public class SvtpkApplication extends Application {
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(true);
         }
+        System.out.println("ui färdig: ");
+        for (SeasonEntity q : seasons) {
+            for (EpisodeEntity e : q.getItems()) {
+                System.out.println("hejs");
+                System.out.println(e.getSvtId());
+                System.out.println(e.getEpisodeTitle() + " : " + e.getProgressState());
+            }
+        }
+        search = false;
     }
 
     private ContextMenu createSeasonItemContextMenu(EpisodeEntity episode) {

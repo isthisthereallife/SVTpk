@@ -1,6 +1,8 @@
 package org.m.svtpk.entity;
 
 
+import javafx.scene.image.Image;
+
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -27,6 +29,7 @@ public class EpisodeEntity {
     private ProgressStates progressState;
     private double progressDouble;
     private Path saveLocation;
+    private Image thumbnail;
 
     public EpisodeEntity() {
         programTitle = "fun program no bugs";
@@ -181,7 +184,7 @@ public class EpisodeEntity {
     }
 
     public void setProgramTitle(String programTitle) {
-        System.out.println("Satte programtitle till: "+programTitle);
+        System.out.println("EpisodeEntity.setProgramTitle satte programtitle till: " + programTitle);
         this.programTitle = programTitle;
     }
 
@@ -265,11 +268,19 @@ public class EpisodeEntity {
         this.description = description;
     }
 
+    public Image getThumbnail() {
+        return thumbnail;
+    }
+
+    public void setThumbnail(Image thumbnail) {
+        this.thumbnail = thumbnail;
+    }
+
     @Override
     public String toString() {
         return "Program: '" + programTitle + "'\n" +
                 "Avsnitt: '" + episodeTitle + "'\n" +
-                "Info: "+ description + "\n\n" +
+                description + "\n\n" +
                 "Längd: " + contentDuration / 60 + " min";
     }
 }

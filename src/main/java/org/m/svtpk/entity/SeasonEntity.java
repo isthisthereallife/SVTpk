@@ -1,5 +1,6 @@
 package org.m.svtpk.entity;
 
+import java.net.URL;
 import java.util.ArrayList;
 
 public class SeasonEntity {
@@ -7,6 +8,7 @@ public class SeasonEntity {
     private String name;
     private SeasonTypes type;
     private ArrayList<EpisodeEntity> items;
+    private URL imageURL;
 
 
     public SeasonEntity() {
@@ -60,4 +62,11 @@ public class SeasonEntity {
         this.items.add(item);
     }
 
+    public URL getImageURL() {
+        return imageURL;
+    }
+
+    public void setImageURL(URL imageURL) {
+        this.imageURL = imageURL;
+    }
 }
