@@ -444,9 +444,16 @@ public class SvtpkApplication extends Application {
             dlBtn.setDisable(true);
         } else if (!currentEpisode.getSvtId().equals("") && !currentEpisode.getSvtId().equalsIgnoreCase("upcoming")) {
             //if there is a SvtId
+            if (currentEpisode.getAvailableResolutions().size() == 0) {
+                //måste bygga en riktig EpisodeEntity. Borde kanske gjort det förut.
+                System.out.println("laddar om avsnittet, nu på riktigt");
+                currentEpisode = episodeService.findEpisode(currentEpisode.getSplashURL().toString());
+            }
             setVideoRes();
             setAudioLanguage();
             setSubs();
+            System.out.println("satte videoRes och sånt för avsnitt " + currentEpisode.getEpisodeTitle());
+            System.out.println("men har den verkligen en videoRes laddad?? såhär många fanns det: " + (currentEpisode.getAvailableResolutions() != null ? currentEpisode.getAvailableResolutions().size() : "den var null"));
             infoText.setVisible(true);
             infoText.setFill(DARKGREEN);
 
@@ -498,7 +505,7 @@ public class SvtpkApplication extends Application {
                         }
 
                         EpisodeCell eC = new EpisodeCell(episode);
-                        eC.setItem(episode.getEpisodeTitle()+"satte setItemyy");
+                        eC.setItem(episode.getEpisodeTitle() + "satte setItemyy");
                         //eC.setText(episode.getEpisodeTitle() + episode.getSvtId());
                         eC.setOnMouseClicked((event) -> {
                             currentEpisode = episodeService.getEpisodeInfo(episode.getSplashURL().toString());
@@ -546,7 +553,6 @@ public class SvtpkApplication extends Application {
                         }
 
                         eC.setBackground(b);
-                        //eC.setPadding(new Insets(5, 5, 5, 5));
 
                         eC.setVisible(true);
                         eC.setAccessibleText(episode.getEpisodeTitle());
@@ -556,9 +562,10 @@ public class SvtpkApplication extends Application {
 
                         //episodeLeaf.setValue(episode.getEpisodeTitle());
                         ProgressStates progressState = episode.getProgressState();
-                        System.out.println("search 1 :" + search);
+                        System.out.println("avsnitt: " + episode.getEpisodeTitle());
                         if (progressState != null) {
                             episodeLeaf.setSelected(progressState.equals(ProgressStates.WANTED));
+                            System.out.println("selected: " + progressState.equals(ProgressStates.WANTED));
                         }
 
                         eC.setTextOverrun(OverrunStyle.ELLIPSIS);
@@ -583,7 +590,7 @@ public class SvtpkApplication extends Application {
                             seasonNode.setIndependent(false);
 
                             episodeLeaf.setExpanded(true);
-                            System.out.println("search: " + search);
+                            System.out.println("är detta en textsökning?: " + search);
                             if (search) {
                                 episode.setProgressState(ProgressStates.WANTED);
                                 episodeLeaf.setSelected(true);
@@ -647,14 +654,18 @@ public class SvtpkApplication extends Application {
             dlBtn.setDisable(true);
         }
         System.out.println("ui färdig: ");
-        for (SeasonEntity q : seasons) {
+        /*for (SeasonEntity q : seasons) {
             for (EpisodeEntity e : q.getItems()) {
                 System.out.println("hejs");
                 System.out.println(e.getSvtId());
                 System.out.println(e.getEpisodeTitle() + " : " + e.getProgressState());
             }
-        }
+        }*/
         search = false;
+    }
+
+    private void redrawCurrentEpisode() {
+
     }
 
     private ContextMenu createSeasonItemContextMenu(EpisodeEntity episode) {
@@ -674,7 +685,7 @@ public class SvtpkApplication extends Application {
     }
 
     private void setVideoRes() {
-        String selectedRes = "";
+        String selectedRes = "720";
         ArrayList<String> res = new ArrayList<>();
         for (Map.Entry<String, VideoReferencesEntity> entry : currentEpisode.getAvailableResolutions().entrySet()) {
             res.add(entry.getKey());
@@ -691,7 +702,7 @@ public class SvtpkApplication extends Application {
     }
 
     private void setAudioLanguage() {
-        String selectedAudio = "";
+        String selectedAudio = "Svenska";
         ArrayList<String> lang = new ArrayList<>();
         for (Map.Entry<String, AudioReferencesEntity> entry : currentEpisode.getAvailableAudio().entrySet()) {
             lang.add(entry.getKey());
