@@ -1,9 +1,7 @@
 package org.m.svtpk.services;
 
-import org.m.svtpk.entity.AudioReferencesEntity;
-import org.m.svtpk.entity.EpisodeEntity;
-import org.m.svtpk.entity.SubtitleReferencesEntity;
-import org.m.svtpk.entity.VideoReferencesEntity;
+import com.google.gson.Gson;
+import org.m.svtpk.entity.*;
 import org.m.svtpk.utils.Settings;
 import org.m.svtpk.utils.StringHelpers;
 
@@ -89,7 +87,6 @@ public class EpisodeService {
                     episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
 
                     episode.setFilename(StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv"));
-                    System.out.println("File name is set in EpisodeService 95: "+episode.getFilename());
                     episode = updateEpisodeLinks(episode);
                     try {
                         episode.setImageURL(new URL(getImgURL(address)));
@@ -123,6 +120,7 @@ public class EpisodeService {
     }
 
     public EpisodeEntity updateEpisodeLinks(EpisodeEntity episode) {
+        String mpdUrl = "";
         String episodeInfoString = "";
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
         String body = "";
@@ -131,10 +129,18 @@ public class EpisodeService {
             body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episode.getSvtId()));
             if (!body.equals("")) {
                 //anrop 2
-                body = connectToURLReturnBodyAsString(new URL(body.split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0]));
-                if (!body.equals("")) {
-                    episode.setMpdURL(new URL("https://api.svt.se/ditto/api/v1/web?manifestUrl=" + body.split("location\":\"")[1].split("\"")[0] + "&excludeCodecs=hvc&excludeCodecs=ac-3"));
+                Gson gson = new Gson();
+                VideoJsonObjectEntity o = gson.fromJson(body,VideoJsonObjectEntity.class);
+                System.out.println(o.getSvtId());
+                System.out.println(o.getVideoReferences().length);
+                for(VideoReferencesEntity vre : o.getVideoReferences()) {
+                    if( vre.getFormat().equals("dash-full")){
+                        episode.setMpdURL(new URL(vre.getUrl()));
+                    }
+                }
+                if (!episode.getMpdURL().toString().equals("")) {
                     //anrop 3, till mpdURLen
+
                     body = connectToURLReturnBodyAsString(episode.getMpdURL());
                     if (!body.equals("")) {
                         episodeInfoString = body;
@@ -147,8 +153,7 @@ public class EpisodeService {
 
         if (episodeInfoString.equals("")) return new EpisodeEntity();
         if (episodeInfoString.contains("\"live\":true")) return new EpisodeEntity(true);
-
-        String BASE_URL = episodeInfoString.split("<BaseURL>")[1].split("</BaseURL>")[0];
+        String BASE_URL = episodeInfoString.split("<Period")[1].split("</Period>")[0];
 
         //Set Available resolutions
         String[] adaptationSet = episodeInfoString.split("<AdaptationSet");
