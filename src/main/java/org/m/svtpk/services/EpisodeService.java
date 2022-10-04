@@ -192,8 +192,6 @@ public class EpisodeService {
             } else if (set.contains("mimeType=\"text")) {
 
                 //subs
-                System.out.println("printar url för subs nr 0:");
-                System.out.println(videoObjectFromJson.getSubtitleReferences()[0].getUrl());
                 SubtitleReferencesEntity sub = new SubtitleReferencesEntity();
                 sub.setId(streamId);
                 try {

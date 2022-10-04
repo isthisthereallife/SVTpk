@@ -14,7 +14,7 @@ public class HttpBodyGetter {
         try {
             HttpURLConnection huc = (HttpURLConnection) url.openConnection();
             huc.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; rv:91.0) Gecko/20100101 Firefox/91.0");
-            huc.setRequestProperty("content-type","text/html; charset=utf-8");
+            huc.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8");
             huc.connect();
             // read the output from the server
             reader = new BufferedReader(new InputStreamReader(huc.getInputStream(), StandardCharsets.UTF_8));

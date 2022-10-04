@@ -77,6 +77,7 @@ public class SvtpkApplication extends Application {
     }
 
     public Scene homeScene() {
+        System.out.println("SVTpk - v0.2.3");
         downThread.start();
         settings = Settings.load();
 
