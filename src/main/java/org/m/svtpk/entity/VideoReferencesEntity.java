@@ -1,5 +1,9 @@
 package org.m.svtpk.entity;
 
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class VideoReferencesEntity {
     private int id;
     private String url;

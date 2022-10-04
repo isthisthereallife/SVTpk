@@ -1,6 +1,6 @@
 package org.m.svtpk.services;
 
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.m.svtpk.entity.*;
 import org.m.svtpk.utils.Settings;
 import org.m.svtpk.utils.StringHelpers;
@@ -121,26 +121,25 @@ public class EpisodeService {
 
     public EpisodeEntity updateEpisodeLinks(EpisodeEntity episode) {
         String mpdUrl = "";
+        VideoJsonObjectEntity videoObjectFromJson = null;
         String episodeInfoString = "";
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
         String body = "";
+        ObjectMapper objectMapper = new ObjectMapper();
         try {
             //anrop 1
             body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episode.getSvtId()));
             if (!body.equals("")) {
                 //anrop 2
-                Gson gson = new Gson();
-                VideoJsonObjectEntity o = gson.fromJson(body,VideoJsonObjectEntity.class);
-                System.out.println(o.getSvtId());
-                System.out.println(o.getVideoReferences().length);
-                for(VideoReferencesEntity vre : o.getVideoReferences()) {
-                    if( vre.getFormat().equals("dash-full")){
+                videoObjectFromJson = objectMapper.readValue(body, VideoJsonObjectEntity.class);
+
+                for(VideoReferencesEntity vre : videoObjectFromJson.getVideoReferences()) {
+                    if( vre.getFormat().equalsIgnoreCase("dash-full")){
                         episode.setMpdURL(new URL(vre.getUrl()));
                     }
                 }
                 if (!episode.getMpdURL().toString().equals("")) {
                     //anrop 3, till mpdURLen
-
                     body = connectToURLReturnBodyAsString(episode.getMpdURL());
                     if (!body.equals("")) {
                         episodeInfoString = body;
@@ -150,11 +149,10 @@ public class EpisodeService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         if (episodeInfoString.equals("")) return new EpisodeEntity();
         if (episodeInfoString.contains("\"live\":true")) return new EpisodeEntity(true);
-        String BASE_URL = episodeInfoString.split("<Period")[1].split("</Period>")[0];
-
+        // this is sketchy AF
+        String BASE_URL = episode.getMpdURL().toString().split("dash-full.mpd")[0];
         //Set Available resolutions
         String[] adaptationSet = episodeInfoString.split("<AdaptationSet");
         int streamId = 0;
@@ -192,12 +190,16 @@ public class EpisodeService {
                 episode.addAvailableAudio(aud.getLabel(), aud);
                 streamId++;
             } else if (set.contains("mimeType=\"text")) {
+
                 //subs
+                System.out.println("printar url för subs nr 0:");
+                System.out.println(videoObjectFromJson.getSubtitleReferences()[0].getUrl());
                 SubtitleReferencesEntity sub = new SubtitleReferencesEntity();
                 sub.setId(streamId);
                 try {
                     sub.setLabel(set.split("<Label>")[1].split("</Label")[0]);
                 } catch (IndexOutOfBoundsException e) {
+                    System.out.println("Nån på svt har glömt ge undertextspåret en Label :/ Sätter den till \"Svenska\"");
                     sub.setLabel("Svenska");
                 }
                 try {
