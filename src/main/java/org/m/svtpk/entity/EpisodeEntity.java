@@ -185,7 +185,6 @@ public class EpisodeEntity {
     }
 
     public void setProgramTitle(String programTitle) {
-        System.out.println("EpisodeEntity.setProgramTitle satte programtitle till: " + programTitle);
         this.programTitle = programTitle;
     }
 

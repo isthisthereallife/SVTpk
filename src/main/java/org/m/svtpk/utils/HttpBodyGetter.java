@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 public class HttpBodyGetter {
     public static String connectToURLReturnBodyAsString(URL url) {
-        System.out.println("HttpBodyGetter fick denna URL: "+url.toString());
+        System.out.println("connectToURLReturnBodyAsString fick denna URL: "+url.toString());
         BufferedReader reader = null;
         StringBuilder stringBuilder = null;
         try {

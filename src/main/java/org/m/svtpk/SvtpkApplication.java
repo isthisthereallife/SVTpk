@@ -341,6 +341,7 @@ public class SvtpkApplication extends Application {
 
         // Button "Kopiera"
         dlBtn.setOnAction(e -> {
+            System.out.println("knappen tryckt!");
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             dlBtn.setText("Kopierar...");
             dlBtn.setDisable(true);
@@ -357,7 +358,6 @@ public class SvtpkApplication extends Application {
                                 alreadyInQueue = true;
                             }
                         }
-                        // det är den HÄR jag vill ha
                         //gör en riktig hämtning av avsnitten. här? kanske inte behövs. innan den ska laddas ner.
                         if (!alreadyInQueue) {
                             EpisodeEntity realEntity = episodeService.findEpisode(episodeInSeason.getSplashURL().toString());
@@ -517,7 +517,7 @@ public class SvtpkApplication extends Application {
 
                                 currentEpisode.setDescription(episode.getDescription());
                             }
-                            if (currentEpisode.getImageURL() == null || currentEpisode.getImageURL().equals("")) {
+                            if (currentEpisode.getImageURL() == null || currentEpisode.getImageURL().toString().equals("")) {
                                 currentEpisode.setImageURL(episode.getImageURL());
                             }
                             updateUI();
@@ -530,27 +530,9 @@ public class SvtpkApplication extends Application {
                         Paint black = Paint.valueOf("black");
                         eC.setTextFill(black);
                         Background b;
-                        //if (episode.getThumbnail() != null) {
-                        try {
-                            b = new Background(
-                                    new BackgroundImage(
-                                            episode.getThumbnail()
-                                            , BackgroundRepeat.ROUND
-                                            , BackgroundRepeat.ROUND
-                                            , BackgroundPosition.CENTER
-                                            , BackgroundSize.DEFAULT
-                                    )
-                            );
 
-                            //} else {
-                        } catch (Exception e) {
-                            b = new Background(
-                                    new BackgroundFill(
-                                            Color.GREEN,
-                                            new CornerRadii(45),
-                                            Insets.EMPTY));
-                            e.printStackTrace();
-                        }
+                        b = new Background(new BackgroundFill(Color.GREY, new CornerRadii(45), Insets.EMPTY));
+
 
                         eC.setBackground(b);
 
@@ -565,7 +547,10 @@ public class SvtpkApplication extends Application {
                         System.out.println("avsnitt: " + episode.getEpisodeTitle());
                         if (progressState != null) {
                             episodeLeaf.setSelected(progressState.equals(ProgressStates.WANTED));
-                            System.out.println("selected: " + progressState.equals(ProgressStates.WANTED));
+                            System.out.println("progressState : "+progressState);
+                        }
+                        else{
+                            System.out.println("Progressstate == null");
                         }
 
                         eC.setTextOverrun(OverrunStyle.ELLIPSIS);
@@ -653,7 +638,7 @@ public class SvtpkApplication extends Application {
             dlBtn.setText("Kopiera");
             dlBtn.setDisable(true);
         }
-        System.out.println("ui färdig: ");
+        System.out.println("ui färdig\n____________________________________________");
         /*for (SeasonEntity q : seasons) {
             for (EpisodeEntity e : q.getItems()) {
                 System.out.println("hejs");

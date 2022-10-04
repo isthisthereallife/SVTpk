@@ -1,8 +1,10 @@
 package org.m.svtpk.services;
 
+import com.google.gson.Gson;
 import javafx.scene.image.Image;
 import org.m.svtpk.SvtpkApplication;
 import org.m.svtpk.entity.*;
+import org.m.svtpk.utils.Arrow;
 import org.m.svtpk.utils.Settings;
 import org.m.svtpk.utils.StringHelpers;
 
@@ -23,6 +25,8 @@ public class EpisodeService {
 
         ArrayList<SeasonEntity> seasons = new ArrayList<>();
 
+        //det här anropet har redan gjorts
+        System.out.println("getSeasonsFromEpisode, hämtar från episode.getSplashURL:");
         String res = connectToURLReturnBodyAsString(episode.getSplashURL());
 
         if (episode.getSvtId() != null) {
@@ -110,8 +114,9 @@ public class EpisodeService {
                                             imageURL = "https://www.svtstatic.se/image/custom/1024/".concat(imageURL);
                                         }
                                         episodeFromString.setImageURL(new URL(imageURL));
-                                        episodeFromString.setThumbnail(
-                                                new Image(imageURL, 25, 25, false, false));
+                                        episodeFromString.setThumbnail(Arrow.getImgArrowDown("grey"));
+                                        //episodeFromString.setThumbnail(
+                                        //        new Image(imageURL, 25, 25, false, false));
                                     } catch (Exception e) {
                                         if (settings.isAdvancedUser()) e.printStackTrace();
                                     }
@@ -139,13 +144,13 @@ public class EpisodeService {
                                                         .replace("\\", "")
                                                         .replace("\"", "")
                                                         .replaceFirst(":", ""));
-                                                System.out.println(episodeFromString.getDescription());
+                                                System.out.println("EpisodeService.getSeasonsFromEpisode letar description för "+episodeTitle);
                                             } catch (Exception e) {
                                                 episode.setDescription("Ingen information tillgänglig.");
-                                                System.out.println("No description available.");
+                                                System.out.println("No description available for episode "+episodeTitle);
                                             }
                                         }
-
+                                        episodeFromString.setProgressState(ProgressStates.IGNORED);
                                         season.addItem(episodeFromString);
                                     }
                                 } catch (Exception e) {
@@ -217,6 +222,8 @@ public class EpisodeService {
             String body = "";
             try {
                 body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episodeId));
+                updateEpisodeLinks(episode, body);
+                //kan jag här köra updateEpisodeLinks???
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -244,11 +251,13 @@ public class EpisodeService {
                     episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
 
                     episode.setFilename(StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv"));
-                    episode = updateEpisodeLinks(episode);
+                    //episode = updateEpisodeLinks(episode);
                     try {
+                        //inte helt såld på den här iden
                         episode.setImageURL(new URL(getImgURL(address)));
                         System.out.println("sätter ImageURL här nere nu, till: " + episode.getImageURL());
-                        episode.setThumbnail(new Image(episode.getImageURL().toString()));
+//                        episode.setThumbnail(new Image(episode.getImageURL().toString()));
+                        episode.setThumbnail(Arrow.getImgArrowDown("grey"));
 
                     } catch (Exception e) {
                         if (settings.isAdvancedUser()) System.out.println("Could not get episode image");
@@ -269,6 +278,7 @@ public class EpisodeService {
         String body = "";
 
         try {
+            System.out.println("getImgURL, hämtar med en provided address");
             body = connectToURLReturnBodyAsString(new URL(addressWithId.split("\\?id=")[0]));
             if (!body.equals("")) {
                 return body.split("data-src=\"")[1].split("\"")[0];
@@ -279,18 +289,48 @@ public class EpisodeService {
         return "";
     }
 
-    public EpisodeEntity updateEpisodeLinks(EpisodeEntity episode) {
+    public EpisodeEntity updateEpisodeLinks(EpisodeEntity episode, String body) {
         String episodeInfoString = "";
+        String mpdUrl = "";
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
-        String body = "";
         try {
             //anrop 1
-            body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episode.getSvtId()));
+            //det här anropet har redan gjorts, kan jag köra detta när det första anropet görs??
+            //body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episode.getSvtId()));
             if (!body.equals("")) {
                 //anrop 2
-                body = connectToURLReturnBodyAsString(new URL(body.split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0]));
+                System.out.println("detta är JSON va?: ");
+                System.out.println(body);
+                Gson gson = new Gson();
+                //System.out.println(gson.);
+                VideoJsonObjectEntity o = gson.fromJson(body,VideoJsonObjectEntity.class);
+                System.out.println(o.getSvtId());
+                System.out.println(o.getVideoReferences().length);
+                for(VideoReferencesEntity vre : o.getVideoReferences()) {
+                    if( vre.getFormat().equals("dash-full")){
+                        System.out.println("den här är det:");
+                        System.out.println(vre.getUrl());
+                        mpdUrl = vre.getUrl();
+                    }
+                }
+
+                System.out.println();
+                //videoReferences i JSON blir en lista av videoReferencesEntity-objekt
+                
+                try {
+                    //this is JSON. treat it as JSON. use GSON.
+
+                    body = connectToURLReturnBodyAsString(new URL(body.split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0]));
+
+                }catch(ArrayIndexOutOfBoundsException e){
+                    body = connectToURLReturnBodyAsString(new URL(body.split("videoReferences")[1].split("url\":\"")[1].split("\"")[0]));
+                    System.out.println("catchade den: "+body);
+                }
+                /*
+                * "videoReferences":[{"url":"https://svt-vod-7a9977ff19/dash-full.mpd","format":"dash-full"},{"url":"https:/*/
+
                 if (!body.equals("")) {
-                    episode.setMpdURL(new URL("https://api.svt.se/ditto/api/v1/web?manifestUrl=" + body.split("location\":\"")[1].split("\"")[0] + "&excludeCodecs=hvc&excludeCodecs=ac-3"));
+                    episode.setMpdURL(new URL(mpdUrl));
                     //anrop 3, till mpdURLen
                     body = connectToURLReturnBodyAsString(episode.getMpdURL());
                     if (!body.equals("")) {
