@@ -2,8 +2,8 @@
 
 <hr>
 <h2>Windows:</h2>
-<h3><a href="https://mega.nz/file/V74CFJgD#DEl7mHPQZFMARjYBmoYm9SwJfyazrT1zOLSZM_VoEsM"> Ladda ner Version 0.2.2</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
-<p><a href="https://mega.nz/file/R3gRUawL#PqaYmtnvIzYuX-Rb7mMfBD69BlRuhkKSk5TueptwkqI">(Jag har redan ffmpeg på min dator)</a></p>
+<h3><a href="https://mega.nz/file/9q4jBDSY#edzLz0Z_hA_iQt1kZSM9ciAfa02bocGzyssrEKHiNAw"> Ladda ner Version 0.2.3</a> <h7 className="x-small">(inklusive ffmpeg)</h7></h3>
+<p><a href="https://mega.nz/file/ArASEDYQ#kafX6CIZNIprdjOTbk2EP4ZPcFSOBPKftJCoMVJqPSQ">(Jag har redan ffmpeg på min dator)</a></p>
 <h2>Mac</h2>
 <p>Kommer snart!</p>
 <h2>Linux</h2>
@@ -12,6 +12,8 @@ Inte aktuellt.
 <br/>
 <ul style="list-style-type:square">
     <h4>Uppdateringshistorik</h4>
+    <h5><a href="https://mega.nz/file/ArASEDYQ#kafX6CIZNIprdjOTbk2EP4ZPcFSOBPKftJCoMVJqPSQ">Version 0.2.3</a></h5>
+    <li>Hantering av ändringar SVT Play gjort i sitt interna API</li>
     <h5><a href="https://mega.nz/file/R3gRUawL#PqaYmtnvIzYuX-Rb7mMfBD69BlRuhkKSk5TueptwkqI">Version 0.2.2</a></h5>
     <li>Å, Ä, och Ö skrivs nu ut som de ska</li>
     <li>Lite mer förlåtande adressfält</li>

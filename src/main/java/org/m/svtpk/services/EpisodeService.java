@@ -293,6 +293,7 @@ public class EpisodeService {
         String episodeInfoString = "";
         String mpdUrl = "";
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
+        String body = "";
         try {
             //anrop 1
             //det här anropet har redan gjorts, kan jag köra detta när det första anropet görs??
@@ -323,7 +324,6 @@ public class EpisodeService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         if (episodeInfoString.equals("")) return new EpisodeEntity();
         if (episodeInfoString.contains("\"live\":true")) return new EpisodeEntity(true);
 
@@ -367,12 +367,14 @@ public class EpisodeService {
                 episode.addAvailableAudio(aud.getLabel(), aud);
                 streamId++;
             } else if (set.contains("mimeType=\"text")) {
+
                 //subs
                 SubtitleReferencesEntity sub = new SubtitleReferencesEntity();
                 sub.setId(streamId);
                 try {
                     sub.setLabel(set.split("<Label>")[1].split("</Label")[0]);
                 } catch (IndexOutOfBoundsException e) {
+                    System.out.println("Nån på svt har glömt ge undertextspåret en Label :/ Sätter den till \"Svenska\"");
                     sub.setLabel("Svenska");
                 }
                 try {
