@@ -1,7 +1,10 @@
 package org.m.svtpk.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import java.net.URL;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SubtitleReferencesEntity {
     private int id;
     private String label;

@@ -1,8 +1,7 @@
 package org.m.svtpk.services;
 
-import com.google.gson.Gson;
-import javafx.scene.image.Image;
-import org.m.svtpk.SvtpkApplication;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.m.svtpk.entity.*;
 import org.m.svtpk.utils.Arrow;
 import org.m.svtpk.utils.Settings;
@@ -14,7 +13,6 @@ import java.net.URI;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 
@@ -144,10 +142,10 @@ public class EpisodeService {
                                                         .replace("\\", "")
                                                         .replace("\"", "")
                                                         .replaceFirst(":", ""));
-                                                System.out.println("EpisodeService.getSeasonsFromEpisode letar description för "+episodeTitle);
+                                                System.out.println("EpisodeService.getSeasonsFromEpisode letar description för " + episodeTitle);
                                             } catch (Exception e) {
                                                 episode.setDescription("Ingen information tillgänglig.");
-                                                System.out.println("No description available for episode "+episodeTitle);
+                                                System.out.println("No description available for episode " + episodeTitle);
                                             }
                                         }
                                         episodeFromString.setProgressState(ProgressStates.IGNORED);
@@ -290,6 +288,8 @@ public class EpisodeService {
     }
 
     public EpisodeEntity updateEpisodeLinks(EpisodeEntity episode, String body) {
+        VideoJsonObjectEntity videoObjectFromJson = null;
+        ObjectMapper objectMapper = new ObjectMapper();
         String episodeInfoString = "";
         String mpdUrl = "";
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
@@ -299,44 +299,26 @@ public class EpisodeService {
             //body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episode.getSvtId()));
             if (!body.equals("")) {
                 //anrop 2
-                System.out.println("detta är JSON va?: ");
-                System.out.println(body);
-                Gson gson = new Gson();
                 //System.out.println(gson.);
-                VideoJsonObjectEntity o = gson.fromJson(body,VideoJsonObjectEntity.class);
-                System.out.println(o.getSvtId());
-                System.out.println(o.getVideoReferences().length);
-                for(VideoReferencesEntity vre : o.getVideoReferences()) {
-                    if( vre.getFormat().equals("dash-full")){
+                VideoJsonObjectEntity vJoE = objectMapper.readValue(body, VideoJsonObjectEntity.class);
+
+                System.out.println(vJoE.getSvtId());
+                System.out.println(vJoE.getVideoReferences().length);
+                for (VideoReferencesEntity vre : vJoE.getVideoReferences()) {
+                    if (vre.getFormat().equalsIgnoreCase("dash-full")) {
                         System.out.println("den här är det:");
                         System.out.println(vre.getUrl());
-                        mpdUrl = vre.getUrl();
+                        episode.setMpdURL(new URL(vre.getUrl()));
+
+                        //anrop 3, till mpdURLen
+                        body = connectToURLReturnBodyAsString(episode.getMpdURL());
+                        if (!body.equals("")) {
+                            System.out.println("episodeInfoString: \n" + episodeInfoString);
+                            episodeInfoString = body;
+                        }
                     }
                 }
 
-                System.out.println();
-                //videoReferences i JSON blir en lista av videoReferencesEntity-objekt
-                
-                try {
-                    //this is JSON. treat it as JSON. use GSON.
-
-                    body = connectToURLReturnBodyAsString(new URL(body.split("dash-full.mpd\",\"resolve\":\"")[1].split("\",")[0]));
-
-                }catch(ArrayIndexOutOfBoundsException e){
-                    body = connectToURLReturnBodyAsString(new URL(body.split("videoReferences")[1].split("url\":\"")[1].split("\"")[0]));
-                    System.out.println("catchade den: "+body);
-                }
-                /*
-                * "videoReferences":[{"url":"https://svt-vod-7a9977ff19/dash-full.mpd","format":"dash-full"},{"url":"https:/*/
-
-                if (!body.equals("")) {
-                    episode.setMpdURL(new URL(mpdUrl));
-                    //anrop 3, till mpdURLen
-                    body = connectToURLReturnBodyAsString(episode.getMpdURL());
-                    if (!body.equals("")) {
-                        episodeInfoString = body;
-                    }
-                }
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -345,7 +327,8 @@ public class EpisodeService {
         if (episodeInfoString.equals("")) return new EpisodeEntity();
         if (episodeInfoString.contains("\"live\":true")) return new EpisodeEntity(true);
 
-        String BASE_URL = episodeInfoString.split("<BaseURL>")[1].split("</BaseURL>")[0];
+        // this is sketchy AF
+        String BASE_URL = episode.getMpdURL().toString().split("dash-full.mpd")[0];
 
         //Set Available resolutions
         String[] adaptationSet = episodeInfoString.split("<AdaptationSet");
