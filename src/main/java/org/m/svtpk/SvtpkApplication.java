@@ -1,13 +1,9 @@
 package org.m.svtpk;
 
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.Event;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -17,7 +13,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
-import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
@@ -30,7 +25,6 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
-import jdk.jfr.EventType;
 import org.m.svtpk.entity.*;
 import org.m.svtpk.services.EpisodeService;
 import org.m.svtpk.utils.Arrow;
@@ -38,8 +32,6 @@ import org.m.svtpk.utils.EpisodeCopier;
 import org.m.svtpk.utils.QueueHandler;
 import org.m.svtpk.utils.Settings;
 
-import javax.swing.event.TreeSelectionEvent;
-import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -475,15 +467,16 @@ public class SvtpkApplication extends Application {
             treeBase = new CheckBoxTreeItem<>(currentEpisode.getProgramTitle());
 
             tree.setEditable(true);
-
-
+            boolean isFilm = true;
             // season nodes
             for (SeasonEntity season : seasons) {
+                System.out.println("hej, en season som heter: " + season.getName());
                 if (season.getType().equals(SeasonTypes.season)
                         || season.getType().equals(SeasonTypes.accessibility)
                         || season.getType().equals(SeasonTypes.productionPeriod)
                         || season.getType().equals(SeasonTypes.clip)
                         || season.getType().equals(SeasonTypes.unknown)) {
+                    isFilm = false;
                     CheckBoxTreeItem<String> seasonNode = new CheckBoxTreeItem<>(season.getName());
 
 
@@ -524,105 +517,51 @@ public class SvtpkApplication extends Application {
                             }
                             updateUI();
                         });
+                        CheckBoxTreeItem<String> episodeLeaf = makeAnEpisodeLeaf(eC, episode, inQueue, seasonNode, false);
 
-                        CheckBoxTreeItem<String> episodeLeaf = new CheckBoxTreeItem<String>();
-                        eC.setPrefSize(25, 25);
-                        eC.setMaxSize(25, 25);
-
-                        Paint black = Paint.valueOf("black");
-                        eC.setTextFill(black);
-                        Background b;
-
-                        b = new Background(new BackgroundFill(Color.GREY, new CornerRadii(45), Insets.EMPTY));
-
-
-                        eC.setBackground(b);
-
-                        eC.setVisible(true);
-                        eC.setAccessibleText(episode.getEpisodeTitle());
-
-                        eC.setGraphicTextGap(3);
-                        eC.setDisable(false);
-
-                        //episodeLeaf.setValue(episode.getEpisodeTitle());
-                        ProgressStates progressState = episode.getProgressState();
-                        System.out.println("avsnitt: " + episode.getEpisodeTitle());
-                        if (progressState != null) {
-                            episodeLeaf.setSelected(progressState.equals(ProgressStates.WANTED));
-                            System.out.println("progressState : "+progressState);
-                        }
-                        else{
-                            System.out.println("Progressstate == null");
-                        }
-
-                        eC.setTextOverrun(OverrunStyle.ELLIPSIS);
-                        episodeLeaf.setValue(eC.getEpisode().getEpisodeTitle());
-                        episodeLeaf.setGraphic(eC);
-
-                        //episodeLeaf.setValue(episode.getEpisodeTitle());
-                        //ändra deras status
-                        if (inQueue) {
-                            episodeLeaf.setIndeterminate(true);
-                        }
-                        if (episode.getSvtId().equals(currentEpisode.getSvtId())) {
-                            //description kommer inte med när vi bygger currentEpisode. ibland.
-                            currentEpisode.setDescription(episode.getDescription());//
-
-                            infoText.setText(currentEpisode.toString());
-                            infoText.setWrappingWidth(200);
-
-                            treeBase.setExpanded(true);
-                            treeBase.setIndependent(false);
-                            seasonNode.setExpanded(true);
-                            seasonNode.setIndependent(false);
-                            seasonNode.setIndeterminate(true);
-
-                            episodeLeaf.setExpanded(true);
-                            System.out.println("är detta en textsökning?: " + search);
-                            if (search) {
-                                episode.setProgressState(ProgressStates.WANTED);
-                                episodeLeaf.setSelected(true);
-                                //treeBase.setIndeterminate(true);
-                                //seasonNode.setIndeterminate(true);
-                            }
-                        }
                         seasonNode.getChildren().add(episodeLeaf);
 
                         episodeLeaf.selectedProperty().addListener((obs, oldVal, isSelected) -> {
 
-                            System.out.println(episodeLeaf.getValue() + "\tobs: "+obs+"\toldVal: "+oldVal+"\tselection state: " + isSelected);
+                            System.out.println(episodeLeaf.getValue() + "\tobs: " + obs + "\toldVal: " + oldVal + "\tselection state: " + isSelected);
                             //episodeLeaf.setSelected(true);
-                            if(isSelected)episode.setProgressState(ProgressStates.WANTED);
-                            if(isSelected)episode.setProgressState(ProgressStates.IGNORED);
+                            System.out.println("klickat på episod: " + episode.getEpisodeTitle());
+                            System.out.print("Sätter den till: ");
+                            if (isSelected) {
+                                System.out.println("WANTED");
+                                episode.setProgressState(ProgressStates.WANTED);
+                            }
+                            if (!isSelected) {
+                                System.out.println("IGNORED");
+                                episode.setProgressState(ProgressStates.IGNORED);
+                            }
 
                         });
-
-
                     }
-/*
-                    seasonNode.addEventHandler(
-                                CheckBoxTreeItem.<String>checkBoxSelectionChangedEvent(),
-                                (CheckBoxTreeItem.TreeModificationEvent<String> e) -> {
-                                    System.out.println(e.getTreeItem());
-                                    if (episodeLeaf.isSelected()) {
-                                        System.out.println("leaf is selected");
-                                        episode.setProgressState(ProgressStates.WANTED);
-                                        seasonNode.setIndeterminate(true);
-                                        seasonNode.setExpanded(true);
-
-
-                                    } else if (!episodeLeaf.isSelected()) {
-                                        episode.setProgressState(ProgressStates.IGNORED);
-                                        //seasonNode.setSelected(false);
-                                    }
-                                    //else if( episodeLeaf.isIndeterminate()){
-                                    //    System.out.println("????????????\nIndeterminate???? \n"+episode.toString());
-                                    //}
-                                }
-                        ); */
                 }
             }
+            // if no seasons were found, it's probably a film
+            if (isFilm) {
+                //mock a season for downloading purposes
+                SeasonEntity s = new SeasonEntity();
+                s.setName("I AM A SEASON");
+                s.addItem(currentEpisode);
+                seasons.add(s);
 
+
+                CheckBoxTreeItem<String> seasonNode = new CheckBoxTreeItem<>(s.getName());
+
+
+                EpisodeCell eC = new EpisodeCell(currentEpisode);
+                currentEpisode.setProgressState(ProgressStates.WANTED);
+                CheckBoxTreeItem<String> filmLeaf = makeAnEpisodeLeaf(eC, currentEpisode, false, seasonNode, true);
+                tree.setCellFactory(EpisodeCell.<String>forTreeView());
+
+                seasonNode.getChildren().add(filmLeaf);
+                treeBase.getChildren().add(seasonNode);
+                treeBase.setSelected(true);
+
+            }
 
             tree.setRoot(treeBase);
             tree.setShowRoot(true);
@@ -664,6 +603,72 @@ public class SvtpkApplication extends Application {
         }*/
         search = false;
     }
+
+    private CheckBoxTreeItem<String> makeAnEpisodeLeaf(EpisodeCell eC, EpisodeEntity episode, boolean inQueue, CheckBoxTreeItem<String> seasonNode, boolean isFilm) {
+        CheckBoxTreeItem<String> episodeLeaf = new CheckBoxTreeItem<String>();
+        eC.setPrefSize(25, 25);
+        eC.setMaxSize(25, 25);
+
+        Paint black = Paint.valueOf("black");
+        eC.setTextFill(black);
+        Background b;
+
+        b = new Background(new BackgroundFill(Color.GREY, new CornerRadii(45), Insets.EMPTY));
+
+
+        eC.setBackground(b);
+
+        eC.setVisible(true);
+        eC.setAccessibleText(episode.getEpisodeTitle());
+
+        eC.setGraphicTextGap(3);
+        eC.setDisable(false);
+
+        //episodeLeaf.setValue(episode.getEpisodeTitle());
+        ProgressStates progressState = episode.getProgressState();
+        if (progressState != null) {
+            episodeLeaf.setSelected(progressState.equals(ProgressStates.WANTED));
+            System.out.println("progressState : " + progressState);
+        } else {
+            System.out.println("Progressstate == null");
+        }
+
+        eC.setTextOverrun(OverrunStyle.ELLIPSIS);
+        episodeLeaf.setValue(eC.getEpisode().getEpisodeTitle());
+        episodeLeaf.setGraphic(eC);
+
+        //episodeLeaf.setValue(episode.getEpisodeTitle());
+        //ändra deras status
+        if (inQueue) {
+            episodeLeaf.setIndeterminate(true);
+        }
+        if (episode.getSvtId().equals(currentEpisode.getSvtId())) {
+            currentEpisode.setDescription(episode.getDescription());//
+
+            infoText.setText(currentEpisode.toString());
+            infoText.setWrappingWidth(200);
+
+            treeBase.setExpanded(true);
+            treeBase.setIndependent(false);
+            seasonNode.setExpanded(true);
+            seasonNode.setIndependent(false);
+            if (isFilm) {
+                seasonNode.setIndeterminate(true);
+            } else {
+                seasonNode.setSelected(true);
+            }
+            episodeLeaf.setExpanded(true);
+            System.out.println("är detta en textsökning?: " + search);
+            if (search) {
+                episode.setProgressState(ProgressStates.WANTED);
+                episodeLeaf.setSelected(true);
+                //treeBase.setIndeterminate(true);
+                //seasonNode.setIndeterminate(true);
+            }
+        }
+        return episodeLeaf;
+    }
+
 
     private void redrawCurrentEpisode() {
 
