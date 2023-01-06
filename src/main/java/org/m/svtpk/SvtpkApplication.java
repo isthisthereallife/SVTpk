@@ -477,7 +477,7 @@ public class SvtpkApplication extends Application {
             tree.setEditable(true);
 
 
-            // season node
+            // season nodes
             for (SeasonEntity season : seasons) {
                 if (season.getType().equals(SeasonTypes.season)
                         || season.getType().equals(SeasonTypes.accessibility)
@@ -490,6 +490,7 @@ public class SvtpkApplication extends Application {
                     treeBase.getChildren().add(seasonNode);
                     tree.setCellFactory(EpisodeCell.<String>forTreeView());
 
+                    // adding episodes to season node
                     for (EpisodeEntity episode : season.getItems()) {
                         //ContextMenu contextMenu = createSeasonItemContextMenu(episode);
 
@@ -574,6 +575,7 @@ public class SvtpkApplication extends Application {
                             treeBase.setIndependent(false);
                             seasonNode.setExpanded(true);
                             seasonNode.setIndependent(false);
+                            seasonNode.setIndeterminate(true);
 
                             episodeLeaf.setExpanded(true);
                             System.out.println("är detta en textsökning?: " + search);
@@ -586,14 +588,28 @@ public class SvtpkApplication extends Application {
                         }
                         seasonNode.getChildren().add(episodeLeaf);
 
-                        seasonNode.addEventHandler(
+                        episodeLeaf.selectedProperty().addListener((obs, oldVal, isSelected) -> {
+
+                            System.out.println(episodeLeaf.getValue() + "\tobs: "+obs+"\toldVal: "+oldVal+"\tselection state: " + isSelected);
+                            //episodeLeaf.setSelected(true);
+                            if(isSelected)episode.setProgressState(ProgressStates.WANTED);
+                            if(isSelected)episode.setProgressState(ProgressStates.IGNORED);
+
+                        });
+
+
+                    }
+/*
+                    seasonNode.addEventHandler(
                                 CheckBoxTreeItem.<String>checkBoxSelectionChangedEvent(),
                                 (CheckBoxTreeItem.TreeModificationEvent<String> e) -> {
+                                    System.out.println(e.getTreeItem());
                                     if (episodeLeaf.isSelected()) {
                                         System.out.println("leaf is selected");
                                         episode.setProgressState(ProgressStates.WANTED);
                                         seasonNode.setIndeterminate(true);
                                         seasonNode.setExpanded(true);
+
 
                                     } else if (!episodeLeaf.isSelected()) {
                                         episode.setProgressState(ProgressStates.IGNORED);
@@ -603,8 +619,7 @@ public class SvtpkApplication extends Application {
                                     //    System.out.println("????????????\nIndeterminate???? \n"+episode.toString());
                                     //}
                                 }
-                        );
-                    }
+                        ); */
                 }
             }
 

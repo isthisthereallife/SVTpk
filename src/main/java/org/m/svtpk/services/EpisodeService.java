@@ -293,7 +293,7 @@ public class EpisodeService {
         String episodeInfoString = "";
         String mpdUrl = "";
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
-        String body = "";
+
         try {
             //anrop 1
             //det här anropet har redan gjorts, kan jag köra detta när det första anropet görs??
