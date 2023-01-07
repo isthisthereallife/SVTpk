@@ -93,7 +93,6 @@ public class EpisodeEntity {
     }
 
     public void addAvailableResolutions(String name, VideoReferencesEntity newResolutions) {
-        System.out.println("added resolution "+newResolutions.getWidth());
         this.availableResolutions.put(name, newResolutions);
     }
 

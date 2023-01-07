@@ -4,6 +4,7 @@ import javafx.application.Application;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -232,13 +233,13 @@ public class SvtpkApplication extends Application {
         TitledPane settingsPane = new TitledPane("Inställningar", vBoxSettings);
         settingsPane.setLayoutX(1);
         settingsPane.setLayoutY(1);
-        settingsPane.maxWidth(50);
+        settingsPane.maxWidth(200);
 
 
         Accordion accordion = new Accordion();
         accordion.getPanes().add(settingsPane);
         settingsBox = new VBox(accordion);
-
+        settingsBox.setPrefWidth(300);
         episodeHBox = new HBox(vBoxInfoText, settingsBox);
         mainContentBox = mainContentBox != null ? mainContentBox : new HBox(episodeHBox);
 
@@ -479,12 +480,12 @@ public class SvtpkApplication extends Application {
                     isFilm = false;
                     CheckBoxTreeItem<String> seasonNode = new CheckBoxTreeItem<>(season.getName());
 
-
                     treeBase.getChildren().add(seasonNode);
                     tree.setCellFactory(EpisodeCell.<String>forTreeView());
 
                     // adding episodes to season node
                     for (EpisodeEntity episode : season.getItems()) {
+                        System.out.println(episode.getEpisodeTitle()+" - "+episode.getProgressState());
                         //ContextMenu contextMenu = createSeasonItemContextMenu(episode);
 
                         Node arrowImageNode = new ImageView();
@@ -500,7 +501,8 @@ public class SvtpkApplication extends Application {
                         }
 
                         EpisodeCell eC = new EpisodeCell(episode);
-                        eC.setItem(episode.getEpisodeTitle() + "satte setItemyy");
+                        eC.setItem(episode.getEpisodeTitle());
+                        eC.setVisible(true);
                         //eC.setText(episode.getEpisodeTitle() + episode.getSvtId());
                         eC.setOnMouseClicked((event) -> {
                             currentEpisode = episodeService.getEpisodeInfo(episode.getSplashURL().toString());
@@ -515,28 +517,64 @@ public class SvtpkApplication extends Application {
                             if (currentEpisode.getImageURL() == null || currentEpisode.getImageURL().toString().equals("")) {
                                 currentEpisode.setImageURL(episode.getImageURL());
                             }
+                            search = true;
                             updateUI();
                         });
                         CheckBoxTreeItem<String> episodeLeaf = makeAnEpisodeLeaf(eC, episode, inQueue, seasonNode, false);
 
                         seasonNode.getChildren().add(episodeLeaf);
 
-                        episodeLeaf.selectedProperty().addListener((obs, oldVal, isSelected) -> {
+                        episodeLeaf.addEventHandler(CheckBoxTreeItem.<String>checkBoxSelectionChangedEvent(), event -> {
+                            System.out.println("&#%&&&&&&&&&&&&&&& \n EN ANNAN SORTS EVENT #¤)/#/()/////////");
 
-                            System.out.println(episodeLeaf.getValue() + "\tobs: " + obs + "\toldVal: " + oldVal + "\tselection state: " + isSelected);
-                            //episodeLeaf.setSelected(true);
-                            System.out.println("klickat på episod: " + episode.getEpisodeTitle());
-                            System.out.print("Sätter den till: ");
-                            if (isSelected) {
-                                System.out.println("WANTED");
-                                episode.setProgressState(ProgressStates.WANTED);
+                              //  System.out.println(" OCH MED LITE PARAMETRAR då, när visas jag?");
+                            System.out.println(event);
+                            System.out.println(episodeLeaf.isSelected());
+                            //isselected är vad det nya värdet är
+                            if(!search) {
+                                if (episodeLeaf.isSelected()) {
+                                    System.out.println("set to WANTED");
+                                    episode.setProgressState(ProgressStates.WANTED);
+                                }
+                                if (!episodeLeaf.isSelected()) {
+                                    System.out.println("set to IGNORED");
+                                    episode.setProgressState(ProgressStates.IGNORED);
+                                }
                             }
-                            if (!isSelected) {
-                                System.out.println("IGNORED");
-                                episode.setProgressState(ProgressStates.IGNORED);
+                            if(search){
+                                if(episode.getProgressState().equals(ProgressStates.WANTED)){
+                                    episodeLeaf.setSelected(true);
+                                }
                             }
+
 
                         });
+
+                        /*episodeLeaf.selectedProperty().addListener((obs, oldVal, isSelected) -> {
+                            if(!search) {
+                                System.out.println(episodeLeaf.getValue() + "\tobs: " + obs + "\toldVal: " + oldVal + "\tselection state: " + isSelected);
+                                //episodeLeaf.setSelected(true);
+                                System.out.println("klickat på episod: " + episode.getEpisodeTitle());
+                                System.out.print("Sätter den till: ");
+                                if (isSelected) {
+                                    System.out.println("WANTED");
+                                    episode.setProgressState(ProgressStates.WANTED);
+                                }
+                                if (!isSelected) {
+                                    System.out.println("IGNORED");
+                                    episode.setProgressState(ProgressStates.IGNORED);
+                                }
+
+                                //debug TODO
+                                System.out.println("--------------------------------------\nSåhär ser seasons ut nu: ");
+                                for (SeasonEntity s : seasons) {
+                                    for (EpisodeEntity e : s.getItems()) {
+                                        System.out.println(e.getEpisodeTitle() + " - " + e.getProgressState());
+                                    }
+                                }
+                                System.out.println("--------------------------------------------\n");
+                            }
+                        });*/
                     }
                 }
             }
@@ -544,13 +582,12 @@ public class SvtpkApplication extends Application {
             if (isFilm) {
                 //mock a season for downloading purposes
                 SeasonEntity s = new SeasonEntity();
-                s.setName("I AM A SEASON");
+                s.setName("");
                 s.addItem(currentEpisode);
                 seasons.add(s);
 
 
                 CheckBoxTreeItem<String> seasonNode = new CheckBoxTreeItem<>(s.getName());
-
 
                 EpisodeCell eC = new EpisodeCell(currentEpisode);
                 currentEpisode.setProgressState(ProgressStates.WANTED);
@@ -560,6 +597,7 @@ public class SvtpkApplication extends Application {
                 seasonNode.getChildren().add(filmLeaf);
                 treeBase.getChildren().add(seasonNode);
                 treeBase.setSelected(true);
+
 
             }
 
@@ -628,9 +666,9 @@ public class SvtpkApplication extends Application {
         ProgressStates progressState = episode.getProgressState();
         if (progressState != null) {
             episodeLeaf.setSelected(progressState.equals(ProgressStates.WANTED));
-            System.out.println("progressState : " + progressState);
+            //System.out.println("progressState : " + progressState);
         } else {
-            System.out.println("Progressstate == null");
+            //System.out.println("Progressstate == null");
         }
 
         eC.setTextOverrun(OverrunStyle.ELLIPSIS);
@@ -653,26 +691,25 @@ public class SvtpkApplication extends Application {
             seasonNode.setExpanded(true);
             seasonNode.setIndependent(false);
             if (isFilm) {
-                seasonNode.setIndeterminate(true);
-            } else {
                 seasonNode.setSelected(true);
+            } else {
+                seasonNode.setIndeterminate(true);
             }
             episodeLeaf.setExpanded(true);
             System.out.println("är detta en textsökning?: " + search);
-            if (search) {
+
                 episode.setProgressState(ProgressStates.WANTED);
                 episodeLeaf.setSelected(true);
                 //treeBase.setIndeterminate(true);
                 //seasonNode.setIndeterminate(true);
-            }
+
+        }
+        if (episode.getProgressState().equals(ProgressStates.WANTED)){
+            episodeLeaf.setSelected(true);
         }
         return episodeLeaf;
     }
 
-
-    private void redrawCurrentEpisode() {
-
-    }
 
     private ContextMenu createSeasonItemContextMenu(EpisodeEntity episode) {
         System.out.println("Creating new Context menu for episode: " + episode.getEpisodeTitle());

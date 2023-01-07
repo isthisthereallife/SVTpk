@@ -20,11 +20,8 @@ public class EpisodeService {
     Settings settings = Settings.load();
 
     public ArrayList<SeasonEntity> getSeasonsFromEpisode(EpisodeEntity episode) {
-
         ArrayList<SeasonEntity> seasons = new ArrayList<>();
 
-        //det här anropet har redan gjorts
-        System.out.println("getSeasonsFromEpisode, hämtar från episode.getSplashURL:");
         String res = connectToURLReturnBodyAsString(episode.getSplashURL());
 
         if (episode.getSvtId() != null) {
@@ -142,7 +139,6 @@ public class EpisodeService {
                                                         .replace("\\", "")
                                                         .replace("\"", "")
                                                         .replaceFirst(":", ""));
-                                                System.out.println("EpisodeService.getSeasonsFromEpisode letar description för " + episodeTitle);
                                             } catch (Exception e) {
                                                 episode.setDescription("Ingen information tillgänglig.");
                                                 System.out.println("No description available for episode " + episodeTitle);
@@ -152,8 +148,6 @@ public class EpisodeService {
                                         season.addItem(episodeFromString);
                                     }
                                 } catch (Exception e) {
-                                    System.out.println("Tråkigt!");
-                                    System.out.println(e.getMessage());
                                     e.printStackTrace();
                                 }
                             }
@@ -253,7 +247,6 @@ public class EpisodeService {
                     try {
                         //inte helt såld på den här iden
                         episode.setImageURL(new URL(getImgURL(address)));
-                        System.out.println("sätter ImageURL här nere nu, till: " + episode.getImageURL());
 //                        episode.setThumbnail(new Image(episode.getImageURL().toString()));
                         episode.setThumbnail(Arrow.getImgArrowDown("grey"));
 
@@ -276,7 +269,6 @@ public class EpisodeService {
         String body = "";
 
         try {
-            System.out.println("getImgURL, hämtar med en provided address");
             body = connectToURLReturnBodyAsString(new URL(addressWithId.split("\\?id=")[0]));
             if (!body.equals("")) {
                 return body.split("data-src=\"")[1].split("\"")[0];
@@ -300,21 +292,15 @@ public class EpisodeService {
             //body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episode.getSvtId()));
             if (!body.equals("")) {
                 //anrop 2
-                //System.out.println(gson.);
                 VideoJsonObjectEntity vJoE = objectMapper.readValue(body, VideoJsonObjectEntity.class);
 
-                System.out.println(vJoE.getSvtId());
-                System.out.println(vJoE.getVideoReferences().length);
                 for (VideoReferencesEntity vre : vJoE.getVideoReferences()) {
                     if (vre.getFormat().equalsIgnoreCase("dash-full")) {
-                        System.out.println("den här är det:");
-                        System.out.println(vre.getUrl());
                         episode.setMpdURL(new URL(vre.getUrl()));
 
                         //anrop 3, till mpdURLen
                         body = connectToURLReturnBodyAsString(episode.getMpdURL());
                         if (!body.equals("")) {
-                            System.out.println("episodeInfoString: \n" + episodeInfoString);
                             episodeInfoString = body;
                         }
                     }
