@@ -76,6 +76,7 @@ public class SvtpkApplication extends Application {
     org.m.svtpk.utils.QueueHandler QueueHandler = new QueueHandler();
     Clipboard clip;
     static boolean search;
+    boolean allTicked = true;
 
 
     @Override
@@ -88,7 +89,7 @@ public class SvtpkApplication extends Application {
     }
 
     public Scene homeScene() {
-        System.out.println("SVTpk - v0.2.3");
+        System.out.println("SVTpk - v0.3");
         downThread.start();
         settings = Settings.load();
         search = false;
@@ -252,26 +253,15 @@ public class SvtpkApplication extends Application {
         statusIndicator.prefHeight(100);
         statusIndicator.setAlignment(Pos.BOTTOM_CENTER);
         statusIndicator.setDisable(!currentEpisode.hasID(currentEpisode));
-        dlBtn = new Button("Kopiera");
+        dlBtn = new Button("Ladda ner");
 
         loadingCounter = loadingCounter != null ? loadingCounter : new SimpleDoubleProperty();
         loadingCounter.addListener(((observableValue, number, newValue) -> {
             loadingCounter.set((Double) newValue);
-            /*
-            dlBtn.setDisable(true);
-            if (loadingCounter.getValue() >= 0) {
-                loaded.setFill(Color.DARKGREY);
-                dlBtn.setText("Kopierar...");
-            }
-            if (loadingCounter.getValue() == 100) {
-                loaded.setFill(DARKGREEN);
-                dlBtn.setText("Kopierat!");
-            }
-             */
+
         }));
 
         progress = progress != null ? progress : new VBox();
-        //progress.prefWidth(200);
         loaded = loaded != null ? loaded : new Text();
         loaded.setText("");
         progressBar = new ProgressBar();
@@ -333,11 +323,11 @@ public class SvtpkApplication extends Application {
         search.getChildren().add(addressTextField);
         search.getChildren().add(findEpisodeBtn);
 
-        // Button "Kopiera"
+        // Button "Ladda ner"
         dlBtn.setOnAction(e -> {
-            System.out.println("knappen tryckt!");
+
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
-            dlBtn.setText("Kopierar...");
+            dlBtn.setText("Laddar ner...");
             dlBtn.setDisable(true);
 
             //kolla i seasons vilka som är WANTED
@@ -409,7 +399,7 @@ public class SvtpkApplication extends Application {
         qE.getEpisode().setProgressDouble(progress);
         qE.setText(qE.toString());
         if ((int) progress == 1 && qE.getEpisode().getSvtId().toString().equals(currentEpisode.getSvtId().toString())) {
-            dlBtn.setText("Kopierat!");
+            dlBtn.setText("Klart!");
 
         }
         //progressBar.setVisible(true);
@@ -430,24 +420,21 @@ public class SvtpkApplication extends Application {
             // if requested episode is a live-stream
             loaded.setVisible(true);
             loaded.setFill(Color.FIREBRICK);
-            loaded.setText("\n\nDu kan tyvärr inte kopiera en live-sändning.");
+            loaded.setText("\n\nDu kan tyvärr inte ladda ner en live-sändning.");
             episodeImageView.setVisible(false);
             settingsBox.setVisible(false);
             currentEpisode = new EpisodeEntity();
-            dlBtn.setText("Kopiera");
+            dlBtn.setText("Ladda ner");
             dlBtn.setDisable(true);
         } else if (!currentEpisode.getSvtId().equals("") && !currentEpisode.getSvtId().equalsIgnoreCase("upcoming")) {
             //if there is a SvtId
             if (currentEpisode.getAvailableResolutions().size() == 0) {
                 //måste bygga en riktig EpisodeEntity. Borde kanske gjort det förut.
-                System.out.println("laddar om avsnittet, nu på riktigt");
                 currentEpisode = episodeService.findEpisode(currentEpisode.getSplashURL().toString());
             }
             setVideoRes();
             setAudioLanguage();
             setSubs();
-            System.out.println("satte videoRes och sånt för avsnitt " + currentEpisode.getEpisodeTitle());
-            System.out.println("men har den verkligen en videoRes laddad?? såhär många fanns det: " + (currentEpisode.getAvailableResolutions() != null ? currentEpisode.getAvailableResolutions().size() : "den var null"));
             infoText.setVisible(true);
             infoText.setFill(DARKGREEN);
 
@@ -459,7 +446,7 @@ public class SvtpkApplication extends Application {
             }
             statusIcon.setImage(Arrow.getImgArrowDown("green"));
             statusIcon.setDisable(false);
-            dlBtn.setText("Kopiera");
+            dlBtn.setText("Ladda ner");
             dlBtn.setDisable(false);
 
             //tree = new TreeView();
@@ -471,7 +458,7 @@ public class SvtpkApplication extends Application {
             boolean isFilm = true;
             // season nodes
             for (SeasonEntity season : seasons) {
-                System.out.println("hej, en season som heter: " + season.getName());
+                allTicked = true;
                 if (season.getType().equals(SeasonTypes.season)
                         || season.getType().equals(SeasonTypes.accessibility)
                         || season.getType().equals(SeasonTypes.productionPeriod)
@@ -485,7 +472,6 @@ public class SvtpkApplication extends Application {
 
                     // adding episodes to season node
                     for (EpisodeEntity episode : season.getItems()) {
-                        System.out.println(episode.getEpisodeTitle()+" - "+episode.getProgressState());
                         //ContextMenu contextMenu = createSeasonItemContextMenu(episode);
 
                         Node arrowImageNode = new ImageView();
@@ -527,11 +513,11 @@ public class SvtpkApplication extends Application {
                         episodeLeaf.addEventHandler(CheckBoxTreeItem.<String>checkBoxSelectionChangedEvent(), event -> {
                             System.out.println("&#%&&&&&&&&&&&&&&& \n EN ANNAN SORTS EVENT #¤)/#/()/////////");
 
-                              //  System.out.println(" OCH MED LITE PARAMETRAR då, när visas jag?");
+                            //  System.out.println(" OCH MED LITE PARAMETRAR då, när visas jag?");
                             System.out.println(event);
                             System.out.println(episodeLeaf.isSelected());
                             //isselected är vad det nya värdet är
-                            if(!search) {
+                            if (!search) {
                                 if (episodeLeaf.isSelected()) {
                                     System.out.println("set to WANTED");
                                     episode.setProgressState(ProgressStates.WANTED);
@@ -541,40 +527,17 @@ public class SvtpkApplication extends Application {
                                     episode.setProgressState(ProgressStates.IGNORED);
                                 }
                             }
-                            if(search){
-                                if(episode.getProgressState().equals(ProgressStates.WANTED)){
+                            if (search) {
+                                if (episode.getProgressState().equals(ProgressStates.WANTED)) {
                                     episodeLeaf.setSelected(true);
                                 }
                             }
-
-
                         });
+                    }
 
-                        /*episodeLeaf.selectedProperty().addListener((obs, oldVal, isSelected) -> {
-                            if(!search) {
-                                System.out.println(episodeLeaf.getValue() + "\tobs: " + obs + "\toldVal: " + oldVal + "\tselection state: " + isSelected);
-                                //episodeLeaf.setSelected(true);
-                                System.out.println("klickat på episod: " + episode.getEpisodeTitle());
-                                System.out.print("Sätter den till: ");
-                                if (isSelected) {
-                                    System.out.println("WANTED");
-                                    episode.setProgressState(ProgressStates.WANTED);
-                                }
-                                if (!isSelected) {
-                                    System.out.println("IGNORED");
-                                    episode.setProgressState(ProgressStates.IGNORED);
-                                }
-
-                                //debug TODO
-                                System.out.println("--------------------------------------\nSåhär ser seasons ut nu: ");
-                                for (SeasonEntity s : seasons) {
-                                    for (EpisodeEntity e : s.getItems()) {
-                                        System.out.println(e.getEpisodeTitle() + " - " + e.getProgressState());
-                                    }
-                                }
-                                System.out.println("--------------------------------------------\n");
-                            }
-                        });*/
+                    if (allTicked) {
+                        seasonNode.setIndeterminate(false);
+                        seasonNode.setSelected(true);
                     }
                 }
             }
@@ -593,7 +556,8 @@ public class SvtpkApplication extends Application {
                 currentEpisode.setProgressState(ProgressStates.WANTED);
                 CheckBoxTreeItem<String> filmLeaf = makeAnEpisodeLeaf(eC, currentEpisode, false, seasonNode, true);
                 tree.setCellFactory(EpisodeCell.<String>forTreeView());
-
+                seasonNode.setIndeterminate(false);
+                seasonNode.setSelected(true);
                 seasonNode.getChildren().add(filmLeaf);
                 treeBase.getChildren().add(seasonNode);
                 treeBase.setSelected(true);
@@ -617,7 +581,7 @@ public class SvtpkApplication extends Application {
             episodeImageView.setImage(null);
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             statusIcon.setDisable(true);
-            dlBtn.setText("Kopiera");
+            dlBtn.setText("Ladda ner");
             dlBtn.setDisable(true);
         } else {
             // no text in text field, clear UI
@@ -628,17 +592,9 @@ public class SvtpkApplication extends Application {
             episodeImageView.setImage(null);
             statusIcon.setImage(Arrow.getImgArrowDown("grey"));
             statusIcon.setDisable(true);
-            dlBtn.setText("Kopiera");
+            dlBtn.setText("Ladda ner");
             dlBtn.setDisable(true);
         }
-        System.out.println("ui färdig\n____________________________________________");
-        /*for (SeasonEntity q : seasons) {
-            for (EpisodeEntity e : q.getItems()) {
-                System.out.println("hejs");
-                System.out.println(e.getSvtId());
-                System.out.println(e.getEpisodeTitle() + " : " + e.getProgressState());
-            }
-        }*/
         search = false;
     }
 
@@ -651,7 +607,7 @@ public class SvtpkApplication extends Application {
         eC.setTextFill(black);
         Background b;
 
-        b = new Background(new BackgroundFill(Color.GREY, new CornerRadii(45), Insets.EMPTY));
+        b = new Background(new BackgroundFill(inQueue ? Color.LIMEGREEN : Color.CORNFLOWERBLUE, new CornerRadii(45), Insets.EMPTY));
 
 
         eC.setBackground(b);
@@ -696,16 +652,19 @@ public class SvtpkApplication extends Application {
                 seasonNode.setIndeterminate(true);
             }
             episodeLeaf.setExpanded(true);
-            System.out.println("är detta en textsökning?: " + search);
 
-                episode.setProgressState(ProgressStates.WANTED);
-                episodeLeaf.setSelected(true);
-                //treeBase.setIndeterminate(true);
-                //seasonNode.setIndeterminate(true);
+
+            episode.setProgressState(ProgressStates.WANTED);
+            episodeLeaf.setSelected(true);
+            //treeBase.setIndeterminate(true);
+            //seasonNode.setIndeterminate(true);
 
         }
-        if (episode.getProgressState().equals(ProgressStates.WANTED)){
+        if (episode.getProgressState().equals(ProgressStates.WANTED)) {
             episodeLeaf.setSelected(true);
+            seasonNode.setIndeterminate(true);
+        } else {
+            allTicked = false;
         }
         return episodeLeaf;
     }
