@@ -1,5 +1,6 @@
 package org.m.svtpk.utils;
 
+import com.sun.javafx.util.Logging;
 import javafx.application.Platform;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -9,12 +10,17 @@ import org.m.svtpk.entity.ProgressStates;
 import org.m.svtpk.entity.QueueEntity;
 
 import java.io.*;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Filter;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
@@ -22,7 +28,7 @@ import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 public class EpisodeCopier implements Runnable {
 
     QueueEntity queueEntity;
-
+    Logger log;
     public EpisodeCopier(QueueEntity queueEntity) {
         this.queueEntity = queueEntity;
     }
@@ -31,6 +37,16 @@ public class EpisodeCopier implements Runnable {
     public void run() {
         Platform.runLater(() -> {
             queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(123, 152, 115), null, null)));
+        });
+        log = Logger.getLogger("Debug");
+        log.setFilter(new Filter() {
+            @Override
+            public boolean isLoggable(LogRecord record) {
+
+                record.setLoggerName("Debug");
+                record.setMessage("Hello");
+                return false;
+            }
         });
         Settings settings = Settings.load();
         String videoFiletype = ".mp4";
@@ -123,7 +139,12 @@ public class EpisodeCopier implements Runnable {
                 System.out.println("Skapar mapp \"Downloads\"");
                 Files.createDirectories(Paths.get(settings.getPath()));
             }
-            Files.copy(source, target, REPLACE_EXISTING);
+            try {
+                Files.copy(source, target, REPLACE_EXISTING);
+            }catch(FileSystemException e){
+                // TODO
+                e.printStackTrace();
+            }
             queueEntity.getEpisode().setSaveLocation(target);
             if (settings.isAdvancedUser()) System.out.println("Fil flyttad.");
             Files.delete(source);
