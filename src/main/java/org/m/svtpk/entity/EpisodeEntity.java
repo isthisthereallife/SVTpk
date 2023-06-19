@@ -30,9 +30,11 @@ public class EpisodeEntity {
     private double progressDouble;
     private Path saveLocation;
     private Image thumbnail;
+    private boolean isExpired = false;
+    private String infotext;
 
     public EpisodeEntity() {
-        programTitle = "fun program no bugs";
+        programTitle = "I'm an episode!";
         svtId = "";
         availableSubs = new HashMap<>();
         availableResolutions = new HashMap<>();
@@ -124,7 +126,7 @@ public class EpisodeEntity {
         } else if (availableResolutions.containsKey("360")) {
             return availableResolutions.get("360");
         } else {
-            System.out.println("ingen upplösning hittad | Episode Entity getBestAvailableResolutions ");
+            System.out.println("Ingen upplösning hittad.");
             return null;
         }
     }
@@ -273,6 +275,20 @@ public class EpisodeEntity {
 
     public void setThumbnail(Image thumbnail) {
         this.thumbnail = thumbnail;
+    }
+
+    public boolean isExpired() {
+        return isExpired;
+    }
+
+    public void setExpired(boolean isExpired) {
+        this.isExpired = isExpired;
+    }
+    public String getInfotext(){
+        return infotext;
+    }
+    public void setInfotext(String infotext){
+        this.infotext = infotext;
     }
 
     @Override

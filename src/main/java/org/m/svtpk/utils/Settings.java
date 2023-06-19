@@ -69,7 +69,7 @@ public class Settings {
                 s.setPath(load().STANDARD_PATH_WIN);
             }
         } catch (Exception e) {
-            System.out.println("error parsing settings");
+            System.out.println("error parsing stored settings");
             return new Settings();
         }
         return s;

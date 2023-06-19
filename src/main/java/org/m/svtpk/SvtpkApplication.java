@@ -449,6 +449,8 @@ public class SvtpkApplication extends Application {
             dlBtn.setText("Ladda ner");
             dlBtn.setDisable(false);
 
+            loaded.setText("");
+
             //tree = new TreeView();
             tree.setDisable(false);
             tree.setVisible(true);
@@ -511,19 +513,15 @@ public class SvtpkApplication extends Application {
                         seasonNode.getChildren().add(episodeLeaf);
 
                         episodeLeaf.addEventHandler(CheckBoxTreeItem.<String>checkBoxSelectionChangedEvent(), event -> {
-                            System.out.println("&#%&&&&&&&&&&&&&&& \n EN ANNAN SORTS EVENT #¤)/#/()/////////");
 
                             //  System.out.println(" OCH MED LITE PARAMETRAR då, när visas jag?");
-                            System.out.println(event);
-                            System.out.println(episodeLeaf.isSelected());
+
                             //isselected är vad det nya värdet är
                             if (!search) {
                                 if (episodeLeaf.isSelected()) {
-                                    System.out.println("set to WANTED");
                                     episode.setProgressState(ProgressStates.WANTED);
                                 }
                                 if (!episodeLeaf.isSelected()) {
-                                    System.out.println("set to IGNORED");
                                     episode.setProgressState(ProgressStates.IGNORED);
                                 }
                             }
@@ -574,15 +572,23 @@ public class SvtpkApplication extends Application {
 
         } else if (addressTextField.getText().length() > 0) {
             //if text supplied but no episode found
-            currentEpisode = new EpisodeEntity();
             loaded.setVisible(true);
             loaded.setFill(Color.FIREBRICK);
-            loaded.setText("Tyvärr, hittar inte det avsnittet.");
-            episodeImageView.setImage(null);
-            statusIcon.setImage(Arrow.getImgArrowDown("grey"));
-            statusIcon.setDisable(true);
-            dlBtn.setText("Ladda ner");
-            dlBtn.setDisable(true);
+            System.out.println(currentEpisode.getInfotext());
+            if(currentEpisode != null) {
+                if (currentEpisode.isExpired()) {
+                    loaded.setText("Tyvärr, det avsnittet är inte längre tillgängligt!");
+                } else {
+                    loaded.setText("Tyvärr, hittar inte det avsnittet.");
+                }
+            }else {
+                currentEpisode = new EpisodeEntity();
+                episodeImageView.setImage(null);
+                statusIcon.setImage(Arrow.getImgArrowDown("grey"));
+                statusIcon.setDisable(true);
+                dlBtn.setText("Ladda ner");
+                dlBtn.setDisable(true);
+            }
         } else {
             // no text in text field, clear UI
             loaded.setText("");

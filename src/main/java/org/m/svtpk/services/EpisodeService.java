@@ -21,7 +21,9 @@ public class EpisodeService {
 
     public ArrayList<SeasonEntity> getSeasonsFromEpisode(EpisodeEntity episode) {
         ArrayList<SeasonEntity> seasons = new ArrayList<>();
-
+        if (episode.getSplashURL() == null) {
+            return new ArrayList<>();
+        }
         String res = connectToURLReturnBodyAsString(episode.getSplashURL());
 
         if (episode.getSvtId() != null) {
@@ -141,7 +143,7 @@ public class EpisodeService {
                                                         .replaceFirst(":", ""));
                                             } catch (Exception e) {
                                                 episode.setDescription("Ingen information tillgänglig.");
-                                                System.out.println("No description available for episode " + episodeTitle);
+                                                if (settings.isAdvancedUser()) System.out.println("No description available for episode " + episodeTitle);
                                             }
                                         }
                                         episodeFromString.setProgressState(ProgressStates.IGNORED);
@@ -182,9 +184,23 @@ public class EpisodeService {
                     if (url.toString().contains("svtplay.se")) {
                         res = connectToURLReturnBodyAsString(url);
                         if (!res.equals("")) {
-                            String id = res.split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
-                            episode = getEpisodeInfo(address + "?" + id);
-                            episode.setSplashURL(uri.toURL());
+                            try {
+                                String id = res.split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
+
+                                episode = getEpisodeInfo(address + "?" + id);
+                                episode.setSplashURL(uri.toURL());
+                            } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
+
+                                //Avsnittet är inte tillgängligt längre. Senast tillgänglig sön 19 mar</p>
+                                if (res.contains("Avsnittet är inte tillgängligt längre.")) {
+                                    int startPos = res.indexOf("Avsnittet är inte tillgängligt längre");
+                                    String cut = res.substring(startPos);
+                                    int endPos = cut.indexOf("<");
+                                    String infotext = cut.substring(0, endPos);
+                                    episode.setInfotext(infotext);
+                                    episode.setExpired(true);
+                                }
+                            }
                         } else {
                             if (settings.isAdvancedUser()) System.out.println("URI was not absolute, didn't search.");
                         }
@@ -230,13 +246,13 @@ public class EpisodeService {
                         episode.setProgramTitle(progTitle);
                     } catch (Exception e) {
                         episode.setProgramTitle(LocalDateTime.now().toLocalDate().toString());
-                        System.out.println("Couldn't find program title. Setting program title to " + (LocalDateTime.now().toLocalDate().toString()));
+                        if (settings.isAdvancedUser()) System.out.println("Couldn't find program title. Setting program title to " + (LocalDateTime.now().toLocalDate().toString()));
                     }
                     try {
                         episode.setEpisodeTitle(body.split("episodeTitle\":\"")[1].split("\",")[0]);
                     } catch (Exception e) {
                         episode.setEpisodeTitle(LocalDateTime.now().toLocalTime().toString());
-                        System.out.println("Couldn't find episode title. Setting episode title to " + (LocalDateTime.now().toLocalDate().toString()));
+                        if (settings.isAdvancedUser()) System.out.println("Couldn't find episode title. Setting episode title to " + (LocalDateTime.now().toLocalDate().toString()));
                     }
 
 
@@ -256,8 +272,8 @@ public class EpisodeService {
                 }
             } catch (Exception e) {
                 if (settings.isAdvancedUser()) {
-                    System.out.println("Could not get episode info");
-                    e.printStackTrace();
+                    if (settings.isAdvancedUser()) System.out.println("Could not get episode info");
+                    if (settings.isAdvancedUser()) e.printStackTrace();
                 }
                 return new EpisodeEntity();
             }
@@ -344,7 +360,7 @@ public class EpisodeService {
                 try {
                     aud.setLabel(set.split("<Label>")[1].split("</Label>")[0]);
                 } catch (IndexOutOfBoundsException e) {
-                    System.out.println("Nån på svt har glömt ge ljudspåret en Label :/ Sätter den till \"Svenska\"");
+                    if (settings.isAdvancedUser()) System.out.println("Nån på svt har glömt ge ljudspåret en Label :/ Sätter den till \"Svenska\"");
                     aud.setLabel("Svenska");
                 }
                 aud.setUrl(BASE_URL + set.split("media=\"")[1].split("\\$Number\\$")[0]);
@@ -360,7 +376,7 @@ public class EpisodeService {
                 try {
                     sub.setLabel(set.split("<Label>")[1].split("</Label")[0]);
                 } catch (IndexOutOfBoundsException e) {
-                    System.out.println("Nån på svt har glömt ge undertextspåret en Label :/ Sätter den till \"Svenska\"");
+                    if (settings.isAdvancedUser()) System.out.println("Nån på svt har glömt ge undertextspåret en Label :/ Sätter den till \"Svenska\"");
                     sub.setLabel("Svenska");
                 }
                 try {
