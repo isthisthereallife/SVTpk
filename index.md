@@ -124,6 +124,7 @@ här</u></a>. Annars är du välkommen att maila till svtpk "snabel a" riseup "p
 <br/>
 <a href="https://github.com/isthisthereallife/svtpk">Klicka här för att komma till källkoden.</a> 
 <hr>
+<a href="#home">Tillbaka till toppen</a>
 <br/>
 <br/>
 <br/>
