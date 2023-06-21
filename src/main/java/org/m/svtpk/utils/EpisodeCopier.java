@@ -143,7 +143,6 @@ public class EpisodeCopier implements Runnable {
                 Files.copy(source, target, REPLACE_EXISTING);
             }catch(FileSystemException e){
                 // TODO
-                e.printStackTrace();
             }
             queueEntity.getEpisode().setSaveLocation(target);
             if (settings.isAdvancedUser()) System.out.println("Fil flyttad.");
