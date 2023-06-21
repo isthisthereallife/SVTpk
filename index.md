@@ -21,25 +21,62 @@ Inte aktuellt.
 
 <h2 id="faq">FAQ</h2>
 <h4><b>Q:</b> Är detta lagligt?</h4>
-<h4><b>A:</b> Ja. Privatkopiering av offentligtgjorda verk är 100% lagligt. Se <a href="https://www.prv.se/sv/upphovsratt/streama-lagligt/faq-upphovsratt-och-streaming/">Patent och Registreringsverket</a>, <a href="https://euipo.europa.eu/ohimportal/sv/web/observatory/faq-sv#7">EUIPO - European Union Intellectual Property Office Observatory</a>, och <a href="https://www.copyswede.se/wp-content/uploads/2018/06/Vad-%C3%A4r-privatkopiering-web2.pdf">Copyswede</a>.<h4>
+<h4><b>A:</b> Ja. Privatkopiering av offentligtgjorda verk är 100% lagligt.
+Se <a href="https://www.prv.se/sv/upphovsratt/streama-lagligt/faq-upphovsratt-och-streaming/">Patent och
+Registreringsverket</a>, <a href="https://euipo.europa.eu/ohimportal/sv/web/observatory/faq-sv#7">EUIPO - European Union
+Intellectual Property Office Observatory</a>,
+och <a href="https://www.copyswede.se/wp-content/uploads/2018/06/Vad-%C3%A4r-privatkopiering-web2.pdf">Copyswede</a>
+.<h4>
 <br/>
 <h4><b>Q:</b> Är SVTpk svårt att använda?</h4>
-<h4><b>A:</b> Nej, eller, jag hoppas verkligen inte det. Se gärna avsnittet <a href="#hjalp"><u>Hjälp</u></a> för en guide med bilder på hur du laddar ner och använder applikationen.
+<h4><b>A:</b> Nej, eller, jag hoppas verkligen inte det. Se gärna avsnittet <a href="#hjalp"><u>Hjälp</u></a> för en
+guide med bilder på hur du laddar ner och använder applikationen.
 
 <br/>
 
 <h4><b>Q:</b> Jag har hittat en bugg / Jag har en idé på en förbättring!
-<h4><b>A:</b> Intressant! Om du är datorvan kan du skapa en "issue" <a href="https://github.com/isthisthereallife/svtpk/issues"><u>här</u></a>. Annars är du välkommen att maila till svtpk "snabel a" riseup "punkt" net.
+<h4><b>A:</b> Intressant! Om du är datorvan kan du skapa en "
+issue" <a href="https://github.com/isthisthereallife/svtpk/issues"><u>här</u></a>. Annars är du välkommen att maila till
+svtpk "snabel a" riseup "punkt" net.
 
 <hr/>
 <br/>
 
 <h2 id="hjalp">Hjälp</h2>
-<h3>Lite text här,
-lite bilder där.
+<h3>Få tillgång till & starta SVTpk
 </h3>
-<p>hohoho</p>
+<ol >
+<li> Ladda ner programmet genom <a href="#ladda-ner"><u>länken</u></a>
+<li> Högerklicka på den nedladdade filen och "Zippa upp" den på valfri plats</li>
+<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/ff0a3cfd-46c9-45a0-95d4-aec17d5eb461" />
+<li><div>Dubbelklicka på den nya mappen</div></li>
+<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/a83f9c85-d83d-4c27-8506-e0f2aeede6ad" />
+<li><div>Dubbelklicka på "Starta SVTpk"</div>
+<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/3075317e-375b-4483-95e1-f6389482131d" />
+
+</li>
+
+</ol>
+<h3>Använda SVTpk</h3>
+<ol><li><p>Ange en adress till ett avsnitt eller program</p>
+<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/deba2321-6017-465a-8516-73d9520fdd0e"  alt="Splash screen"/>
+</li>
+<li>
+<p>Välj avsnitt, tryck "Ladda ner"</p>
+<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/5ddc3f4f-161e-4a7b-a4fd-d81200402095" />
+</li>
+<li><p>Du är klar! Avsnittet är kopierat till din hårddisk  \(◔ᗜ◔)/ </p></li>
+<br/>
+<li><p>Upprepa <b>så mycket du vill</b></p>
+<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/94e1aa3d-c833-4de0-b1ad-5168cad4257d" />
+<li><p>Kanske ett avsnitt till...</p>
+
+<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/60524764-cc1b-4634-941e-70320e8d1d01" />
+</li>
+</ol>
+
 <hr/>
+
 <br/>
 <h2 id="om">Om</h2>
 
