@@ -1,6 +1,5 @@
 package org.m.svtpk.utils;
 
-import com.sun.javafx.util.Logging;
 import javafx.application.Platform;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -17,10 +16,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Filter;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
@@ -28,7 +23,6 @@ import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 public class EpisodeCopier implements Runnable {
 
     QueueEntity queueEntity;
-    Logger log;
     public EpisodeCopier(QueueEntity queueEntity) {
         this.queueEntity = queueEntity;
     }
@@ -38,7 +32,7 @@ public class EpisodeCopier implements Runnable {
         Platform.runLater(() -> {
             queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(123, 152, 115), null, null)));
         });
-        log = Logger.getLogger("Debug");
+        /*log = Logger.getLogger("Debug");
         log.setFilter(new Filter() {
             @Override
             public boolean isLoggable(LogRecord record) {
@@ -48,6 +42,8 @@ public class EpisodeCopier implements Runnable {
                 return false;
             }
         });
+
+         */
         Settings settings = Settings.load();
         String videoFiletype = ".mp4";
         String subsFiletype = ".srt";

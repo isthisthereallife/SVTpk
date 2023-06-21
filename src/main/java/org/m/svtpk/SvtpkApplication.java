@@ -574,7 +574,7 @@ public class SvtpkApplication extends Application {
             //if text supplied but no episode found
             loaded.setVisible(true);
             loaded.setFill(Color.FIREBRICK);
-            System.out.println(currentEpisode.getInfotext());
+
             if(currentEpisode != null) {
                 if (currentEpisode.isExpired()) {
                     loaded.setText("Tyvärr, det avsnittet är inte längre tillgängligt!");
