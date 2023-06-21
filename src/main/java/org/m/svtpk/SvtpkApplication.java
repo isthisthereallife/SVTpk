@@ -85,6 +85,8 @@ public class SvtpkApplication extends Application {
         window.getIcons().add(Arrow.getImgArrowDown("green"));
         window.setTitle("SVTpk");
         window.setScene(homeScene());
+        window.setHeight(700);
+        window.setWidth(700);
         window.show();
     }
 
@@ -115,7 +117,6 @@ public class SvtpkApplication extends Application {
                         : addressTextField;
         addressTextField.setPrefWidth(400);
 
-
         // QUEUE
 
         ListView<QueueEntity> queueListView = new ListView<>();
@@ -123,10 +124,11 @@ public class SvtpkApplication extends Application {
         queueListView.setVisible(false);
         queueListView.setItems(queue);
         queueListView.setPrefWidth(200);
-        queueListView.setPrefHeight(600);
+        queueListView.maxHeight(200);
         //queueListView.setContextMenu(getContextMenu());
 
         queueVBox = new VBox(queueListView);
+        queueVBox.setMaxHeight(100);
         episodeImageView = currentEpisode.getImageURL() == null ? new ImageView() : new ImageView(new Image(String.valueOf(currentEpisode.getImageURL())));
         episodeImageView.setPreserveRatio(true);
         episodeImageView.setFitWidth(200);
@@ -135,7 +137,7 @@ public class SvtpkApplication extends Application {
         infoText.prefHeight(160);
         infoText.setFill(DARKGREEN);
         VBox vBoxInfoText = new VBox(addressFieldLabel, addressTextField, episodeImageView, infoText);
-
+        vBoxInfoText.setAlignment(Pos.CENTER);
         //lägg till alternativen till den här,
         VBox vBoxSettings = new VBox();
         vBoxSettings.prefWidth(100);
@@ -322,6 +324,7 @@ public class SvtpkApplication extends Application {
         HBox search = new HBox(10);
         search.getChildren().add(addressTextField);
         search.getChildren().add(findEpisodeBtn);
+        search.setAlignment(Pos.CENTER);
 
         // Button "Ladda ner"
         dlBtn.setOnAction(e -> {
@@ -386,6 +389,7 @@ public class SvtpkApplication extends Application {
         grid.add(addressFieldLabel, 0, 1);
         grid.add(search, 0, 2, 6, 1);
         mainContentBox.getChildren().add(queueVBox);
+        mainContentBox.setMaxHeight(200);
         grid.add(mainContentBox, 0, 4);
         grid.add(statusIndicator, 0, 4);
         grid.add(progress, 0, 6);
@@ -647,6 +651,7 @@ public class SvtpkApplication extends Application {
 
             infoText.setText(currentEpisode.toString());
             infoText.setWrappingWidth(200);
+            infoText.maxHeight(200);
 
             treeBase.setExpanded(true);
             treeBase.setIndependent(false);
