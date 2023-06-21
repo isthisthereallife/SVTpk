@@ -15,9 +15,10 @@
 <hr/>
 
 
-<h2 id="om">Om</h2>
 
-<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/a5dba52d-adf9-4209-829b-d14e4962e17c"/>
+<img width="500px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/a5dba52d-adf9-4209-829b-d14e4962e17c"/>
+<hr/>
+<h2 id="om">Om</h2>
 <p>
 SVTpk är en applikation som gör det enklare att privatkopiera ("Ladda ner") från SVT Play.
 <br/>Den är fullt portabel och kräver ingen installation.
@@ -32,7 +33,7 @@ Registreringsverket</a>, <a href="https://euipo.europa.eu/ohimportal/sv/web/obse
 Intellectual Property Office Observatory</a>,
 och <a href="https://www.copyswede.se/wp-content/uploads/2018/06/Vad-%C3%A4r-privatkopiering-web2.pdf">Copyswede</a>
 
-<img width="400px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/20f583df-d68b-4a75-9697-83f222fb683b" />
+<img width="500px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/20f583df-d68b-4a75-9697-83f222fb683b" />
 <br/>
 <br/>
 <h4><b>Q:</b> Är SVTpk svårt att använda?</h4>
