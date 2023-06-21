@@ -1,6 +1,5 @@
-<h1 id="home"><img src="https://github.com/isthisthereallife/svtpk/assets/56800749/22c67ce1-c68e-498c-a5ff-e339add87a3b" height="40px" /> SVTpk - Privatkopiera från SVT Play</h1>
-
-<div><a href="#ladda-ner"><u>Ladda ner</u></a>
+<div>
+<a href="#ladda-ner"><img src="https://github.com/isthisthereallife/svtpk/assets/56800749/22c67ce1-c68e-498c-a5ff-e339add87a3b" height="40px" />&emsp;<u>Ladda ner</u></a>
 &emsp;<a href="#om"><u>Om</u></a>
 &emsp;<a href="#faq"><u>FAQ</u></a>
 &emsp;<a href="#hjalp"><u>Hjälp</u></a>
