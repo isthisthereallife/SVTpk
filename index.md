@@ -16,15 +16,15 @@
 
 
 
-<img width="500px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/a5dba52d-adf9-4209-829b-d14e4962e17c"/>
-<hr/>
 <h2 id="om">Om</h2>
+<img width="400px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/a5dba52d-adf9-4209-829b-d14e4962e17c"/>
 <p>
 SVTpk är en applikation som gör det enklare att privatkopiera ("Ladda ner") från SVT Play.
 <br/>Den är fullt portabel och kräver ingen installation.
 <br/>SVTpk utvecklas av <a href="https://isthisthereallife.github.io/pages/">isthisthereallife</a>.
 </p>
 
+<hr/>
 <h2 id="faq">FAQ</h2>
 <h4><b>Q:</b> Är detta lagligt?</h4>
 <b>A:</b> <b>Ja</b>. Privatkopiering av offentliggjorda verk är 100% lagligt.
@@ -32,8 +32,8 @@ Se <a href="https://www.prv.se/sv/upphovsratt/streama-lagligt/faq-upphovsratt-oc
 Registreringsverket</a>, <a href="https://euipo.europa.eu/ohimportal/sv/web/observatory/faq-sv#7">EUIPO - European Union
 Intellectual Property Office Observatory</a>,
 och <a href="https://www.copyswede.se/wp-content/uploads/2018/06/Vad-%C3%A4r-privatkopiering-web2.pdf">Copyswede</a>
-
-<img width="500px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/20f583df-d68b-4a75-9697-83f222fb683b" />
+<br/>
+<img width="400px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/20f583df-d68b-4a75-9697-83f222fb683b" />
 <br/>
 <br/>
 <h4><b>Q:</b> Är SVTpk svårt att använda?</h4>
