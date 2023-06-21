@@ -46,7 +46,7 @@ svtpk "snabel a" riseup "punkt" net.
 <h2 id="hjalp">Hjälp</h2>
 <h3>Få tillgång till & starta SVTpk
 </h3>
-<ol >
+<ol>
 <li> Ladda ner programmet genom <a href="#ladda-ner"><u>länken</u></a>
 <li> Högerklicka på den nedladdade filen och "Zippa upp" den på valfri plats</li>
 <img src="https://github.com/isthisthereallife/svtpk/assets/56800749/ff0a3cfd-46c9-45a0-95d4-aec17d5eb461" />
@@ -54,9 +54,7 @@ svtpk "snabel a" riseup "punkt" net.
 <img src="https://github.com/isthisthereallife/svtpk/assets/56800749/a83f9c85-d83d-4c27-8506-e0f2aeede6ad" />
 <li><div>Dubbelklicka på "Starta SVTpk"</div>
 <img src="https://github.com/isthisthereallife/svtpk/assets/56800749/3075317e-375b-4483-95e1-f6389482131d" />
-
 </li>
-
 </ol>
 <h3>Använda SVTpk</h3>
 <ol><li><p>Ange en adress till ett avsnitt eller program</p>
@@ -70,11 +68,7 @@ svtpk "snabel a" riseup "punkt" net.
 <br/>
 <li><p>Upprepa <b>så mycket du vill</b></p>
 <img src="https://github.com/isthisthereallife/svtpk/assets/56800749/94e1aa3d-c833-4de0-b1ad-5168cad4257d" />
-<li><p>Kanske ett avsnitt till...</p>
-
-<img src="https://github.com/isthisthereallife/svtpk/assets/56800749/60524764-cc1b-4634-941e-70320e8d1d01" />
-</li>
-</ol>
+<li><p>Kanske ett avsnitt till...</p><img src="https://github.com/isthisthereallife/svtpk/assets/56800749/60524764-cc1b-4634-941e-70320e8d1d01" /></li></ol>
 
 <hr/>
 
