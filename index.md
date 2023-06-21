@@ -31,6 +31,8 @@ Se <a href="https://www.prv.se/sv/upphovsratt/streama-lagligt/faq-upphovsratt-oc
 Registreringsverket</a>, <a href="https://euipo.europa.eu/ohimportal/sv/web/observatory/faq-sv#7">EUIPO - European Union
 Intellectual Property Office Observatory</a>,
 och <a href="https://www.copyswede.se/wp-content/uploads/2018/06/Vad-%C3%A4r-privatkopiering-web2.pdf">Copyswede</a>
+
+<img width="400px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/20f583df-d68b-4a75-9697-83f222fb683b" />
 <br/>
 <br/>
 <h4><b>Q:</b> Är SVTpk svårt att använda?</h4>
