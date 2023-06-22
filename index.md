@@ -122,6 +122,7 @@ här</u></a>. Annars är du välkommen att maila till svtpk "snabel a" riseup "p
 <br/>
 <hr>
 <br/>
+<img src="https://github.com/isthisthereallife/SVTpk/assets/56800749/8757b48d-40bc-474e-a888-2c0658d59190" width="400px" />
 <br/>
 <br/>
 <a href="https://github.com/isthisthereallife/svtpk">Klicka här för att komma till källkoden.</a> 
