@@ -34,15 +34,21 @@ Registreringsverket</a>, <a href="https://euipo.europa.eu/ohimportal/sv/web/obse
 Intellectual Property Office Observatory</a>,
 och <a href="https://www.copyswede.se/wp-content/uploads/2018/06/Vad-%C3%A4r-privatkopiering-web2.pdf">Copyswede</a>
 <br/>
-<img width="400px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/20f583df-d68b-4a75-9697-83f222fb683b" />
-<br/>
 <br/>
 <h4><b>Q:</b> Är SVTpk svårt att använda?</h4>
 <b>A: Nej</b>, eller, jag hoppas verkligen inte det. Se gärna avsnittet <a href="#hjalp"><u>Hjälp</u></a> för en guide
-med bilder på hur du laddar ner och använder applikationen
-
+med bilder på hur du laddar ner och använder applikationen.
 <br/>
-
+<br/>
+<h4 id="slow"><b>Q:</b> Varför går det så långsamt?</h4>
+<b>A:</b> På grund av sättet SVT Play distribuerar materialet. Strömningen och sammanfogningen av audio och videosegment är vad som tar tid. 
+<p>Så, tänk mer "banda från tvn" och mindre "tanka torrents."</p>
+<br/>
+<img width="400px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/20f583df-d68b-4a75-9697-83f222fb683b" />
+<br/>
+<br/>
+<h4><b>Q:</b> Kan jag spela in livesändningar?</h4>
+<b>A:</b> Nej.
 <h4><b>Q:</b> Jag har hittat en bugg / Jag har en idé på en förbättring!</h4>
 <b>A: Intressant!</b> Om du vill kan du skapa en "issue" <a href="https://github.com/isthisthereallife/svtpk/issues"><u>
 här</u></a>. Annars är du välkommen att maila till svtpk "snabel a" riseup "punkt" net
@@ -83,7 +89,7 @@ här</u></a>. Annars är du välkommen att maila till svtpk "snabel a" riseup "p
         <img src="https://github.com/isthisthereallife/svtpk/assets/56800749/5ddc3f4f-161e-4a7b-a4fd-d81200402095" />
     </li>
     <li>
-        <p>Du är klar! Avsnittet är kopierat till din hårddisk  \(◔ᗜ◔)/ </p>
+        <p>Du är klar! Avsnittet är <a href="#slow">snart</a> kopierat till din hårddisk  \(◔ᗜ◔)/ </p>
         <br/>
     </li>
     <li><p>Upprepa <b>så mycket du vill</b></p>
