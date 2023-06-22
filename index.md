@@ -1,4 +1,4 @@
-<div align="center">
+<div style="display:flex; align-items:center; justify-content:center;">
 <img align="center" src="https://github.com/isthisthereallife/svtpk/assets/56800749/22c67ce1-c68e-498c-a5ff-e339add87a3b" height="40px" />
 &emsp;<a href="#ladda-ner"><u>Ladda ner</u></a>
 &emsp;<a href="#om"><u>Om</u></a>
@@ -21,6 +21,7 @@
 <p>
 SVTpk är en applikation som gör det enklare att privatkopiera ("Ladda ner") från SVT Play.
 <br/>Den är fullt portabel och kräver ingen installation.
+
 <br/>SVTpk utvecklas av <a href="https://isthisthereallife.github.io/pages/">isthisthereallife</a>.
 </p>
 
