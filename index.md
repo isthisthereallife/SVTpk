@@ -8,8 +8,8 @@
 <hr/>
 <h2 id="ladda-ner">Ladda ner </h2>
 <h3>Windows:</h3>
-<h4><a href="https://mega.nz/file/5yoTFBAQ#xzUYIMvHRLomTie6kpWVcmzyn7VFKF8EZSAHEVsQ8xE"> Ladda ner Version 0.3</a> <span>(inklusive ffmpeg)</span></h4>
-<p><a href="https://mega.nz/file/5yhWSAab#LVe9-ReYxVvQLid7cRl1FK8Ay1U0O-xzKYKQHWaUNGc">(Jag har redan ffmpeg på min dator)</a></p>
+<h4><a href="https://mega.nz/file/0zBgFRTI#Sadlmj_OubFjZszB6NLdKA19VIuP65PcLcuIFOOPj6k"> Ladda ner Version 0.3</a> <span>(inklusive ffmpeg)</span></h4>
+<p><a href="https://mega.nz/file/t3pUHArB#17CyISOIz0A1dC3oTAk7rPltGSNYb9v9OiJJEp0zjbA">(Jag har redan ffmpeg på min dator)</a></p>
 
 <hr/>
 
@@ -98,7 +98,7 @@ här</u></a>. Annars är du välkommen att maila till svtpk "snabel a" riseup "p
 <h2 id="versionshistorik">Versionshistorik</h2>
 <ul style="list-style-type:square">
 
-<h4><a href="https://mega.nz/file/5yhWSAab#LVe9-ReYxVvQLid7cRl1FK8Ay1U0O-xzKYKQHWaUNGc">Version 0.3 (Senaste)</a></h4>
+<h4><a href="https://mega.nz/file/t3pUHArB#17CyISOIz0A1dC3oTAk7rPltGSNYb9v9OiJJEp0zjbA">Version 0.3 (Senaste)</a></h4>
 <li>SÄSONGER, SÄSONGER, SÄSONGER</li>
 <li>Ange ett avsnitt, få tillgång till hela säsonger</li>
 <hr/>
