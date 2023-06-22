@@ -85,8 +85,8 @@ public class SvtpkApplication extends Application {
         window.getIcons().add(Arrow.getImgArrowDown("green"));
         window.setTitle("SVTpk");
         window.setScene(homeScene());
-        window.setHeight(500);
-        window.setWidth(700);
+        window.setHeight(600);
+        window.setWidth(800);
         window.show();
     }
 
@@ -128,7 +128,8 @@ public class SvtpkApplication extends Application {
         //queueListView.setContextMenu(getContextMenu());
 
         queueVBox = new VBox(queueListView);
-        queueVBox.setMaxHeight(100);
+        queueVBox.setMaxHeight(500);
+        queueVBox.setPrefWidth(300);
         episodeImageView = currentEpisode.getImageURL() == null ? new ImageView() : new ImageView(new Image(String.valueOf(currentEpisode.getImageURL())));
         episodeImageView.setPreserveRatio(true);
         episodeImageView.setFitWidth(200);
@@ -137,6 +138,7 @@ public class SvtpkApplication extends Application {
         infoText.prefHeight(160);
         infoText.setFill(DARKGREEN);
         VBox vBoxInfoText = new VBox(addressFieldLabel, addressTextField, episodeImageView, infoText);
+        vBoxInfoText.setMaxHeight(500);
         vBoxInfoText.setAlignment(Pos.CENTER);
         //lägg till alternativen till den här,
         VBox vBoxSettings = new VBox();
@@ -244,6 +246,8 @@ public class SvtpkApplication extends Application {
         settingsBox = new VBox(accordion);
         settingsBox.setPrefWidth(300);
         episodeHBox = new HBox(vBoxInfoText, settingsBox);
+        episodeHBox.setPrefHeight(200);
+        episodeHBox.setMaxHeight(500);
         mainContentBox = mainContentBox != null ? mainContentBox : new HBox(episodeHBox);
 
         episodeHBox.getChildren().add(tree);
@@ -396,7 +400,7 @@ public class SvtpkApplication extends Application {
         grid.add(hboxDlBtn, 0, 7);
 
         //grid.add(debugBtn, 0, 7);
-        return new Scene(grid, 1000, 800);
+        return new Scene(grid, 800, 600);
     }
 
     public static void updateLoadingBar(QueueEntity qE, double progress) {

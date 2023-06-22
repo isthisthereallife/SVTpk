@@ -293,9 +293,11 @@ public class EpisodeEntity {
 
     @Override
     public String toString() {
+
+        String desc = description.length()<250 ? description : description.substring(0,249).concat("...");
         return "Program: '" + programTitle + "'\n" +
                 "Avsnitt: '" + episodeTitle + "'\n" +
-                description + "\n\n" +
+                desc + "\n\n" +
                 "Längd: " + contentDuration / 60 + " min";
     }
 }
