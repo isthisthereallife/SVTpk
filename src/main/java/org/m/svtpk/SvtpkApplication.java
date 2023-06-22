@@ -85,7 +85,7 @@ public class SvtpkApplication extends Application {
         window.getIcons().add(Arrow.getImgArrowDown("green"));
         window.setTitle("SVTpk");
         window.setScene(homeScene());
-        window.setHeight(700);
+        window.setHeight(500);
         window.setWidth(700);
         window.show();
     }
