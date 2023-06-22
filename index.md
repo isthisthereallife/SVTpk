@@ -9,7 +9,7 @@
 <hr/>
 <h2 id="ladda-ner">Ladda ner </h2>
 <h3>Windows:</h3>
-<h4><a href="https://mega.nz/file/0zBgFRTI#Sadlmj_OubFjZszB6NLdKA19VIuP65PcLcuIFOOPj6k"> Ladda ner Version 0.3</a> <span>(inklusive ffmpeg)</span></h4>
+<h4><a href="https://mega.nz/file/0zBgFRTI#Sadlmj_OubFjZszB6NLdKA19VIuP65PcLcuIFOOPj6k"> Ladda ner</a><span></span></h4>
 <p><a href="https://mega.nz/file/t3pUHArB#17CyISOIz0A1dC3oTAk7rPltGSNYb9v9OiJJEp0zjbA">(Jag har redan ffmpeg på min dator)</a></p>
 
 <hr/>
