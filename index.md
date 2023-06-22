@@ -47,7 +47,7 @@ med bilder på hur du laddar ner och använder applikationen.
 <img width="400px" src="https://github.com/isthisthereallife/svtpk/assets/56800749/20f583df-d68b-4a75-9697-83f222fb683b" />
 <br/>
 <br/>
-<h4><b>Q:</b> Kan jag spela in livesändningar?</h4>
+<h4><b>Q:</b> Går det att spela in livesändningar?</h4>
 <b>A:</b> Nej.
 <h4><b>Q:</b> Jag har hittat en bugg / Jag har en idé på en förbättring!</h4>
 <b>A: Intressant!</b> Om du vill kan du skapa en "issue" <a href="https://github.com/isthisthereallife/svtpk/issues"><u>
