@@ -1,4 +1,4 @@
-<div style="display:flex; align-items:center; justify-content:center;">
+<div id="home" style="display:flex; align-items:center; justify-content:center;">
 <img align="center" src="https://github.com/isthisthereallife/svtpk/assets/56800749/22c67ce1-c68e-498c-a5ff-e339add87a3b" height="40px" />
 &emsp;<a href="#ladda-ner"><u>Ladda ner</u></a>
 &emsp;<a href="#om"><u>Om</u></a>
