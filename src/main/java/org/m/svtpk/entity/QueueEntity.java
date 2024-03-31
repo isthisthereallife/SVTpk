@@ -51,7 +51,7 @@ public class QueueEntity extends CheckBoxListCell {
         MenuItem miOpenFolder = new MenuItem("Öppna Filens Sökväg");
         MenuItem miRemoveDone = new MenuItem("Ta Bort Färdiga");
         //MenuItem miRemoveAll = new MenuItem("Rensa Listan");
-        MenuItem miRetry = new MenuItem("Uppdatera Kö");
+        MenuItem miRefresh = new MenuItem("Uppdatera Kö");
         ArrayList<MenuItem> list = new ArrayList<>();
         if (this.episode.getSaveLocation() != null) {
             list.add(miOpenFolder);
@@ -130,8 +130,8 @@ public class QueueEntity extends CheckBoxListCell {
             //ta bort alla från queue
         });
         */
-        contextMenu.getItems().add(miRetry);
-        miRetry.setOnAction((mi) -> {
+        contextMenu.getItems().add(miRefresh);
+        miRefresh.setOnAction((mi) -> {
             QueueHandler.processQueue();
         });
         return contextMenu;

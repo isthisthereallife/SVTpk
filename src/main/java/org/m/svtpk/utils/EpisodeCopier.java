@@ -1,6 +1,7 @@
 package org.m.svtpk.utils;
 
 import javafx.application.Platform;
+import javafx.scene.control.Control;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.paint.Color;
@@ -23,6 +24,7 @@ import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 public class EpisodeCopier implements Runnable {
 
     QueueEntity queueEntity;
+
     public EpisodeCopier(QueueEntity queueEntity) {
         this.queueEntity = queueEntity;
     }
@@ -31,6 +33,7 @@ public class EpisodeCopier implements Runnable {
     public void run() {
         Platform.runLater(() -> {
             queueEntity.setBackground(new Background(new BackgroundFill(Color.rgb(123, 152, 115), null, null)));
+            queueEntity.setPrefWidth(170);
         });
         /*log = Logger.getLogger("Debug");
         log.setFilter(new Filter() {
@@ -137,8 +140,8 @@ public class EpisodeCopier implements Runnable {
             }
             try {
                 Files.copy(source, target, REPLACE_EXISTING);
-            }catch(FileSystemException e){
-                // TODO
+            } catch (FileSystemException e) {
+                System.out.println("Misslyckades med att flytta filen till önskad mapp.");
             }
             queueEntity.getEpisode().setSaveLocation(target);
             if (settings.isAdvancedUser()) System.out.println("Fil flyttad.");

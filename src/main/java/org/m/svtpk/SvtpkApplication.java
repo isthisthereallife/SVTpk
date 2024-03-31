@@ -36,6 +36,9 @@ import org.m.svtpk.utils.Settings;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -77,6 +80,8 @@ public class SvtpkApplication extends Application {
     Clipboard clip;
     static boolean search;
     boolean allTicked = true;
+    int height = 700;
+    int width = 1000;
 
 
     @Override
@@ -85,13 +90,13 @@ public class SvtpkApplication extends Application {
         window.getIcons().add(Arrow.getImgArrowDown("green"));
         window.setTitle("SVTpk");
         window.setScene(homeScene());
-        window.setHeight(600);
-        window.setWidth(800);
+        window.setHeight(height);
+        window.setWidth(width);
         window.show();
     }
 
     public Scene homeScene() {
-        System.out.println("SVTpk - v0.3");
+        System.out.println("SVTpk - v0.4");
         downThread.start();
         settings = Settings.load();
         search = false;
@@ -103,6 +108,8 @@ public class SvtpkApplication extends Application {
         GridPane grid = basicGrid();
         Label addressFieldLabel = new Label("Ange adress till avsnitt");
         addressFieldLabel.setAlignment(Pos.CENTER);
+        HBox addressFieldLabelBox = new HBox(addressFieldLabel);
+        addressFieldLabelBox.setAlignment(Pos.CENTER);
 
         //paste from clipboard if clipboard text exists and seems relevant
         clip = Clipboard.getSystemClipboard();
@@ -117,30 +124,37 @@ public class SvtpkApplication extends Application {
                         : addressTextField;
         addressTextField.setPrefWidth(400);
 
-        // QUEUE
+        // QUEUE-BOX
 
         ListView<QueueEntity> queueListView = new ListView<>();
         //QueueEntity qE = new QueueEntity(currentEpisode);
         queueListView.setVisible(false);
-        queueListView.setItems(queue);
         queueListView.setPrefWidth(200);
         queueListView.maxHeight(200);
+
+
+        queueListView.setItems(queue);
+
         //queueListView.setContextMenu(getContextMenu());
 
         queueVBox = new VBox(queueListView);
         queueVBox.setMaxHeight(500);
-        queueVBox.setPrefWidth(300);
+        queueVBox.setPrefWidth(250);
+
+
         episodeImageView = currentEpisode.getImageURL() == null ? new ImageView() : new ImageView(new Image(String.valueOf(currentEpisode.getImageURL())));
         episodeImageView.setPreserveRatio(true);
-        episodeImageView.setFitWidth(200);
+        episodeImageView.setFitWidth(300);
 
         infoText = new Text(currentEpisode.hasID(currentEpisode) ? currentEpisode.toString() : "");
         infoText.prefHeight(160);
         infoText.setFill(DARKGREEN);
         VBox vBoxInfoText = new VBox(addressFieldLabel, addressTextField, episodeImageView, infoText);
         vBoxInfoText.setMaxHeight(500);
-        vBoxInfoText.setAlignment(Pos.CENTER);
-        //lägg till alternativen till den här,
+        vBoxInfoText.setAlignment(Pos.TOP_CENTER);
+        // END OF QUEUE-BOX
+
+        // SETTINGS-BOX
         VBox vBoxSettings = new VBox();
         vBoxSettings.prefWidth(100);
 
@@ -209,7 +223,9 @@ public class SvtpkApplication extends Application {
         });
         currentSavePath.setOnMouseClicked(e -> {
             try {
-                Runtime.getRuntime().exec("explorer.exe /select," + currentSavePath);
+                // TODO -  this is WINDOWS SPECIFIC, and it should not be.
+                Runtime.getRuntime().exec("explorer.exe " + currentSavePath);
+                // Runtime.getRuntime().exec("explorer.exe /select," + currentSavePath);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -217,15 +233,33 @@ public class SvtpkApplication extends Application {
         hBoxCopy.setSpacing(38);
 
         dirBtn.setOnAction(e -> {
-                    String path = String.valueOf(d.showDialog(window));
-                    if (!path.equals("null")) {
-                        settings.setPath(path);
-                    } else {
-                        settings.setPath();
+                    boolean pathOK = false;
+                    try {
+                        // check if old path is valid
+                        if (Files.exists(Paths.get(settings.getPath()))) {
+                            pathOK = true;
+                        }
+                    } catch (InvalidPathException | NullPointerException ignored) {
+
+                    } finally {
+                        if(!pathOK){
+                            // reset path since it was invalid
+                            settings.setPath();
+                            settings.save();
+                        }
+                        d.setTitle("Välj plats att spara till...");
+                        d.setInitialDirectory(new File(settings.getPath()));
+                        String path = String.valueOf(d.showDialog(window));
+                        if (!path.equals("null")) {
+                            settings.setPath(path);
+                        } else {
+                            settings.setPath();
+                        }
+                        settings.save();
+                        currentSavePath.setText(settings.getPath());
                     }
-                    settings.save();
-                    currentSavePath.setText(settings.getPath());
                 }
+
         );
         VBox copy = new VBox(hBoxCopy, currentSavePath);
 
@@ -240,13 +274,17 @@ public class SvtpkApplication extends Application {
         settingsPane.setLayoutY(1);
         settingsPane.maxWidth(200);
 
-
         Accordion accordion = new Accordion();
         accordion.getPanes().add(settingsPane);
         settingsBox = new VBox(accordion);
-        settingsBox.setPrefWidth(300);
+        settingsBox.setPrefWidth(250);
+        settingsBox.setAlignment(Pos.TOP_RIGHT);
+
+        // END OF SETTINGS-BOX
+
+
         episodeHBox = new HBox(vBoxInfoText, settingsBox);
-        episodeHBox.setPrefHeight(200);
+        episodeHBox.setPrefHeight(500);
         episodeHBox.setMaxHeight(500);
         mainContentBox = mainContentBox != null ? mainContentBox : new HBox(episodeHBox);
 
@@ -380,27 +418,31 @@ public class SvtpkApplication extends Application {
             updateUI();
         });
 
-        Button debugBtn = new Button("DEBUG");
-        debugBtn.setAlignment(Pos.BOTTOM_CENTER);
-        debugBtn.setOnAction(e -> {
-        });
+        Text title = new Text("SVTpk");
+        title.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
+        title.setTextAlignment(TextAlignment.CENTER);
+        VBox titleBox = new VBox(title);
+        titleBox.getChildren().add(addressFieldLabel);
+        titleBox.setAlignment(Pos.CENTER);
 
 
         //grid.setGridLinesVisible(true);
         ColumnConstraints cC = new ColumnConstraints();
         cC.setPercentWidth(100);
         grid.getColumnConstraints().add(cC);
-        grid.add(addressFieldLabel, 0, 1);
-        grid.add(search, 0, 2, 6, 1);
+
+        grid.add(titleBox, 0, 0);
+        grid.add(search, 0, 2);
         mainContentBox.getChildren().add(queueVBox);
-        mainContentBox.setMaxHeight(200);
+        mainContentBox.setMaxHeight(800);
+        mainContentBox.setPrefHeight(800);
         grid.add(mainContentBox, 0, 4);
-        grid.add(statusIndicator, 0, 4);
-        grid.add(progress, 0, 6);
+        grid.add(statusIndicator, 0, 5);
+//        grid.add(progress, 0, 6);
         grid.add(hboxDlBtn, 0, 7);
 
         //grid.add(debugBtn, 0, 7);
-        return new Scene(grid, 800, 600);
+        return new Scene(grid, 1000, 800);
     }
 
     public static void updateLoadingBar(QueueEntity qE, double progress) {
@@ -419,6 +461,7 @@ public class SvtpkApplication extends Application {
 
 
     private void updateUI() {
+        System.out.println("updating ui");
         episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
         progressBar.setVisible(false);
         tree.setDisable(true);
@@ -583,13 +626,13 @@ public class SvtpkApplication extends Application {
             loaded.setVisible(true);
             loaded.setFill(Color.FIREBRICK);
 
-            if(currentEpisode != null) {
+            if (currentEpisode != null) {
                 if (currentEpisode.isExpired()) {
                     loaded.setText("Tyvärr, det avsnittet är inte längre tillgängligt!");
                 } else {
                     loaded.setText("Tyvärr, hittar inte det avsnittet.");
                 }
-            }else {
+            } else {
                 currentEpisode = new EpisodeEntity();
                 episodeImageView.setImage(null);
                 statusIcon.setImage(Arrow.getImgArrowDown("grey"));
@@ -686,8 +729,7 @@ public class SvtpkApplication extends Application {
 
 
     private ContextMenu createSeasonItemContextMenu(EpisodeEntity episode) {
-        System.out.println("Creating new Context menu for episode: " + episode.getEpisodeTitle());
-        final ContextMenu contextMenu = new ContextMenu();
+       final ContextMenu contextMenu = new ContextMenu();
 
         MenuItem miDetails = new MenuItem("Visa info");
 
@@ -764,10 +806,7 @@ public class SvtpkApplication extends Application {
         //grid.setMinSize(500, 400);
         //grid.setPrefWidth(600);
         //grid.setGridLinesVisible(true);
-        Text title = new Text("SVTpk");
-        title.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
-        title.setTextAlignment(TextAlignment.CENTER);
-        grid.add(title, 0, 0, 2, 1);
+
         return grid;
     }
 
