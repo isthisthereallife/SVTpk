@@ -28,10 +28,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import org.m.svtpk.entity.*;
 import org.m.svtpk.services.EpisodeService;
-import org.m.svtpk.utils.Arrow;
-import org.m.svtpk.utils.EpisodeCopier;
-import org.m.svtpk.utils.QueueHandler;
-import org.m.svtpk.utils.Settings;
+import org.m.svtpk.utils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -333,8 +330,8 @@ public class SvtpkApplication extends Application {
             }
         });
 
-        String findEpisodeBtnText = clip.getString() == null ?
-                "Hitta" : clip.getString().contains("svt") && addressTextField.getText().length() > 0 ? "Klistra in och Hitta" : "Hitta";
+        String findEpisodeBtnText = "Hitta";
+                //clip.getString() == null ? "Hitta" : clip.getString().contains("svt") && addressTextField.getText().length() > 0 ? "Hitta" : "Hitta";
         Button findEpisodeBtn = new Button(findEpisodeBtnText);
         findEpisodeBtn.setOnAction(e -> {
             if (addressTextField.getText().equals("") && clip.getString() != null && clip.getString().contains("svt")) {
@@ -387,17 +384,25 @@ public class SvtpkApplication extends Application {
                                 alreadyInQueue = true;
                             }
                         }
-                        //gör en riktig hämtning av avsnitten. här? kanske inte behövs. innan den ska laddas ner.
+                        //gör en riktig hämtning av avsnitten.
                         if (!alreadyInQueue) {
                             EpisodeEntity realEntity = episodeService.findEpisode(episodeInSeason.getSplashURL().toString());
+                            System.out.println("episodeInSeason har kanske fortfarande säsongsinfo??: "+" "+episodeInSeason.getSeasonType()+" "+episodeInSeason.getSeasonTitle()+" "+episodeInSeason.getSeasonNumber());
+                            System.out.println("till och med avsnittsinfo: "+episodeInSeason.getEpisodeTitle()+" är nummer: "+episodeInSeason.getEpisodeNumber());
+                            System.out.println("filnamn: "+episodeInSeason.getFilename());
+                            if (episodeInSeason.getFilename() == null){
+                                episodeInSeason.setFilename(StringHelpers.fileNameFixerUpper(episodeInSeason.getEpisodeTitle()));
+                            }
+                            realEntity.setFilename(episodeInSeason.getFilename());
+
                             realEntity.setProgressState(ProgressStates.QUEUED);
                             QueueEntity queueEntity = new QueueEntity(realEntity);
                             queueEntity.setContextMenu(queueEntity.createContextMenu());
                             queueEntity.setText(queueEntity.toString());
                             queueEntity.setWrapText(false);
                             queueEntity.setBackground(new Background(new BackgroundFill(Color.LIGHTGREY, null, null)));
-                            queueEntity.setPrefWidth(135);
-                            queueEntity.setTextOverrun(OverrunStyle.CENTER_ELLIPSIS);
+                            queueEntity.setPrefWidth(170);
+                            //queueEntity.setTextOverrun(OverrunStyle.);
                             queueEntity.setPadding(Insets.EMPTY);
                             queue.add(queueEntity);
                         }
@@ -426,7 +431,7 @@ public class SvtpkApplication extends Application {
         titleBox.setAlignment(Pos.CENTER);
 
 
-        //grid.setGridLinesVisible(true);
+        grid.setGridLinesVisible(true);
         ColumnConstraints cC = new ColumnConstraints();
         cC.setPercentWidth(100);
         grid.getColumnConstraints().add(cC);
@@ -480,7 +485,6 @@ public class SvtpkApplication extends Application {
         } else if (!currentEpisode.getSvtId().equals("") && !currentEpisode.getSvtId().equalsIgnoreCase("upcoming")) {
             //if there is a SvtId
             if (currentEpisode.getAvailableResolutions().size() == 0) {
-                //måste bygga en riktig EpisodeEntity. Borde kanske gjort det förut.
                 currentEpisode = episodeService.findEpisode(currentEpisode.getSplashURL().toString());
             }
             setVideoRes();
@@ -511,6 +515,7 @@ public class SvtpkApplication extends Application {
             boolean isFilm = true;
             // season nodes
             for (SeasonEntity season : seasons) {
+                System.out.println("typ: "+ season.getType());
                 allTicked = true;
                 if (season.getType().equals(SeasonTypes.season)
                         || season.getType().equals(SeasonTypes.accessibility)
@@ -526,6 +531,11 @@ public class SvtpkApplication extends Application {
                     // adding episodes to season node
                     for (EpisodeEntity episode : season.getItems()) {
                         //ContextMenu contextMenu = createSeasonItemContextMenu(episode);
+
+                        episode.setSeasonTitle(season.getName());
+                        episode.setSeasonType(season.getType());
+                        episode.extractSeasonAndEpisodeNumbers();
+                        episode.setFilename();
 
                         Node arrowImageNode = new ImageView();
                         boolean inQueue = false;
@@ -594,8 +604,9 @@ public class SvtpkApplication extends Application {
             if (isFilm) {
                 //mock a season for downloading purposes
                 SeasonEntity s = new SeasonEntity();
-                s.setName("");
+                s.setName("...");
                 s.addItem(currentEpisode);
+                s.setType(SeasonTypes.unknown);
                 seasons.add(s);
 
 

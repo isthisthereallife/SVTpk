@@ -143,7 +143,8 @@ public class EpisodeService {
                                                         .replaceFirst(":", ""));
                                             } catch (Exception e) {
                                                 episode.setDescription("Ingen information tillgänglig.");
-                                                if (settings.isAdvancedUser()) System.out.println("No description available for episode " + episodeTitle);
+                                                if (settings.isAdvancedUser())
+                                                    System.out.println("No description available for episode " + episodeTitle);
                                             }
                                         }
                                         episodeFromString.setProgressState(ProgressStates.IGNORED);
@@ -238,6 +239,7 @@ public class EpisodeService {
             }
             try {
                 if (!body.equals("")) {
+                    System.out.println(body);
                     //check if it is a live stream
                     if (body.contains("\"live\":true")) return new EpisodeEntity(true);
                     episode.setSvtId(body.split("svtId\":\"")[1].split("\"")[0]);
@@ -246,19 +248,22 @@ public class EpisodeService {
                         episode.setProgramTitle(progTitle);
                     } catch (Exception e) {
                         episode.setProgramTitle(LocalDateTime.now().toLocalDate().toString());
-                        if (settings.isAdvancedUser()) System.out.println("Couldn't find program title. Setting program title to " + (LocalDateTime.now().toLocalDate().toString()));
+                        if (settings.isAdvancedUser())
+                            System.out.println("Couldn't find program title. Setting program title to " + (LocalDateTime.now().toLocalDate().toString()));
                     }
                     try {
                         episode.setEpisodeTitle(body.split("episodeTitle\":\"")[1].split("\",")[0]);
                     } catch (Exception e) {
                         episode.setEpisodeTitle(LocalDateTime.now().toLocalTime().toString());
-                        if (settings.isAdvancedUser()) System.out.println("Couldn't find episode title. Setting episode title to " + (LocalDateTime.now().toLocalDate().toString()));
+                        if (settings.isAdvancedUser())
+                            System.out.println("Couldn't find episode title. Setting episode title to " + (LocalDateTime.now().toLocalDate().toString()));
                     }
 
 
                     episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
 
-                    episode.setFilename(StringHelpers.fileNameFixerUpper(episode.getProgramTitle() + "-" + episode.getEpisodeTitle()).concat(".mkv"));
+
+
                     //episode = updateEpisodeLinks(episode);
                     try {
                         //inte helt såld på den här iden
@@ -360,7 +365,8 @@ public class EpisodeService {
                 try {
                     aud.setLabel(set.split("<Label>")[1].split("</Label>")[0]);
                 } catch (IndexOutOfBoundsException e) {
-                    if (settings.isAdvancedUser()) System.out.println("Nån på svt har glömt ge ljudspåret en Label :/ Sätter den till \"Svenska\"");
+                    if (settings.isAdvancedUser())
+                        System.out.println("Nån på svt har glömt ge ljudspåret en Label :/ Sätter den till \"Svenska\"");
                     aud.setLabel("Svenska");
                 }
                 aud.setUrl(BASE_URL + set.split("media=\"")[1].split("\\$Number\\$")[0]);
@@ -376,7 +382,8 @@ public class EpisodeService {
                 try {
                     sub.setLabel(set.split("<Label>")[1].split("</Label")[0]);
                 } catch (IndexOutOfBoundsException e) {
-                    if (settings.isAdvancedUser()) System.out.println("Nån på svt har glömt ge undertextspåret en Label :/ Sätter den till \"Svenska\"");
+                    if (settings.isAdvancedUser())
+                        System.out.println("Nån på svt har glömt ge undertextspåret en Label :/ Sätter den till \"Svenska\"");
                     sub.setLabel("Svenska");
                 }
                 try {

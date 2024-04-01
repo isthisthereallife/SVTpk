@@ -39,6 +39,7 @@ public class SeasonEntity {
         this.type = type;
     }
     public void setTypeFromString (String type) {
+        System.out.println("typ i SeasonEntity: "+type);
         switch (type.toLowerCase()) {
             case "accessibility" -> this.type = SeasonTypes.accessibility;
             case "clip" -> this.type = SeasonTypes.clip;

@@ -50,8 +50,8 @@ public class EpisodeCopier implements Runnable {
         Settings settings = Settings.load();
         String videoFiletype = ".mp4";
         String subsFiletype = ".srt";
-        String filename = StringHelpers.fileNameFixerUpper(queueEntity.getEpisode().getProgramTitle() + "-" + queueEntity.getEpisode().getEpisodeTitle()).concat(videoFiletype);
-        String subsname = StringHelpers.fileNameFixerUpper(queueEntity.getEpisode().getProgramTitle() + "-" + queueEntity.getEpisode().getEpisodeTitle()).concat(subsFiletype);
+        String filename = queueEntity.getEpisode().getFilename().concat(videoFiletype);
+        String subsname = queueEntity.getEpisode().getFilename().concat(subsFiletype);
 
 
         /*

@@ -2,6 +2,7 @@ package org.m.svtpk.entity;
 
 
 import javafx.scene.image.Image;
+import org.m.svtpk.utils.StringHelpers;
 
 import java.net.URL;
 import java.nio.file.Path;
@@ -14,7 +15,10 @@ public class EpisodeEntity {
     private int contentDuration;
     private boolean blockedForChildren;
     private String programTitle;
+    private String seasonTitle;
     private String episodeTitle;
+    private String episodeTitleUnnumbered;
+    private SeasonTypes seasonType;
     private String description;
     private VideoReferencesEntity[] videoReferences;
     private SubtitleReferencesEntity[] subtitleReferences;
@@ -32,6 +36,8 @@ public class EpisodeEntity {
     private Image thumbnail;
     private boolean isExpired = false;
     private String infotext;
+    private int seasonNumber;
+    private int episodeNumber;
 
     public EpisodeEntity() {
         programTitle = "I'm an episode!";
@@ -40,6 +46,10 @@ public class EpisodeEntity {
         availableResolutions = new HashMap<>();
         availableAudio = new HashMap<>();
         description = "";
+        seasonNumber = -1;
+        episodeNumber = -1;
+        episodeTitleUnnumbered = "";
+
     }
 
     public EpisodeEntity(String episodeTitle, String programTitle, ProgressStates progressState) {
@@ -189,12 +199,36 @@ public class EpisodeEntity {
         this.programTitle = programTitle;
     }
 
+    public String getSeasonTitle() {
+        return seasonTitle;
+    }
+
+    public void setSeasonTitle(String seasonTitle) {
+        this.seasonTitle = seasonTitle;
+    }
+
+    public SeasonTypes getSeasonType() {
+        return seasonType;
+    }
+
+    public void setSeasonType(SeasonTypes seasonType) {
+        this.seasonType = seasonType;
+    }
+
     public String getEpisodeTitle() {
         return episodeTitle;
     }
 
-    public void setEpisodeTitle(String episodeTitle) {
-        this.episodeTitle = episodeTitle;
+    public void setEpisodeTitle(String thisTitle) {
+        this.episodeTitle = thisTitle;
+    }
+
+    public String getEpisodeTitleUnnumbered() {
+        return episodeTitleUnnumbered;
+    }
+
+    public void setEpisodeTitleUnnumbered(String episodeTitleUnnumbered) {
+        this.episodeTitleUnnumbered = episodeTitleUnnumbered;
     }
 
     public VideoReferencesEntity[] getVideoReferences() {
@@ -284,20 +318,115 @@ public class EpisodeEntity {
     public void setExpired(boolean isExpired) {
         this.isExpired = isExpired;
     }
-    public String getInfotext(){
+
+    public String getInfotext() {
         return infotext;
     }
-    public void setInfotext(String infotext){
+
+    public void setInfotext(String infotext) {
         this.infotext = infotext;
+    }
+
+    public int getSeasonNumber() {
+        return seasonNumber;
+    }
+
+    public void setSeasonNumber(int seasonNumber) {
+        this.seasonNumber = seasonNumber;
+    }
+
+    public int getEpisodeNumber() {
+        return episodeNumber;
+    }
+
+    public void setEpisodeNumber(int episodeNumber) {
+        this.episodeNumber = episodeNumber;
+    }
+
+    public boolean isNumberedEpisodeAndPartOfNumberedSeason() {
+        return (this.seasonNumber > 0 && this.episodeNumber > 0);
     }
 
     @Override
     public String toString() {
 
-        String desc = description.length()<250 ? description : description.substring(0,249).concat("...");
+        String desc = description.length() < 250 ? description : description.substring(0, 249).concat("...");
         return "Program: '" + programTitle + "'\n" +
                 "Avsnitt: '" + episodeTitle + "'\n" +
                 desc + "\n\n" +
                 "Längd: " + contentDuration / 60 + " min";
+    }
+
+    public void extractSeasonAndEpisodeNumbers() {
+        // if the type is right, and the season title is right, we have a numbered season
+        if(this.seasonType.equals(SeasonTypes.season)) {
+            if ((this.seasonTitle.split(" ")[0].equalsIgnoreCase("säsong") || this.seasonTitle.split(" ")[0].equalsIgnoreCase("season"))) {
+                try {
+                    this.seasonNumber = Integer.parseInt(this.seasonTitle.split(" ")[1]);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            // get and store number if the episode is numbered
+            if (this.episodeTitle.split(" ")[0].equalsIgnoreCase("avsnitt") || this.episodeTitle.split(" ")[0].equalsIgnoreCase("episode")) {
+
+                try {
+                    this.episodeNumber = Integer.parseInt(this.episodeTitle.split(" ")[1]);
+                    this.episodeTitleUnnumbered = this.episodeTitle;
+
+                } catch (NumberFormatException ignored) {
+                }
+
+            } else {
+                // some episodes may have names like "2. Avsnitt twå" || "14. Fjortooon"
+                // but no series has more than 99 episodes to a season. Hopefully.
+                // (also hope no episode is called "99 luftballoons" or "47 ronin", because that would mess it all up)
+
+                // check first char
+                if (this.episodeTitle.substring(0, 1).matches("\\d")) {
+                    // check second char
+                    if (this.episodeTitle.substring(1, 2).matches("\\d")) {
+                        // if 3'd char is also a number, it's more likely to be a year in a name.
+                        // hence the if-inversion
+                        if (!this.episodeTitle.substring(2, 3).matches("\\d")) {
+                            this.episodeNumber = Integer.parseInt(this.episodeTitle.substring(0, 2));
+                            if (this.episodeTitle.charAt(2) == '.') {
+                                // if it's like "12. The twelfth episode"
+                                this.episodeTitleUnnumbered = this.episodeTitle.substring(3).trim();
+
+                            }
+                        }
+                    } else if (this.episodeTitle.charAt(1) == '.') {
+                        this.episodeNumber = Integer.parseInt(String.valueOf(this.episodeTitle.charAt(0)));
+                        this.episodeTitleUnnumbered = this.episodeTitle.substring(2).trim();
+
+                    }
+                }
+            }
+        }
+    }
+    public void setFilename(){
+        // set the filename to ProgramTitle.SxxExx.EpisodeTitle
+        // if seasons and episodes are numbered.
+        if(this.isNumberedEpisodeAndPartOfNumberedSeason()) {
+            System.out.println("PERFECT");
+            this.setFilename(
+                    StringHelpers.fileNameFixerUpper(
+                            this.getProgramTitle() +
+                                    ".S" +
+                                    (this.getSeasonNumber() < 10 ? "0" + this.getSeasonNumber() : this.getSeasonNumber()) +
+                                    "E" +
+                                    (this.getEpisodeNumber() < 10 ? "0" + this.getEpisodeNumber() : this.getEpisodeNumber()) +
+                                    "." +
+                                    this.getEpisodeTitleUnnumbered().trim()));
+        } else if(this.getSeasonTitle()!= null && !this.getSeasonTitle().isEmpty() && !this.getSeasonTitle().equals("...")){
+            System.out.println("this is not a perfect one. but it has a Season Title.");
+            // TODO otherwise if has season-name, set it to ProgramTitle.SeasonTitle.Exx.EpisodeTitle
+            this.setFilename(StringHelpers.fileNameFixerUpper(this.getProgramTitle() + "."+this.getSeasonTitle()+"." + this.getEpisodeTitle()));
+
+        } else {//if(this.isFilm){
+            // TODO set film name to FilmTitle.year
+            System.out.println("i think this is a film. will get treated as one, anyway.");
+            this.setFilename(StringHelpers.fileNameFixerUpper(this.getProgramTitle() + "-" + this.getEpisodeTitle()));
+        }
     }
 }

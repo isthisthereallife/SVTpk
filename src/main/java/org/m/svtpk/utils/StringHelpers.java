@@ -10,16 +10,16 @@ public class StringHelpers {
                 //.replace("Ä", "A")
                 //.replace("ö", "o")
                 //.replace("Ö", "O")
-                .replace(" ", "")
-                .replace(":", "-")
-                .replace("*", "'")
-                .replace("?", "'")
-                .replace("\"", "'")
-                .replace("<", "")
-                .replace(">", "")
-                .replace("|", "")
-                .replace("/", "")
-                .replace("\\", "");
+                .replace(" ", ".")
+                .replace(":", ".")
+                .replace("*", ".")
+                .replace("?", ".")
+                .replace("\"", ".")
+                .replace("<", ".")
+                .replace(">", ".")
+                .replace("|", ".")
+                .replace("/", ".")
+                .replace("\\", ".");
     }
 
     public static String lazyfix(String orig){
