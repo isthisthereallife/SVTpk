@@ -239,7 +239,7 @@ public class SvtpkApplication extends Application {
                         if (Files.exists(Paths.get(settings.getPath()))) {
                             pathOK = true;
                         }
-                    } catch (InvalidPathException | NullPointerException ignored) {
+                    } catch (IllegalArgumentException | NullPointerException ignored) {
 
                     } finally {
                         if (!pathOK) {
