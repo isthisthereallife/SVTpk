@@ -135,7 +135,7 @@ public class EpisodeCopier implements Runnable {
             Path target = Paths.get(settings.getPath()).resolve(filename);
             if (settings.isAdvancedUser()) System.out.println("Flyttar filen.");
             if (!Files.exists(Paths.get(settings.getPath()))) {
-                System.out.println("Skapar mapp \"Downloads\"");
+                System.out.println("Skapar mapp "+settings.getPath());
                 Files.createDirectories(Paths.get(settings.getPath()));
             }
             try {

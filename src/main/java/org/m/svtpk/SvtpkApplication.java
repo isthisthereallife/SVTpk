@@ -98,7 +98,7 @@ public class SvtpkApplication extends Application {
         settings = Settings.load();
         search = false;
         if (settings.isAdvancedUser()) {
-            System.out.println("System property: " + System.getProperty("user.dir"));
+            System.out.println("Current Directory: " + System.getProperty("user.dir"));
             System.out.println("Operating System: " + System.getProperty("os.name"));
             System.out.println("Java runtime version: " + System.getProperty("java.runtime.version"));
         }
@@ -221,8 +221,11 @@ public class SvtpkApplication extends Application {
         currentSavePath.setOnMouseClicked(e -> {
             try {
                 // TODO -  this is WINDOWS SPECIFIC, and it should not be.
-                Runtime.getRuntime().exec("explorer.exe " + currentSavePath);
-                // Runtime.getRuntime().exec("explorer.exe /select," + currentSavePath);
+                if (Files.exists(Paths.get(settings.getPath()))) {
+                    Runtime.getRuntime().exec("explorer.exe " + settings.getPath());
+                } else {
+                    Runtime.getRuntime().exec("explorer.exe " + System.getProperty("user.dir"));
+                }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
