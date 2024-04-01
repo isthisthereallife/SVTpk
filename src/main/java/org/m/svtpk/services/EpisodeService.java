@@ -27,8 +27,18 @@ public class EpisodeService {
         String res = connectToURLReturnBodyAsString(episode.getSplashURL());
 
         if (episode.getSvtId() != null) {
+
+            //System.out.println("res in getSeasonsFromEpisode" + res);
+            // trying to extract production year, mostly for films
+            try {
+                String prodYear = res.split("productionYearRange")[1].substring(5, 9);
+                episode.setProductionYear(prodYear);
+            } catch (ArrayIndexOutOfBoundsException oob){
+                if(settings.isAdvancedUser()) System.out.println("Kunde inte extrahera produktionsår.");
+            }
             res = res.split("<script id=\"__NEXT_DATA__\" type=\"application/json\">")[1];
             String[] selectionTypes = res.split("selectionType");
+
 
             // Season loop
             for (String selection : selectionTypes) {
@@ -148,6 +158,7 @@ public class EpisodeService {
                                             }
                                         }
                                         episodeFromString.setProgressState(ProgressStates.IGNORED);
+                                        if(episode.getProductionYear()!=null) episodeFromString.setProductionYear(episode.getProductionYear());
                                         season.addItem(episodeFromString);
                                     }
                                 } catch (Exception e) {
@@ -232,14 +243,12 @@ public class EpisodeService {
             try {
                 body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episodeId));
                 updateEpisodeLinks(episode, body);
-                //kan jag här köra updateEpisodeLinks???
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
             try {
                 if (!body.equals("")) {
-                    System.out.println(body);
                     //check if it is a live stream
                     if (body.contains("\"live\":true")) return new EpisodeEntity(true);
                     episode.setSvtId(body.split("svtId\":\"")[1].split("\"")[0]);
@@ -261,7 +270,6 @@ public class EpisodeService {
 
 
                     episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
-
 
 
                     //episode = updateEpisodeLinks(episode);

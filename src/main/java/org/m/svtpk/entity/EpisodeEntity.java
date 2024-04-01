@@ -38,6 +38,7 @@ public class EpisodeEntity {
     private String infotext;
     private int seasonNumber;
     private int episodeNumber;
+    private String productionYear;
 
     public EpisodeEntity() {
         programTitle = "I'm an episode!";
@@ -343,6 +344,14 @@ public class EpisodeEntity {
         this.episodeNumber = episodeNumber;
     }
 
+    public String getProductionYear() {
+        return productionYear;
+    }
+
+    public void setProductionYear(String productionYear) {
+        this.productionYear = productionYear;
+    }
+
     public boolean isNumberedEpisodeAndPartOfNumberedSeason() {
         return (this.seasonNumber > 0 && this.episodeNumber > 0);
     }
@@ -359,7 +368,7 @@ public class EpisodeEntity {
 
     public void extractSeasonAndEpisodeNumbers() {
         // if the type is right, and the season title is right, we have a numbered season
-        if(this.seasonType.equals(SeasonTypes.season)) {
+        if (this.seasonType.equals(SeasonTypes.season)) {
             if ((this.seasonTitle.split(" ")[0].equalsIgnoreCase("säsong") || this.seasonTitle.split(" ")[0].equalsIgnoreCase("season"))) {
                 try {
                     this.seasonNumber = Integer.parseInt(this.seasonTitle.split(" ")[1]);
@@ -404,11 +413,10 @@ public class EpisodeEntity {
             }
         }
     }
-    public void setFilename(){
-        // set the filename to ProgramTitle.SxxExx.EpisodeTitle
-        // if seasons and episodes are numbered.
-        if(this.isNumberedEpisodeAndPartOfNumberedSeason()) {
-            System.out.println("PERFECT");
+
+    public void setFilename() {
+        // set the filename to Program.title.SxxExx.Episode.title
+        if (this.isNumberedEpisodeAndPartOfNumberedSeason()) {
             this.setFilename(
                     StringHelpers.fileNameFixerUpper(
                             this.getProgramTitle() +
@@ -418,15 +426,17 @@ public class EpisodeEntity {
                                     (this.getEpisodeNumber() < 10 ? "0" + this.getEpisodeNumber() : this.getEpisodeNumber()) +
                                     "." +
                                     this.getEpisodeTitleUnnumbered().trim()));
-        } else if(this.getSeasonTitle()!= null && !this.getSeasonTitle().isEmpty() && !this.getSeasonTitle().equals("...")){
-            System.out.println("this is not a perfect one. but it has a Season Title.");
-            // TODO otherwise if has season-name, set it to ProgramTitle.SeasonTitle.Exx.EpisodeTitle
-            this.setFilename(StringHelpers.fileNameFixerUpper(this.getProgramTitle() + "."+this.getSeasonTitle()+"." + this.getEpisodeTitle()));
-
-        } else {//if(this.isFilm){
-            // TODO set film name to FilmTitle.year
-            System.out.println("i think this is a film. will get treated as one, anyway.");
-            this.setFilename(StringHelpers.fileNameFixerUpper(this.getProgramTitle() + "-" + this.getEpisodeTitle()));
+        } else if (this.getSeasonTitle() != null && !this.getSeasonTitle().isEmpty() && !this.getSeasonTitle().equals("...")) {
+            // If has season-name, set it to Program.title.Season.title.Episode.title
+            this.setFilename(StringHelpers.fileNameFixerUpper(this.getProgramTitle() + "." + this.getSeasonTitle() + "." + this.getEpisodeTitle()));
+        } else {
+            // This is probably a film, to be named like "Film.Title(year)"
+            if (this.programTitle.equalsIgnoreCase(this.episodeTitle)) {
+                this.setFilename(StringHelpers.fileNameFixerUpper(this.programTitle + (this.getProductionYear() == null ? "" : "("+this.getProductionYear()+")")));
+            }else {
+                // fallback. maybe for documentaries
+                this.setFilename(StringHelpers.fileNameFixerUpper(this.getProgramTitle() + "-" + this.getEpisodeTitle()));
+            }
         }
     }
 }

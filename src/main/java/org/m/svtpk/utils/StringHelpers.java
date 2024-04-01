@@ -11,7 +11,7 @@ public class StringHelpers {
                 //.replace("ö", "o")
                 //.replace("Ö", "O")
                 .replace(" ", ".")
-                .replace(":", ".")
+                .replace(":", "")
                 .replace("*", ".")
                 .replace("?", ".")
                 .replace("\"", ".")

@@ -239,7 +239,7 @@ public class SvtpkApplication extends Application {
                     } catch (InvalidPathException | NullPointerException ignored) {
 
                     } finally {
-                        if(!pathOK){
+                        if (!pathOK) {
                             // reset path since it was invalid
                             settings.setPath();
                             settings.save();
@@ -331,7 +331,7 @@ public class SvtpkApplication extends Application {
         });
 
         String findEpisodeBtnText = "Hitta";
-                //clip.getString() == null ? "Hitta" : clip.getString().contains("svt") && addressTextField.getText().length() > 0 ? "Hitta" : "Hitta";
+        //clip.getString() == null ? "Hitta" : clip.getString().contains("svt") && addressTextField.getText().length() > 0 ? "Hitta" : "Hitta";
         Button findEpisodeBtn = new Button(findEpisodeBtnText);
         findEpisodeBtn.setOnAction(e -> {
             if (addressTextField.getText().equals("") && clip.getString() != null && clip.getString().contains("svt")) {
@@ -351,7 +351,7 @@ public class SvtpkApplication extends Application {
         addressTextField.textProperty().addListener((observable, oldValue, newValue) -> {
             if (addressTextField.getText().length() < 1 && clip.getString() != null && clip.getString().contains("svt")) {
                 currentEpisode = new EpisodeEntity();
-                findEpisodeBtn.setText("Klistra in och Hitta");
+                findEpisodeBtn.setText("Hitta");
                 updateUI();
             } else {
                 findEpisodeBtn.setText("Hitta");
@@ -387,12 +387,11 @@ public class SvtpkApplication extends Application {
                         //gör en riktig hämtning av avsnitten.
                         if (!alreadyInQueue) {
                             EpisodeEntity realEntity = episodeService.findEpisode(episodeInSeason.getSplashURL().toString());
-                            System.out.println("episodeInSeason har kanske fortfarande säsongsinfo??: "+" "+episodeInSeason.getSeasonType()+" "+episodeInSeason.getSeasonTitle()+" "+episodeInSeason.getSeasonNumber());
-                            System.out.println("till och med avsnittsinfo: "+episodeInSeason.getEpisodeTitle()+" är nummer: "+episodeInSeason.getEpisodeNumber());
-                            System.out.println("filnamn: "+episodeInSeason.getFilename());
-                            if (episodeInSeason.getFilename() == null){
-                                episodeInSeason.setFilename(StringHelpers.fileNameFixerUpper(episodeInSeason.getEpisodeTitle()));
+                            if (episodeInSeason.getFilename() == null) {
+                                episodeInSeason.setFilename();
                             }
+                            if (episodeInSeason.getProductionYear() != null)
+                                realEntity.setProductionYear(episodeInSeason.getProductionYear());
                             realEntity.setFilename(episodeInSeason.getFilename());
 
                             realEntity.setProgressState(ProgressStates.QUEUED);
@@ -431,7 +430,7 @@ public class SvtpkApplication extends Application {
         titleBox.setAlignment(Pos.CENTER);
 
 
-        grid.setGridLinesVisible(true);
+        //grid.setGridLinesVisible(true);
         ColumnConstraints cC = new ColumnConstraints();
         cC.setPercentWidth(100);
         grid.getColumnConstraints().add(cC);
@@ -466,7 +465,6 @@ public class SvtpkApplication extends Application {
 
 
     private void updateUI() {
-        System.out.println("updating ui");
         episodeHBox.setVisible(currentEpisode.hasID(currentEpisode));
         progressBar.setVisible(false);
         tree.setDisable(true);
@@ -515,7 +513,6 @@ public class SvtpkApplication extends Application {
             boolean isFilm = true;
             // season nodes
             for (SeasonEntity season : seasons) {
-                System.out.println("typ: "+ season.getType());
                 allTicked = true;
                 if (season.getType().equals(SeasonTypes.season)
                         || season.getType().equals(SeasonTypes.accessibility)
@@ -575,9 +572,6 @@ public class SvtpkApplication extends Application {
 
                         episodeLeaf.addEventHandler(CheckBoxTreeItem.<String>checkBoxSelectionChangedEvent(), event -> {
 
-                            //  System.out.println(" OCH MED LITE PARAMETRAR då, när visas jag?");
-
-                            //isselected är vad det nya värdet är
                             if (!search) {
                                 if (episodeLeaf.isSelected()) {
                                     episode.setProgressState(ProgressStates.WANTED);
@@ -740,7 +734,7 @@ public class SvtpkApplication extends Application {
 
 
     private ContextMenu createSeasonItemContextMenu(EpisodeEntity episode) {
-       final ContextMenu contextMenu = new ContextMenu();
+        final ContextMenu contextMenu = new ContextMenu();
 
         MenuItem miDetails = new MenuItem("Visa info");
 
