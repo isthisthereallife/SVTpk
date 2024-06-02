@@ -28,7 +28,10 @@ SVTpk är en applikation som gör det enklare att privatkopiera ("Ladda ner") fr
 <hr/>
 <h2 id="faq">FAQ</h2>
 <h4><b>Q:</b> Är detta lagligt?</h4>
-<b>A:</b> <b>Ja</b>. Privatkopiering av offentliggjorda verk är 100% lagligt.
+<b>A:</b> Jag hänvisar till Patent och Registreringsverket:
+<br/>
+<img width="400px" src="https://github.com/isthisthereallife/SVTpk/assets/56800749/d0202682-110f-4e7e-b043-72e1160ca740" alt="" />
+<br/>
 Se <a href="https://www.prv.se/sv/upphovsratt/streama-lagligt/faq-upphovsratt-och-streaming/">Patent och
 Registreringsverket</a>, <a href="https://euipo.europa.eu/ohimportal/sv/web/observatory/faq-sv#7">EUIPO - European Union
 Intellectual Property Office Observatory</a>,
