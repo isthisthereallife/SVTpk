@@ -67,10 +67,8 @@ public class EpisodeCopier implements Runnable {
                 .getAvailableResolutions()
                 .get(settings.getResolution()).getId()) : "0");
 
-        System.out.println("queueEntity: "+queueEntity.getEpisode().toString());
-        queueEntity.getEpisode().getAvailableAudio().forEach((a,b) -> {
-                    System.out.println(a.toString() + ": " + b.getLabel()+"\n"+b.getUrl()+"\n"+b.getId());
-                });
+        if (settings.isAdvancedUser()) System.out.println(queueEntity.getEpisode().toString());
+
         String audArgs = "0:";
         audArgs = audArgs.concat(queueEntity.getEpisode().getAvailableAudio() != null ? String.valueOf(queueEntity
                 .getEpisode()
@@ -140,7 +138,7 @@ public class EpisodeCopier implements Runnable {
             Path target = Paths.get(settings.getPath()).resolve(filename);
             if (settings.isAdvancedUser()) System.out.println("Flyttar filen.");
             if (!Files.exists(Paths.get(settings.getPath()))) {
-                System.out.println("Skapar mapp "+settings.getPath());
+                System.out.println("Skapar mapp " + settings.getPath());
                 Files.createDirectories(Paths.get(settings.getPath()));
             }
             try {
@@ -170,8 +168,8 @@ public class EpisodeCopier implements Runnable {
                     );
                     Files.delete(Paths.get(System.getProperty("user.dir")).resolve(subsname));
                 } catch (NullPointerException e) {
-                    System.out.println("Kunde inte kopiera undertexter.");
-                    if (settings.isAdvancedUser()) e.printStackTrace();
+
+                    if (settings.isAdvancedUser()) System.out.println("Kunde inte kopiera undertexter.");
                 }
             }
 
