@@ -9,8 +9,8 @@
 <hr/>
 <h2 id="ladda-ner">Ladda ner </h2>
 <h3>Windows:</h3>
-<h4><a href="https://mega.nz/file/0zBgFRTI#Sadlmj_OubFjZszB6NLdKA19VIuP65PcLcuIFOOPj6k"> Ladda ner</a><span></span></h4>
-<p><a href="https://mega.nz/file/t3pUHArB#17CyISOIz0A1dC3oTAk7rPltGSNYb9v9OiJJEp0zjbA">(Jag har redan ffmpeg på min dator)</a></p>
+<h4><a href="https://mega.nz/file/UmJQWajY#MppIGKH8JrTcyLCB6Rft9EntMMLZsTyvgegj5BFV3J8"> Ladda ner</a><span></span></h4>
+<p><a href="https://mega.nz/file/1vY1jK6Y#d3H-1tDuLxh6gtBFJQFGyLpYBb6-7GrvTk_UdaYO_VI">(Jag har redan ffmpeg på min dator)</a></p>
 
 <hr/>
 
@@ -108,8 +108,12 @@ här</u></a>. Annars är du välkommen att maila till svtpk "snabel a" riseup "p
 
 <h2 id="versionshistorik">Versionshistorik</h2>
 <ul style="list-style-type:square">
-
-<h4><a href="https://mega.nz/file/t3pUHArB#17CyISOIz0A1dC3oTAk7rPltGSNYb9v9OiJJEp0zjbA">Version 0.3 (Senaste)</a></h4>
+<h4><a href="https://mega.nz/file/1vY1jK6Y#d3H-1tDuLxh6gtBFJQFGyLpYBb6-7GrvTk_UdaYO_VI">Version 0.4 (Senaste)</a></h4>
+<li>Avsnitt namnges nu såsom Programnamn.S01E01.Avsnittsnamn</li>
+<li>Filmer namnges nu såsom Filmtitel(1999)</li>
+<li>"Spara till"-knappen funkar bättre</li>
+<li>Hantering av ändringar SVT Play gjort i sitt interna API</li>
+<h4><a href="https://mega.nz/file/t3pUHArB#17CyISOIz0A1dC3oTAk7rPltGSNYb9v9OiJJEp0zjbA">Version 0.3</a></h4>
 <li>SÄSONGER, SÄSONGER, SÄSONGER</li>
 <li>Ange ett avsnitt, få tillgång till hela säsonger</li>
 <hr/>

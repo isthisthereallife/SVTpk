@@ -31,7 +31,7 @@ public class Arrow {
         return new Image(getArrowDownLocation()+"_" + colour.toLowerCase() + getArrowDownFiletype());
     }
     public static String getArrowDownLocation() {
-        return "file:resources/images/arrow";
+        return "file:src/main/resources/images/arrow";
     }
     public static String getArrowDownFiletype(){
         return ".png";
