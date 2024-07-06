@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Objects;
 
 import static org.m.svtpk.utils.HttpBodyGetter.connectToURLReturnBodyAsString;
 
@@ -25,16 +26,14 @@ public class EpisodeService {
             return new ArrayList<>();
         }
         String res = connectToURLReturnBodyAsString(episode.getSplashURL());
-
-        if (episode.getSvtId() != null) {
-
-            //System.out.println("res in getSeasonsFromEpisode" + res);
+        if (episode.getSvtId() != null && !Objects.equals(episode.getSvtId(), "")) {
+            
             // trying to extract production year, mostly for films
             try {
                 String prodYear = res.split("productionYearRange")[1].substring(5, 9);
                 episode.setProductionYear(prodYear);
-            } catch (ArrayIndexOutOfBoundsException oob){
-                if(settings.isAdvancedUser()) System.out.println("Kunde inte extrahera produktionsår.");
+            } catch (ArrayIndexOutOfBoundsException oob) {
+                if (settings.isAdvancedUser()) System.out.println("Kunde inte extrahera produktionsår.");
             }
             res = res.split("<script id=\"__NEXT_DATA__\" type=\"application/json\">")[1];
             String[] selectionTypes = res.split("selectionType");
@@ -113,11 +112,15 @@ public class EpisodeService {
                                             imageURL = imageId.concat("/" + imageURL);
                                         }
                                         if (imageURL.isBlank()) {
-                                            imageURL = episode.getImageURL().toString();
+                                            if (episode.getImageURL() != null) {
+                                                imageURL = episode.getImageURL().toString();
+                                            } else {
+                                                imageURL = Arrow.getArrowDownLocation() + Arrow.getArrowDownFiletype();
+                                            }
                                         }
 
 
-                                        if (!imageURL.contains("https://www.svtstatic.se/image/custom/1024/")) {
+                                        if (imageURL != null && !imageURL.contains("https://www.svtstatic.se/image/custom/1024/")) {
                                             imageURL = "https://www.svtstatic.se/image/custom/1024/".concat(imageURL);
                                         }
                                         episodeFromString.setImageURL(new URL(imageURL));
@@ -158,7 +161,8 @@ public class EpisodeService {
                                             }
                                         }
                                         episodeFromString.setProgressState(ProgressStates.IGNORED);
-                                        if(episode.getProductionYear()!=null) episodeFromString.setProductionYear(episode.getProductionYear());
+                                        if (episode.getProductionYear() != null)
+                                            episodeFromString.setProductionYear(episode.getProductionYear());
                                         season.addItem(episodeFromString);
                                     }
                                 } catch (Exception e) {
@@ -179,9 +183,16 @@ public class EpisodeService {
         return seasons;
     }
 
+    /**
+     * Get an EpisodeEntity from a supplied path
+     *
+     * @param address path to episode
+     * @return new EpisodeEntity compiled from address
+     */
     public EpisodeEntity findEpisode(String address) {
         String res = "";
         address = address.replace(" ", "").trim();
+        // remove trailing slash
         if (address.endsWith("/")) address = address.substring(0, address.length() - 1);
         EpisodeEntity episode = new EpisodeEntity();
         if (address.length() > 9) {
@@ -191,15 +202,15 @@ public class EpisodeService {
                 //address = URLEncoder.encode(address, StandardCharsets.UTF_8);
                 if (uri.isAbsolute() && address.contains("\\id=")) {
 
-                    episode = getEpisodeInfo(address);
+                    episode = getEpisodeInfo(address, "");
                 } else if (uri.isAbsolute()) {
                     if (url.toString().contains("svtplay.se")) {
                         res = connectToURLReturnBodyAsString(url);
                         if (!res.equals("")) {
                             try {
-                                String id = res.split("data-rt=\"top-area-play-button")[1].split("\\?")[1].split("\"")[0];
-
-                                episode = getEpisodeInfo(address + "?" + id);
+                                String id = res.split("data-rt=\"top-area-play-button")[1];
+                                id = id.split(" href=\"/video/")[1].split("/")[0];
+                                episode = getEpisodeInfo(address + "?" + id, id);
                                 episode.setSplashURL(uri.toURL());
                             } catch (NullPointerException | ArrayIndexOutOfBoundsException e) {
 
@@ -228,69 +239,72 @@ public class EpisodeService {
         return episode;
     }
 
-    public EpisodeEntity getEpisodeInfo(String address) {
+    public EpisodeEntity getEpisodeInfo(String address, String episodeId) {
         EpisodeEntity episode = new EpisodeEntity();
+        //if no id, get from address
+
         String[] id = address.split("id=");
-        if (id.length > 1 && id[1].trim().length() > 5) {
 
 
-            //clean up the id, remove excess
-            id[1] = id[1].split("\\W")[0];
-
-            String episodeId = id[1];
-            String URI = "https://api.svt.se/video/" + episodeId;
-            String body = "";
-            try {
-                body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episodeId));
-                updateEpisodeLinks(episode, body);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            try {
-                if (!body.equals("")) {
-                    //check if it is a live stream
-                    if (body.contains("\"live\":true")) return new EpisodeEntity(true);
-                    episode.setSvtId(body.split("svtId\":\"")[1].split("\"")[0]);
-                    try {
-                        String progTitle = body.split("programTitle\":\"")[1].split("\",")[0];
-                        episode.setProgramTitle(progTitle);
-                    } catch (Exception e) {
-                        episode.setProgramTitle(LocalDateTime.now().toLocalDate().toString());
-                        if (settings.isAdvancedUser())
-                            System.out.println("Couldn't find program title. Setting program title to " + (LocalDateTime.now().toLocalDate().toString()));
-                    }
-                    try {
-                        episode.setEpisodeTitle(body.split("episodeTitle\":\"")[1].split("\",")[0]);
-                    } catch (Exception e) {
-                        episode.setEpisodeTitle(LocalDateTime.now().toLocalTime().toString());
-                        if (settings.isAdvancedUser())
-                            System.out.println("Couldn't find episode title. Setting episode title to " + (LocalDateTime.now().toLocalDate().toString()));
-                    }
-
-
-                    episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
-
-
-                    //episode = updateEpisodeLinks(episode);
-                    try {
-                        //inte helt såld på den här iden
-                        episode.setImageURL(new URL(getImgURL(address)));
-//                        episode.setThumbnail(new Image(episode.getImageURL().toString()));
-                        episode.setThumbnail(Arrow.getImgArrowDown("grey"));
-
-                    } catch (Exception e) {
-                        if (settings.isAdvancedUser()) System.out.println("Could not get episode image");
-                    }
-                }
-            } catch (Exception e) {
-                if (settings.isAdvancedUser()) {
-                    if (settings.isAdvancedUser()) System.out.println("Could not get episode info");
-                    if (settings.isAdvancedUser()) e.printStackTrace();
-                }
-                return new EpisodeEntity();
-            }
+        //clean up the id, remove excess
+        episodeId = episodeId.isEmpty() && (id.length > 1 && id[1].trim().length() > 5) ? id[1].split("\\W")[0] : episodeId;
+        // last chance to get an id :|
+        if (episodeId.isEmpty()){
+            episodeId = address.split("/video/")[1].split("/")[0];
         }
+        String URI = "https://api.svt.se/video/" + episodeId;
+        String body = "";
+        try {
+            body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episodeId));
+            updateEpisodeLinks(episode, body);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            if (!body.equals("")) {
+                //check if it is a live stream
+                if (body.contains("\"live\":true")) return new EpisodeEntity(true);
+                episode.setSvtId(body.split("svtId\":\"")[1].split("\"")[0]);
+                try {
+                    String progTitle = body.split("programTitle\":\"")[1].split("\",")[0];
+                    episode.setProgramTitle(progTitle);
+                } catch (Exception e) {
+                    episode.setProgramTitle(LocalDateTime.now().toLocalDate().toString());
+                    if (settings.isAdvancedUser())
+                        System.out.println("Couldn't find program title. Setting program title to " + (LocalDateTime.now().toLocalDate().toString()));
+                }
+                try {
+                    episode.setEpisodeTitle(body.split("episodeTitle\":\"")[1].split("\",")[0]);
+                } catch (Exception e) {
+                    episode.setEpisodeTitle(LocalDateTime.now().toLocalTime().toString());
+                    if (settings.isAdvancedUser())
+                        System.out.println("Couldn't find episode title. Setting episode title to " + (LocalDateTime.now().toLocalDate().toString()));
+                }
+
+
+                episode.setContentDuration(Integer.parseInt(body.split("contentDuration\":")[1].split(",")[0]));
+
+
+                //episode = updateEpisodeLinks(episode);
+                try {
+                    //inte helt såld på den här iden
+                    episode.setImageURL(new URL(getImgURL(address)));
+//                        episode.setThumbnail(new Image(episode.getImageURL().toString()));
+                    episode.setThumbnail(Arrow.getImgArrowDown("grey"));
+
+                } catch (Exception e) {
+                    if (settings.isAdvancedUser()) System.out.println("Could not get episode image");
+                }
+            }
+        } catch (Exception e) {
+            if (settings.isAdvancedUser()) {
+                if (settings.isAdvancedUser()) System.out.println("Could not get episode info");
+                if (settings.isAdvancedUser()) e.printStackTrace();
+            }
+            return new EpisodeEntity();
+        }
+
         return episode;
     }
 
@@ -316,20 +330,22 @@ public class EpisodeService {
         String URI = "https://api.svt.se/video/" + episode.getSvtId();
 
         try {
-            //anrop 1
-            //det här anropet har redan gjorts, kan jag köra detta när det första anropet görs??
-            //body = connectToURLReturnBodyAsString(new URL("https://api.svt.se/video/" + episode.getSvtId()));
-            if (!body.equals("")) {
-                //anrop 2
+            if (!body.isEmpty()) {
+                // get the video and subtitle references from body
                 VideoJsonObjectEntity vJoE = objectMapper.readValue(body, VideoJsonObjectEntity.class);
 
                 for (VideoReferencesEntity vre : vJoE.getVideoReferences()) {
                     if (vre.getFormat().equalsIgnoreCase("dash-full")) {
-                        episode.setMpdURL(new URL(vre.getUrl()));
+                        // get correct MPD-url by accessing the resolve
+                        episode.setResolveURL(new URL(vre.getResolve()));
+                        String resolvedMpdURL = connectToURLReturnBodyAsString(episode.getResolveURL());
+                        resolvedMpdURL = resolvedMpdURL.split("\"location\":\"")[1].split("\"")[0];
 
-                        //anrop 3, till mpdURLen
+                        episode.setMpdURL(new URL(resolvedMpdURL));
+
+                        // get Mpd from MpdURL
                         body = connectToURLReturnBodyAsString(episode.getMpdURL());
-                        if (!body.equals("")) {
+                        if (!body.isEmpty()) {
                             episodeInfoString = body;
                         }
                     }

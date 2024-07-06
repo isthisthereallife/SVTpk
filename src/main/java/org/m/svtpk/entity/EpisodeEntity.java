@@ -39,6 +39,7 @@ public class EpisodeEntity {
     private int seasonNumber;
     private int episodeNumber;
     private String productionYear;
+    private URL resolveURL;
 
     public EpisodeEntity() {
         programTitle = "I'm an episode!";
@@ -432,11 +433,18 @@ public class EpisodeEntity {
         } else {
             // This is probably a film, to be named like "Film.Title(year)"
             if (this.programTitle.equalsIgnoreCase(this.episodeTitle)) {
-                this.setFilename(StringHelpers.fileNameFixerUpper(this.programTitle + (this.getProductionYear() == null ? "" : "("+this.getProductionYear()+")")));
-            }else {
+                this.setFilename(StringHelpers.fileNameFixerUpper(this.programTitle + (this.getProductionYear() == null ? "" : "(" + this.getProductionYear() + ")")));
+            } else {
                 // fallback. maybe for documentaries
                 this.setFilename(StringHelpers.fileNameFixerUpper(this.getProgramTitle() + "-" + this.getEpisodeTitle()));
             }
         }
+    }
+
+    public void setResolveURL(URL url) {
+        this.resolveURL = url;
+    }
+    public URL getResolveURL(){
+        return this.resolveURL;
     }
 }

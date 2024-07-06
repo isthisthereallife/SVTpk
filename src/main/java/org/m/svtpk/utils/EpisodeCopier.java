@@ -66,6 +66,11 @@ public class EpisodeCopier implements Runnable {
                 .getEpisode()
                 .getAvailableResolutions()
                 .get(settings.getResolution()).getId()) : "0");
+
+        System.out.println("queueEntity: "+queueEntity.getEpisode().toString());
+        queueEntity.getEpisode().getAvailableAudio().forEach((a,b) -> {
+                    System.out.println(a.toString() + ": " + b.getLabel()+"\n"+b.getUrl()+"\n"+b.getId());
+                });
         String audArgs = "0:";
         audArgs = audArgs.concat(queueEntity.getEpisode().getAvailableAudio() != null ? String.valueOf(queueEntity
                 .getEpisode()

@@ -3,10 +3,12 @@ package org.m.svtpk.utils;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import java.net.URL;
+
 public class Arrow {
 
     public static ImageView getImgViewArrowLeft() {
-        ImageView imgArrowLeft = new ImageView(new Image("file:src/main/resources/images/arrow.png"));
+        ImageView imgArrowLeft = new ImageView(new Image(getArrowDownLocation()+getArrowDownFiletype()));
         imgArrowLeft.rotateProperty().setValue(90);
         imgArrowLeft.setPreserveRatio(true);
         imgArrowLeft.setFitWidth(20);
@@ -26,6 +28,12 @@ public class Arrow {
     }
 
     public static Image getImgArrowDown(String colour) {
-        return new Image("file:src/main/resources/images/arrow_" + colour.toLowerCase() + ".png");
+        return new Image(getArrowDownLocation()+"_" + colour.toLowerCase() + getArrowDownFiletype());
+    }
+    public static String getArrowDownLocation() {
+        return "file:src/main/resources/images/arrow";
+    }
+    public static String getArrowDownFiletype(){
+        return ".png";
     }
 }
