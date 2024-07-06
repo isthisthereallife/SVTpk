@@ -168,7 +168,6 @@ public class EpisodeCopier implements Runnable {
                     );
                     Files.delete(Paths.get(System.getProperty("user.dir")).resolve(subsname));
                 } catch (NullPointerException e) {
-
                     if (settings.isAdvancedUser()) System.out.println("Kunde inte kopiera undertexter.");
                 }
             }
