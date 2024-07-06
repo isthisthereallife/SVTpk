@@ -111,12 +111,18 @@ public class EpisodeCopier implements Runnable {
                     System.out.println(line);
                 }
                 if (line.contains("time=")) {
-                    String[] time = line.split("time=")[1].split(" ")[0].split(":");
-                    int hours = Integer.parseInt(time[0]);
-                    int minutes = Integer.parseInt(time[1]);
-                    int seconds = Integer.parseInt(time[2].split("\\.")[0]);
-                    //int millisec = Integer.parseInt(time[2].split("\\.")[1]);
-                    int elapsedTime = (hours * 60 * 60) + (minutes * 60) + seconds;
+                    int elapsedTime = 0;
+                    try {
+                        String[] time = line.split("time=")[1].split(" ")[0].split(":");
+                        int hours = Integer.parseInt(time[0]);
+                        int minutes = Integer.parseInt(time[1]);
+                        int seconds = Integer.parseInt(time[2].split("\\.")[0]);
+                        //int millisec = Integer.parseInt(time[2].split("\\.")[1]);
+                        elapsedTime = (hours * 60 * 60) + (minutes * 60) + seconds;
+                    }catch(NumberFormatException ignored){
+                        // let's just pretend that it is finished. it's probably fine.
+                        elapsedTime = queueEntity.getEpisode().getContentDuration();
+                    }
                     assert queueEntity.getEpisode().getContentDuration() != 0;
                     //Platform.runLater(() -> SvtpkApplication.updateLoadingBar(((double) elapsedTime / queueEntity.getEpisode().getContentDuration())));
                     //istället ska jag göra den här platform.runLater-grejen från ett annat ställe
@@ -183,7 +189,7 @@ public class EpisodeCopier implements Runnable {
             QueueHandler.processQueue();
 
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             queueEntity.getEpisode().setProgressState(ProgressStates.ERROR);
             queueEntity.setBackground(new Background(new BackgroundFill(Color.FIREBRICK, null, null)));
 
